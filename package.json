@@ -1,7 +1,6 @@
 {
   "name": "forja",
   "version": "1.0.0",
-  "description": "FORJA — Entrená con Ciencia. Gym tracker con coach IA.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +14,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite": "^6.0.0"
   }
 }
