@@ -608,6 +608,7 @@ INSTRUCCIONES:
 8. Incluir campo "quantities" con array de ingredientes y cantidades exactas para cada opción de comida.
 9. Sugerí ingredientes extra que suban la proteína plant-based: tempeh, edamame, quark, cottage, claras adicionales.
 10. El objetivo de ${protMin}-${protMax}g/dia es desafiante con dieta pescatariana — sé honesto y estratégico.
+11. IMPORTANTE: Sé conciso en todas las descripciones y textos. El JSON debe ser compacto. No uses frases largas, máximo 8-10 palabras por descripción de comida.
 
 Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 {
@@ -669,14 +670,26 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 }`;
 
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4500,messages:[{role:"user",content:prompt}]})});
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:6000,messages:[{role:"user",content:prompt}]})});
       const d=await r.json();if(d.error)throw new Error(d.error.message);
       const txt=d.content?.map(c=>c.text||"").join("")||"";
-      const clean=txt.replace(/```json|```/g,"").trim();
-      const plan=JSON.parse(clean);
+      let clean=txt.replace(/```json|```/g,"").trim();
+      let plan;
+      try{plan=JSON.parse(clean);}
+      catch(e){
+        // Intenta cerrar JSON truncado
+        const stack=[];let fixed=clean;
+        for(const ch of clean){if(ch==='{')stack.push('}');else if(ch==='[')stack.push(']');else if(ch==='}'||ch===']')stack.pop();}
+        // Cierra strings abiertas primero
+        const qCount=(clean.match(/"/g)||[]).length;
+        if(qCount%2!==0)fixed+='"';
+        fixed+=stack.reverse().join('');
+        try{plan=JSON.parse(fixed);}
+        catch(e2){throw new Error("El plan fue demasiado largo y se cortó. Intentá regenerar — suele funcionar al segundo intento.");}
+      }
       const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
       setData(nd);sv(nd);setAiPlan(plan);setView("plan");
-    }catch(e){alert("Error generando plan: "+e.message);}
+    }catch(e){alert("Error: "+e.message);}
     setAiLoad(false);
   };
 
