@@ -224,7 +224,17 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null};
+
+// ─── NUTRITION CONSTANTS ───
+const MEAL_TYPES=[
+  {id:"desayuno",l:"Desayuno",i:"☀️"},
+  {id:"almuerzo",l:"Almuerzo",i:"🍽️"},
+  {id:"merienda",l:"Merienda",i:"☕"},
+  {id:"cena",l:"Cena",i:"🌙"},
+  {id:"snack",l:"Snack",i:"🥜"},
+  {id:"suplemento",l:"Suplemento",i:"💊"},
+];
 
 function tgt(hist){
   if(!hist?.length)return null;
@@ -239,10 +249,12 @@ function tgt(hist){
   return{targetWeight:tw,targetReps:tr,targetSets:ts,suggestion:sug};
 }
 
-function buildPrompt(ses,all,fb){
+function buildPrompt(ses,all,fb,meals){
   const exd=ses.exercises.map(ex=>{const ss=ex.sets.map((s,i)=>"  S"+(i+1)+": "+s.weight+"kg x "+s.reps).join("\n");return ex.name+" ("+MG[ex.muscleGroup]?.l+"):\n"+ss}).join("\n\n");
   const recent=all.slice(-5).map(s=>fd(s.date)+": "+[...new Set(s.exercises.map(e=>MG[e.muscleGroup]?.l))].join(", ")).join("\n");
-  return "Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).\nSesion completada:\nFecha: "+fd(ses.date)+"\nEjercicios:\n"+exd+"\nRecientes:\n"+recent+"\nComentario: \""+fb+"\"\n\nEl usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.\nResponde en espanol, conciso (max 200 palabras). Evalua:\n1. Volumen e intensidad (son adecuados para su nivel actual?)\n2. Recomendaciones concretas para la proxima sesion\n3. Si deberia mantenerse en la fase actual o avanzar a la siguiente\n4. Frecuencia y recuperacion\nSe directo y practico.";
+  const todayMeals=(meals||[]).filter(m=>m.date===ses.date);
+  const nutCtx=todayMeals.length>0?"Alimentacion del dia:\n"+todayMeals.map(m=>{let txt=MEAL_TYPES.find(t=>t.id===m.type)?.l+": "+m.food;if(m.kcal)txt+=" ("+m.kcal+"kcal";if(m.protein)txt+=", "+m.protein+"g prot";if(m.carbs)txt+=", "+m.carbs+"g carb";if(m.fat)txt+=", "+m.fat+"g grasa";if(m.kcal||m.protein)txt+=")";return txt}).join("\n"):"";
+  return "Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).\nSesion completada:\nFecha: "+fd(ses.date)+"\nEjercicios:\n"+exd+"\nRecientes:\n"+recent+"\n"+(nutCtx?nutCtx+"\n":"")+"\nComentario: \""+fb+"\"\n\nEl usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.\nResponde en espanol, conciso (max 220 palabras). Evalua:\n1. Volumen e intensidad (son adecuados para su nivel actual?)\n2. Recomendaciones concretas para la proxima sesion\n3. Si deberia mantenerse en la fase actual o avanzar a la siguiente\n4. Frecuencia y recuperacion\n"+(nutCtx?"5. Comentario breve sobre la alimentacion del dia en relacion al entreno\n":"")+"Se directo y practico.";
 }
 
 async function callAI(prompt,key){
@@ -284,7 +296,7 @@ stl:{fontSize:11,color:"#888",display:"block",marginTop:4,textTransform:"upperca
 function Logo({size=40}){return <svg width={size} height={size} viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="url(#fg2)"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#D62828"/></linearGradient></defs><path d="M25 65 L75 65 L70 55 L65 45 L35 45 L30 55 Z" fill="#FFF" opacity="0.95"/><rect x="40" y="30" width="20" height="18" rx="3" fill="#FFF" opacity="0.95"/><rect x="20" y="65" width="60" height="6" rx="3" fill="#FFF" opacity="0.7"/><circle cx="72" cy="32" r="3" fill="#FFD166"/><circle cx="78" cy="26" r="2" fill="#FFD166" opacity="0.7"/><circle cx="65" cy="28" r="1.5" fill="#FFD166" opacity="0.5"/></svg>}
 
 function TabBar({active,onChange}){
-  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
+  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
   return <div style={S.tbar}>{tabs.map(t=><button key={t.id} onClick={()=>onChange(t.id)} style={{...S.tab,...(active===t.id?S.tabA:{})}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontWeight:active===t.id?700:400}}>{t.l}</span></button>)}</div>;
 }
 
@@ -377,7 +389,7 @@ function WorkoutTab({data,setData,apiKey}){
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
   const rmEx=eid=>setSes(s=>({...s,exercises:s.exercises.filter(ex=>ex.id!==eid)}));
   const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns};
-    if(apiKey){try{const txt=await callAI(buildPrompt(toSave,ns,fb),apiKey);setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
+    if(apiKey){try{const txt=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
     else{setAiRes("Sin API key. Sesion guardada. Anda a Config.")}
     setData(nd);sv(nd);setAiLoad(false)};
   const reset=()=>{setSes(null);setShowFb(false);setFb("");setAiRes("")};
@@ -422,10 +434,373 @@ function SettingsTab({apiKey,onApiKeyChange}){
   return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
 }
 
+// ─── FOOD DATABASE (proteinas por 100g) ───
+const FOOD_DB=[
+  {n:"Pechuga de pollo",p:31,c:0,f:3.6,k:165,cat:"Proteinas"},
+  {n:"Pechuga de pavo",p:29,c:0,f:1,k:135,cat:"Proteinas"},
+  {n:"Carne picada (90% magra)",p:26,c:0,f:10,k:196,cat:"Proteinas"},
+  {n:"Bife de lomo",p:26,c:0,f:8,k:179,cat:"Proteinas"},
+  {n:"Salmon",p:25,c:0,f:13,k:208,cat:"Proteinas"},
+  {n:"Atun en agua",p:30,c:0,f:1,k:128,cat:"Proteinas"},
+  {n:"Huevo entero",p:13,c:1,f:11,k:155,cat:"Proteinas"},
+  {n:"Clara de huevo",p:11,c:1,f:0,k:52,cat:"Proteinas"},
+  {n:"Queso cottage",p:11,c:3,f:4,k:98,cat:"Lacteos"},
+  {n:"Yogur griego natural",p:10,c:4,f:0,k:59,cat:"Lacteos"},
+  {n:"Leche entera",p:3.2,c:5,f:3.5,k:61,cat:"Lacteos"},
+  {n:"Queso fresco",p:12,c:1,f:8,k:120,cat:"Lacteos"},
+  {n:"Arroz blanco cocido",p:2.7,c:28,f:0.3,k:130,cat:"Carbohidratos"},
+  {n:"Arroz integral cocido",p:2.6,c:23,f:1,k:111,cat:"Carbohidratos"},
+  {n:"Avena",p:13,c:66,f:7,k:389,cat:"Carbohidratos"},
+  {n:"Papa hervida",p:2,c:17,f:0.1,k:77,cat:"Carbohidratos"},
+  {n:"Batata",p:1.6,c:20,f:0.1,k:86,cat:"Carbohidratos"},
+  {n:"Pan integral",p:9,c:41,f:3.4,k:247,cat:"Carbohidratos"},
+  {n:"Pasta cocida",p:5,c:25,f:1,k:131,cat:"Carbohidratos"},
+  {n:"Lentejas cocidas",p:9,c:20,f:0.4,k:116,cat:"Legumbres"},
+  {n:"Garbanzos cocidos",p:9,c:27,f:2.6,k:164,cat:"Legumbres"},
+  {n:"Porotos negros cocidos",p:8.9,c:23,f:0.5,k:132,cat:"Legumbres"},
+  {n:"Broccoli",p:2.8,c:7,f:0.4,k:34,cat:"Verduras"},
+  {n:"Espinaca",p:2.9,c:3.6,f:0.4,k:23,cat:"Verduras"},
+  {n:"Tomate",p:0.9,c:3.9,f:0.2,k:18,cat:"Verduras"},
+  {n:"Palta / Aguacate",p:2,c:9,f:15,k:160,cat:"Grasas"},
+  {n:"Aceite de oliva",p:0,c:0,f:100,k:884,cat:"Grasas"},
+  {n:"Almendras",p:21,c:22,f:49,k:579,cat:"Grasas"},
+  {n:"Mantequilla de mani",p:25,c:20,f:50,k:588,cat:"Grasas"},
+  {n:"Proteina en polvo (whey)",p:80,c:8,f:4,k:390,cat:"Suplementos"},
+  {n:"Creatina monohidrato",p:0,c:0,f:0,k:0,cat:"Suplementos"},
+];
+
+// ─── NUTRITION TAB ───
+function NutritionTab({data,setData,apiKey}){
+  const[view,setView]=useState("home"); // home | add | history | plan | shopping | fooddb
+  const[date,setDate]=useState(td());
+  const[type,setType]=useState("desayuno");
+  const[food,setFood]=useState("");
+  const[qty,setQty]=useState("100");
+  const[kcal,setKcal]=useState("");
+  const[protein,setProtein]=useState("");
+  const[carbs,setCarbs]=useState("");
+  const[fat,setFat]=useState("");
+  const[notes,setNotes]=useState("");
+  const[histDate,setHistDate]=useState(td());
+  const[dbSearch,setDbSearch]=useState("");
+  const[selFood,setSelFood]=useState(null);
+  const[aiPlan,setAiPlan]=useState(data.weeklyNutrPlan||null);
+  const[aiLoad,setAiLoad]=useState(false);
+  const[checkedItems,setCheckedItems]=useState({});
+
+  const doSave=()=>{
+    const meal={id:gi(),date,type,food:food.trim(),qty:qty?Number(qty):null,kcal:kcal?Number(kcal):null,protein:protein?Number(protein):null,carbs:carbs?Number(carbs):null,fat:fat?Number(fat):null,notes:notes.trim()||null};
+    const nd={...data,meals:[...(data.meals||[]),meal]};
+    setData(nd);sv(nd);
+    setView("home");setFood("");setKcal("");setProtein("");setCarbs("");setFat("");setNotes("");setQty("100");setSelFood(null);
+  };
+  const del=id=>{const nd={...data,meals:(data.meals||[]).filter(m=>m.id!==id)};setData(nd);sv(nd)};
+
+  const selectFromDB=(f)=>{
+    const q=Number(qty)||100;
+    const scale=q/100;
+    setFood(f.n);setKcal(Math.round(f.k*scale)+"");setProtein(Math.round(f.p*scale*10)/10+"");setCarbs(Math.round(f.c*scale*10)/10+"");setFat(Math.round(f.f*scale*10)/10+"");
+    setSelFood(f);setView("add");
+  };
+
+  const todayMeals=(data.meals||[]).filter(m=>m.date===td()).sort((a,b)=>MEAL_TYPES.findIndex(t=>t.id===a.type)-MEAL_TYPES.findIndex(t=>t.id===b.type));
+  const histMeals=(data.meals||[]).filter(m=>m.date===histDate).sort((a,b)=>MEAL_TYPES.findIndex(t=>t.id===a.type)-MEAL_TYPES.findIndex(t=>t.id===b.type));
+  const sumP=ms=>Math.round(ms.filter(m=>m.protein).reduce((s,m)=>s+m.protein,0));
+  const sumK=ms=>Math.round(ms.filter(m=>m.kcal).reduce((s,m)=>s+m.kcal,0));
+
+  // generate weekly plan via AI
+  const genPlan=async()=>{
+    if(!apiKey){alert("Necesitas API key en Config.");return;}
+    setAiLoad(true);
+    const ph=PHASES[data.phase||0];
+    const trainDays=ph.schedule.map(d=>d.day+" ("+d.name+")").join(", ");
+    const recentMeals=[...new Set((data.meals||[]).slice(-30).map(m=>m.food))].slice(0,20).join(", ")||"sin historial";
+    const prompt=`Sos un nutricionista deportivo. El usuario entrena fuerza e hipertrofia, fase actual: ${ph.name} (${ph.wk} semanas, ${ph.days} dias/semana).
+Dias de entreno esta semana: ${trainDays}.
+Comidas tipicas del usuario: ${recentMeals}.
+Rutina: almuerzos como prep meal (cocina el domingo para toda la semana), cenas mas flexibles o restaurante, come de todo sin restricciones.
+Objetivo principal: maximizar proteinas (1.8-2.2g/kg), comer bien sin obsesionarse con calorias.
+
+Genera un plan semanal orientativo en JSON con esta estructura exacta (sin markdown, solo JSON):
+{
+  "proteinTarget": "Xg/dia aproximado",
+  "prepMeal": {
+    "name": "nombre del plato",
+    "description": "descripcion breve",
+    "proteinPer100g": X,
+    "estimatedProteinPerServing": X,
+    "ingredients": ["item1 - cantidad para 5 porciones", "item2 - cantidad"]
+  },
+  "days": [
+    {
+      "day": "Lunes",
+      "isTraining": true,
+      "trainingName": "Full Body A",
+      "meals": {
+        "desayuno": {"option1": "descripcion con proteina estimada (Xg P)", "option2": "alternativa"},
+        "almuerzo": {"option1": "prep meal: nombre (Xg P)"},
+        "merienda": {"option1": "descripcion (Xg P)", "option2": "alternativa"},
+        "cena": {"option1": "descripcion (Xg P)", "option2": "alternativa mas rapida"}
+      },
+      "proteinEstimate": "Xg"
+    }
+  ],
+  "shoppingList": {
+    "Proteinas": ["pollo 1kg", "atun 4 latas"],
+    "Lacteos": ["yogur griego x4"],
+    "Carbohidratos": ["arroz 500g"],
+    "Verduras": ["brocoli 500g"],
+    "Otros": ["aceite de oliva"]
+  }
+}
+Incluye los 7 dias. Dias de entreno mas proteina y carbos, dias de descanso algo mas liviano pero siempre proteina alta.`;
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})});
+      const d=await r.json();if(d.error)throw new Error(d.error.message);
+      const txt=d.content?.map(c=>c.text||"").join("")||"";
+      const clean=txt.replace(/```json|```/g,"").trim();
+      const plan=JSON.parse(clean);
+      const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
+      setData(nd);sv(nd);setAiPlan(plan);setView("plan");
+    }catch(e){alert("Error generando plan: "+e.message);}
+    setAiLoad(false);
+  };
+
+  const MealList=({meals,showDel=true})=>{
+    if(!meals.length)return <p style={{color:"#888",textAlign:"center",fontSize:14,padding:"20px 0"}}>Sin registros.</p>;
+    const tp=sumP(meals),tk=sumK(meals);
+    return <>
+      {(tk>0||tp>0)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
+        {tp>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22,color:"#2ECC71"}}>{tp}<span style={{...S.stu,fontSize:11}}>g</span></span><span style={S.stl}>Proteinas</span></div>}
+        {tk>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22}}>{tk}</span><span style={S.stl}>kcal</span></div>}
+      </div>}
+      {MEAL_TYPES.map(mt=>{
+        const grp=meals.filter(m=>m.type===mt.id);
+        if(!grp.length)return null;
+        return <div key={mt.id} style={{marginBottom:12}}>
+          <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>{mt.i} {mt.l}</div>
+          {grp.map(m=><div key={m.id} style={{...S.cd,padding:"10px 14px",marginBottom:5}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+              <div style={{flex:1}}>
+                <span style={{fontSize:14,color:"#FFF",fontWeight:600}}>{m.food}</span>
+                {m.qty&&<span style={{fontSize:11,color:"#666",marginLeft:6}}>{m.qty}g</span>}
+                <div style={{display:"flex",gap:10,marginTop:5,flexWrap:"wrap"}}>
+                  {m.protein>0&&<span style={{fontSize:12,color:"#2ECC71",fontWeight:700}}>{m.protein}g prot</span>}
+                  {m.kcal>0&&<span style={{fontSize:12,color:"#FF6B35"}}>{m.kcal} kcal</span>}
+                  {m.carbs>0&&<span style={{fontSize:12,color:"#3498DB"}}>{m.carbs}g C</span>}
+                  {m.fat>0&&<span style={{fontSize:12,color:"#E67E22"}}>{m.fat}g G</span>}
+                </div>
+                {m.notes&&<p style={{fontSize:11,color:"#999",margin:"4px 0 0",fontStyle:"italic"}}>{m.notes}</p>}
+              </div>
+              {showDel&&<button onClick={()=>del(m.id)} style={S.sm}>x</button>}
+            </div>
+          </div>)}
+        </div>;
+      })}
+    </>;
+  };
+
+  // ── FOOD DB VIEW ──
+  if(view==="fooddb"){
+    const cats=[...new Set(FOOD_DB.map(f=>f.cat))];
+    const filtered=dbSearch?FOOD_DB.filter(f=>f.n.toLowerCase().includes(dbSearch.toLowerCase())):FOOD_DB;
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("add")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Base de alimentos</h2>
+      </div>
+      <input value={dbSearch} onChange={e=>setDbSearch(e.target.value)} placeholder="Buscar alimento..." style={{...S.inp,marginBottom:4}}/>
+      <p style={{fontSize:11,color:"#666",marginBottom:14}}>Valores por 100g. Toca para agregar con {qty}g.</p>
+      {(dbSearch?[{name:"Resultados",items:filtered}]:cats.map(c=>({name:c,items:FOOD_DB.filter(f=>f.cat===c)}))).map(group=>(
+        <div key={group.name||"r"} style={{marginBottom:16}}>
+          {!dbSearch&&<div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{group.name}</div>}
+          {group.items.map(f=><button key={f.n} onClick={()=>selectFromDB(f)} style={{...S.eo,marginBottom:5,flexDirection:"column",alignItems:"flex-start",gap:3}}>
+            <span style={{fontSize:14,color:"#FFF",fontWeight:600}}>{f.n}</span>
+            <div style={{display:"flex",gap:12}}>
+              <span style={{fontSize:12,color:"#2ECC71",fontWeight:700}}>{f.p}g prot</span>
+              <span style={{fontSize:12,color:"#3498DB"}}>{f.c}g C</span>
+              <span style={{fontSize:12,color:"#E67E22"}}>{f.f}g G</span>
+              <span style={{fontSize:12,color:"#888"}}>{f.k} kcal</span>
+            </div>
+          </button>)}
+        </div>
+      ))}
+    </div>;
+  }
+
+  // ── ADD VIEW ──
+  if(view==="add")return <div style={S.pg}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+      <button onClick={()=>{setView("home");setSelFood(null);}} style={S.sm}>&#8592;</button>
+      <h2 style={S.t1}>Agregar comida</h2>
+    </div>
+    <label style={S.lbl}>Fecha</label>
+    <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <label style={S.lbl}>Tipo</label>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:14}}>
+      {MEAL_TYPES.map(t=><button key={t.id} onClick={()=>setType(t.id)} style={{...S.mb2,border:type===t.id?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:type===t.id?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)",padding:"10px 6px"}}>
+        <span style={{fontSize:18}}>{t.i}</span><span style={{fontSize:10}}>{t.l}</span>
+      </button>)}
+    </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+      <label style={S.lbl}>Alimento *</label>
+      <button onClick={()=>setView("fooddb")} style={{...S.sm,fontSize:11,color:"#FF6B35",border:"1px solid rgba(255,107,53,0.3)"}}>📋 Base de datos</button>
+    </div>
+    <input value={food} onChange={e=>setFood(e.target.value)} placeholder="Ej: Pechuga de pollo" style={{...S.inp,marginBottom:10}}/>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+      <div><label style={{...S.lbl,fontSize:10}}>Cantidad (g)</label>
+        <input type="number" value={qty} onChange={e=>{
+          const q=Number(e.target.value)||100;setQty(e.target.value);
+          if(selFood){const sc=q/100;setKcal(Math.round(selFood.k*sc)+"");setProtein(Math.round(selFood.p*sc*10)/10+"");setCarbs(Math.round(selFood.c*sc*10)/10+"");setFat(Math.round(selFood.f*sc*10)/10+"");}
+        }} style={S.inp} placeholder="100"/>
+      </div>
+      <div><label style={{...S.lbl,fontSize:10,color:"#2ECC71"}}>Proteinas (g)</label><input type="number" value={protein} onChange={e=>setProtein(e.target.value)} style={S.inp} placeholder="0"/></div>
+      <div><label style={{...S.lbl,fontSize:10}}>Kcal</label><input type="number" value={kcal} onChange={e=>setKcal(e.target.value)} style={S.inp} placeholder="0"/></div>
+      <div><label style={{...S.lbl,fontSize:10,color:"#3498DB"}}>Carbohidratos (g)</label><input type="number" value={carbs} onChange={e=>setCarbs(e.target.value)} style={S.inp} placeholder="0"/></div>
+      <div><label style={{...S.lbl,fontSize:10,color:"#E67E22"}}>Grasas (g)</label><input type="number" value={fat} onChange={e=>setFat(e.target.value)} style={S.inp} placeholder="0"/></div>
+    </div>
+    {selFood&&protein&&<div style={{...S.tbdg,marginBottom:10}}>💪 {protein}g de proteína en {qty}g de {selFood.n}</div>}
+    <label style={S.lbl}>Notas <span style={{fontSize:10,color:"#666",fontWeight:400,textTransform:"none",letterSpacing:0}}>(opcional)</span></label>
+    <textarea value={notes} onChange={e=>setNotes(e.target.value)} style={S.ta} rows={2} placeholder="Preparacion, marca, etc."/>
+    <button onClick={doSave} disabled={!food.trim()} style={{...S.btn,marginTop:14,width:"100%",opacity:food.trim()?1:0.5}}>Guardar</button>
+  </div>;
+
+  // ── HISTORY VIEW ──
+  if(view==="history")return <div style={S.pg}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+      <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+      <h2 style={S.t1}>Historial</h2>
+    </div>
+    <label style={S.lbl}>Fecha</label>
+    <input type="date" value={histDate} onChange={e=>setHistDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
+    <MealList meals={histMeals}/>
+  </div>;
+
+  // ── WEEKLY PLAN VIEW ──
+  if(view==="plan"){
+    const plan=data.weeklyNutrPlan;
+    if(!plan)return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Plan semanal</h2>
+      </div>
+      <div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Generá tu plan semanal personalizado con el Coach IA. Va a usar tus comidas típicas y tu fase de entrenamiento actual.</p></div>
+      <button onClick={genPlan} disabled={aiLoad} style={{...S.btn,width:"100%",marginTop:12,opacity:aiLoad?0.6:1}}>{aiLoad?"⏳ Generando plan...":"✨ Generar plan con IA"}</button>
+    </div>;
+    const DAYS_ES=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"];
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Plan semanal</h2>
+      </div>
+      <p style={{fontSize:11,color:"#666",marginBottom:14}}>Generado el {fd(plan.generatedAt||td())}</p>
+      {plan.proteinTarget&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.06)",marginBottom:14}}>
+        <span style={{fontSize:13,color:"#2ECC71",fontWeight:700}}>💪 Objetivo proteico: {plan.proteinTarget}</span>
+      </div>}
+      {plan.prepMeal&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:14}}>
+        <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>🥘 PREP MEAL DEL DOMINGO</div>
+        <div style={{fontSize:15,color:"#FFF",fontWeight:700,marginBottom:4}}>{plan.prepMeal.name}</div>
+        <p style={{fontSize:12,color:"#CCC",marginBottom:8}}>{plan.prepMeal.description}</p>
+        {plan.prepMeal.estimatedProteinPerServing&&<div style={{fontSize:13,color:"#2ECC71",fontWeight:700,marginBottom:8}}>~{plan.prepMeal.estimatedProteinPerServing}g proteína por porción</div>}
+        {plan.prepMeal.ingredients&&<div>{plan.prepMeal.ingredients.map((ing,i)=><div key={i} style={{fontSize:12,color:"#AAA",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{ing}</div>)}</div>}
+      </div>}
+      {(plan.days||[]).map((day,i)=><div key={i} style={{...S.cd,marginBottom:10,borderLeft:"3px solid "+(day.isTraining?"#FF6B35":"#444")}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <span style={{fontFamily:"'Oswald',sans-serif",fontSize:15,color:day.isTraining?"#FF6B35":"#AAA"}}>{day.day}</span>
+          <div style={{textAlign:"right"}}>
+            {day.isTraining&&<div style={{fontSize:10,color:"#FF6B35"}}>{day.trainingName}</div>}
+            {day.proteinEstimate&&<div style={{fontSize:12,color:"#2ECC71",fontWeight:700}}>{day.proteinEstimate} prot</div>}
+          </div>
+        </div>
+        {day.meals&&Object.entries(day.meals).map(([mtype,opts])=>{
+          const mt=MEAL_TYPES.find(t=>t.id===mtype);if(!mt||!opts)return null;
+          return <div key={mtype} style={{marginBottom:8}}>
+            <div style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:0.5,textTransform:"uppercase",marginBottom:3}}>{mt.i} {mt.l}</div>
+            {opts.option1&&<div style={{fontSize:12,color:"#DDD",paddingLeft:8,borderLeft:"2px solid rgba(255,107,53,0.3)",marginBottom:2}}>① {opts.option1}</div>}
+            {opts.option2&&<div style={{fontSize:12,color:"#999",paddingLeft:8,borderLeft:"2px solid rgba(255,255,255,0.1)"}}>② {opts.option2}</div>}
+          </div>;
+        })}
+      </div>)}
+      <button onClick={genPlan} disabled={aiLoad} style={{...S.btn,width:"100%",marginTop:4,background:"rgba(255,255,255,0.06)",color:"#AAA",fontSize:13}}>{aiLoad?"⏳ Regenerando...":"🔄 Regenerar plan"}</button>
+    </div>;
+  }
+
+  // ── SHOPPING LIST VIEW ──
+  if(view==="shopping"){
+    const plan=data.weeklyNutrPlan;
+    if(!plan?.shoppingList)return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Lista de compras</h2>
+      </div>
+      <div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Primero generá el plan semanal y la lista de compras se arma automáticamente.</p></div>
+      <button onClick={()=>setView("plan")} style={{...S.btn,width:"100%",marginTop:12}}>Ir al Plan semanal</button>
+    </div>;
+    const allItems=Object.entries(plan.shoppingList).flatMap(([cat,items])=>items.map(item=>({cat,item,key:cat+"_"+item})));
+    const done=allItems.filter(i=>checkedItems[i.key]).length;
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>🛒 Lista de compras</h2>
+      </div>
+      <p style={{fontSize:12,color:"#666",marginBottom:14}}>{done}/{allItems.length} items — semana del {fd(plan.generatedAt||td())}</p>
+      {Object.entries(plan.shoppingList).map(([cat,items])=>(
+        <div key={cat} style={{marginBottom:16}}>
+          <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>{cat}</div>
+          {items.map((item,i)=>{
+            const key=cat+"_"+item;const done=checkedItems[key];
+            return <button key={i} onClick={()=>setCheckedItems(prev=>({...prev,[key]:!prev[key]}))} style={{...S.eo,marginBottom:5,opacity:done?0.4:1,textDecoration:done?"line-through":"none"}}>
+              <span style={{fontSize:14}}>{item}</span>
+              <span style={{fontSize:18}}>{done?"✅":"⬜"}</span>
+            </button>;
+          })}
+        </div>
+      ))}
+      <button onClick={()=>setCheckedItems({})} style={{...S.sm,width:"100%",marginTop:8,padding:"10px",color:"#888"}}>Limpiar marcados</button>
+    </div>;
+  }
+
+  // ── HOME VIEW ──
+  const todayP=sumP(todayMeals),todayK=sumK(todayMeals);
+  const todaySession=data.sessions?.find(s=>s.date===td());
+  const plan=data.weeklyNutrPlan;
+  return <div style={S.pg}>
+    <h2 style={S.t1}>🥗 Alimentación</h2>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+      <button onClick={()=>setView("plan")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",borderColor:plan?"rgba(255,107,53,0.3)":"rgba(255,255,255,0.06)"}}>
+        <div style={{fontSize:20,marginBottom:4}}>📅</div>
+        <div style={{fontSize:13,color:"#FFF",fontWeight:600}}>Plan semanal</div>
+        <div style={{fontSize:10,color:plan?"#FF6B35":"#666"}}>{plan?"Ver plan":"Generar con IA"}</div>
+      </button>
+      <button onClick={()=>setView("shopping")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",borderColor:plan?.shoppingList?"rgba(46,204,113,0.3)":"rgba(255,255,255,0.06)"}}>
+        <div style={{fontSize:20,marginBottom:4}}>🛒</div>
+        <div style={{fontSize:13,color:"#FFF",fontWeight:600}}>Lista de compras</div>
+        <div style={{fontSize:10,color:plan?.shoppingList?"#2ECC71":"#666"}}>{plan?.shoppingList?"Ver lista":"Requiere plan"}</div>
+      </button>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:16}}>
+      <button onClick={()=>setView("add")} style={{...S.btn,flex:1,padding:"12px 16px",fontSize:14}}>+ Registrar</button>
+      <button onClick={()=>setView("history")} style={{...S.sm,padding:"12px 14px",fontSize:12,color:"#AAA"}}>📅</button>
+    </div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+      <h3 style={{...S.t1,fontSize:14,margin:0}}>Hoy — {fd(td())}</h3>
+      {todaySession&&<span style={{fontSize:11,color:"#FF6B35"}}>🏋️ Dia de entreno</span>}
+    </div>
+    {(todayP>0||todayK>0)&&<div style={{display:"flex",gap:8,marginBottom:10}}>
+      {todayP>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22,color:"#2ECC71"}}>{todayP}<span style={{...S.stu,fontSize:11}}>g</span></span><span style={S.stl}>Proteinas</span></div>}
+      {todayK>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22}}>{todayK}</span><span style={S.stl}>kcal</span></div>}
+    </div>}
+    <MealList meals={todayMeals}/>
+    {todayMeals.length===0&&<div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.06)"}}>
+      <p style={{fontSize:12,color:"#CCC",lineHeight:1.5,margin:0}}>💡 Registrá tus comidas para que el Coach IA las use al analizar tu entreno. Los macros son opcionales — alcanza con escribir qué comiste.</p>
+    </div>}
+  </div>;
+}
+
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
@@ -434,6 +809,7 @@ function App(){
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
+      {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="body"&&<BodyTab data={data} setData={setData}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
       {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/>}
