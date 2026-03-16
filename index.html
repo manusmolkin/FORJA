@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#0A0A0B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>FORJA</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -73,6 +72,7 @@ const ANTHRO=[
 // Phases for someone returning after months off
 const PHASES=[
 {name:"Readaptacion",wk:"1-3",days:3,c:"#2ECC71",ic:"\u{1F331}",
+rpe:{title:"RIR 3-4 (RPE 6-7)",desc:"Esfuerzo moderado. Que te sobren 3-4 repeticiones antes del fallo. El objetivo es aprender movimientos y generar habito, NO fatigar el musculo. Si sentis que te cuesta terminar la serie, baja el peso.",color:"#2ECC71"},
 desc:"Volver al habito. Cargas livianas, tecnica perfecta, sin fallo.",
 schedule:[
 {day:"Lunes",name:"Full Body A - Empuje",muscles:["chest","shoulders","legs","triceps"],
@@ -104,6 +104,7 @@ cardio:"Caminar 20-30 min post-entreno, 2 veces por semana. Nada intenso.",
 goals:["Ir 3 veces por semana sin faltar","Aprender/reaprender la tecnica de cada ejercicio","NO buscar fallo muscular (quedar 3-4 reps antes)","Que no duela tanto al dia siguiente (DOMS moderado)","Hacerse la antropometria inicial"]
 },
 {name:"Base de Fuerza",wk:"4-7",days:3,c:"#3498DB",ic:"\u{1F527}",
+rpe:{title:"RIR 2-3 (RPE 7-8)",desc:"Esfuerzo moderado-alto. Que te sobren 2-3 reps. Empezas a sentir que las ultimas reps cuestan pero nunca llegas al fallo. Si completas todas las reps comodamente, subi 2.5% la proxima semana.",color:"#3498DB"},
 desc:"Subir cargas progresivamente. Todavia 3 dias para consolidar.",
 schedule:[
 {day:"Lunes",name:"Fuerza - Empuje",muscles:["chest","shoulders","triceps","abs"],
@@ -135,6 +136,7 @@ cardio:"2x/semana: 1 sesion 25-30 min moderado + 1 de 15-20 min con intervalos s
 goals:["Aumentar cargas 2.5-5% por semana en compuestos","Completar 3 sesiones semanales sin faltar","Sentir trabajo muscular real en cada ejercicio","Prepararse para pasar a 4 dias"]
 },
 {name:"Hipertrofia",wk:"8-12",days:4,c:"#E67E22",ic:"\u{1F525}",
+rpe:{title:"RIR 1-2 (RPE 8-9)",desc:"Esfuerzo alto. Te sobran 1-2 reps como maximo. En ejercicios de aislamiento (curl, extensiones, laterales) podes llegar al fallo en la ultima serie. En compuestos (sentadilla, press, peso muerto) siempre guardate 1 rep.",color:"#E67E22"},
 desc:"4 dias/semana. Upper/Lower split. Mas volumen.",
 schedule:[
 {day:"Lunes",name:"Upper - Fuerza",muscles:["chest","back","shoulders"],
@@ -176,6 +178,7 @@ cardio:"2-3x/semana: intervalos 20 min o cardio moderado 30 min en dias libres",
 goals:["Cada musculo entrenado 2 veces por semana","12-20 series semanales por grupo muscular","Progresar en peso O en reps cada semana","Segunda antropometria al final de esta fase"]
 },
 {name:"Intensificacion",wk:"13+",days:5,c:"#D62828",ic:"\u26A1",
+rpe:{title:"RIR 0-1 (RPE 9-10)",desc:"Esfuerzo maximo. En compuestos principales apunta a RIR 1 (te queda 1 sola rep). En aislamientos podes ir al fallo (RIR 0) en las ultimas 1-2 series. Cada 4 semanas hace una semana de deload (RPE 6-7) para recuperar.",color:"#D62828"},
 desc:"5 dias/semana. Push/Pull/Legs. Alta intensidad.",
 schedule:[
 {day:"Lunes",name:"Push",muscles:["chest","shoulders","triceps"],exercises:[
@@ -314,10 +317,9 @@ function PlanTab({data,setData}){
     <div style={S.cd}><p style={{fontSize:13,color:"#CCC"}}>{ph.cardio}</p></div>
     <h3 style={{...S.t1,fontSize:14,marginTop:16}}>{"\u{1F3AF}"} Objetivos</h3>
     {ph.goals.map((g,i)=><div key={i} style={{...S.cd,padding:"10px 14px",display:"flex",gap:10,alignItems:"flex-start"}}><span style={{color:ph.c,fontSize:14}}>&#8226;</span><p style={{fontSize:13,color:"#CCC",margin:0}}>{g}</p></div>)}
-    <div style={{...S.cd,marginTop:16,borderLeft:"3px solid #FF6B35",background:"rgba(255,107,53,0.06)"}}>
-      <h4 style={{fontSize:13,fontFamily:"'Oswald',sans-serif",color:"#FF6B35",margin:"0 0 8px"}}>COMO ELEGIR EL PESO</h4>
-      <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>Los pesos sugeridos son orientativos. La regla de oro: <b style={{color:"#FFF"}}>si podes hacer 2-3 reps mas de las indicadas, el peso esta bien</b>. Si llegas justo o no llegas, baja. Nunca busques fallo muscular en la Fase 1.</p>
-      <p style={{fontSize:12,color:"#AAA",lineHeight:1.6,marginTop:8}}>RPE 6-7 = esfuerzo moderado, te sobran 3-4 reps.</p>
+    <div style={{...S.cd,marginTop:16,borderLeft:"3px solid "+ph.rpe.color,background:ph.rpe.color+"0A"}}>
+      <h4 style={{fontSize:13,fontFamily:"'Oswald',sans-serif",color:ph.rpe.color,margin:"0 0 8px"}}>INTENSIDAD: {ph.rpe.title}</h4>
+      <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>{ph.rpe.desc}</p>
     </div>
     <div style={{...S.cd,marginTop:10,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.06)"}}>
       <h4 style={{fontSize:13,fontFamily:"'Oswald',sans-serif",color:"#9B59B6",margin:"0 0 8px"}}>HABLAR CON EL COACH IA</h4>
