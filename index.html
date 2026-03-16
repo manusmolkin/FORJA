@@ -508,54 +508,119 @@ function NutritionTab({data,setData,apiKey}){
   const sumP=ms=>Math.round(ms.filter(m=>m.protein).reduce((s,m)=>s+m.protein,0));
   const sumK=ms=>Math.round(ms.filter(m=>m.kcal).reduce((s,m)=>s+m.kcal,0));
 
-  // generate weekly plan via AI
+  // ── USER FOOD PROFILE ──
+  const USER_TUPPERS=[
+    "Quinoa","Arroz","Lentejas","Porotos negros","Garbanzos",
+    "Tomate cherry","Huevo duro","Lechuga","Rúcula","Zanahoria rallada",
+    "Remolacha en cubos","Cebolla de verdeo","Palta","Frutos secos",
+    "Atún en lata","Tofu",
+    "Tarta de cebolla (guarnición)","Tarta de choclo (guarnición)",
+    "Tarta de zucchini (guarnición)","Tarta de calabaza (guarnición)",
+    "Tarta de acelga (guarnición)","Tarta de pollo (principal)","Tarta de ricota/huevo (principal)",
+  ];
+  const USER_MAINS=[
+    "Pescado al horno","Wok de verduras con tofu o pollo","Milanesas de berenjena",
+    "Milanesas de zucchini","Milanesas de carne","Hamburguesas veganas (lenteja/berenjena/zanahoria)",
+    "Katsu curry (tofu o calabaza empanado con arroz y curry japonés)",
+    "Ensalada completa con proteína","Pizzetas de calabaza con queso",
+    "Pastel de papa con soja texturizada","Risotto de verduras o hongos",
+    "Guiso de lentejas","Revuelto de huevos y verduras","Omelette de claras",
+    "Salmón a la plancha","Pollo al horno con hierbas","Bowl de proteína (base + proteína + toppings)",
+  ];
+  const USER_SIDES=[
+    "Arroz blanco o integral","Quinoa","Verduras asadas al horno","Ensalada verde",
+    "Puré de papa","Puré de batata","Papas al horno","Batatas al horno",
+    "Batatas fritas al horno","Papas fritas al horno","Knishes de papa",
+    "Brócoli al vapor","Espinaca salteada","Zucchini a la plancha",
+  ];
+
   const genPlan=async()=>{
     if(!apiKey){alert("Necesitas API key en Config.");return;}
     setAiLoad(true);
     const ph=PHASES[data.phase||0];
-    const trainDays=ph.schedule.map(d=>d.day+" ("+d.name+")").join(", ");
-    const recentMeals=[...new Set((data.meals||[]).slice(-30).map(m=>m.food))].slice(0,20).join(", ")||"sin historial";
-    const prompt=`Sos un nutricionista deportivo. El usuario entrena fuerza e hipertrofia, fase actual: ${ph.name} (${ph.wk} semanas, ${ph.days} dias/semana).
-Dias de entreno esta semana: ${trainDays}.
-Comidas tipicas del usuario: ${recentMeals}.
-Rutina: almuerzos como prep meal (cocina el domingo para toda la semana), cenas mas flexibles o restaurante, come de todo sin restricciones.
-Objetivo principal: maximizar proteinas (1.8-2.2g/kg), comer bien sin obsesionarse con calorias.
+    const trainDays=ph.schedule.map(d=>d.day+": "+d.name).join(" | ");
+    const restDays=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].filter(d=>!ph.schedule.map(s=>s.day).some(td2=>d.startsWith(td2.slice(0,3)))).join(", ");
+    const weightKg=data.anthropometry?.length?
+      (data.anthropometry.sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77):77;
+    const protMin=Math.round(weightKg*1.8),protMax=Math.round(weightKg*2.1);
 
-Genera un plan semanal orientativo en JSON con esta estructura exacta (sin markdown, solo JSON):
+    const prompt=`Sos un nutricionista deportivo especializado en hipertrofia. Generá un plan semanal de comidas personalizado.
+
+PERFIL DEL USUARIO:
+- Peso estimado: ${weightKg}kg
+- Objetivo proteico: ${protMin}-${protMax}g/dia (1.8-2.1g/kg)
+- Entrena fuerza e hipertrofia, fase: ${ph.name} (sem ${ph.wk}, ${ph.days} dias/semana)
+- Dias de entreno: ${trainDays}
+- Dias de descanso: ${restDays}
+- Cocina bastante plant-based pero come de todo (pescado, huevo, algo de carne)
+- Come de todo, sin restricciones
+
+RUTINA SEMANAL:
+- Los DOMINGOS cocina prep meal (tuppers) para los ALMUERZOS de lun-vie
+- Las CENAS son mas flexibles: cocina algo o sale a restaurante
+- Le gusta cocinar y tiene mana en la cocina
+
+INGREDIENTES PARA TUPPERS (almuerzo prep meal):
+${USER_TUPPERS.join(", ")}
+
+PLATOS PRINCIPALES que sabe y le gustan:
+${USER_MAINS.join(", ")}
+
+GUARNICIONES que suele hacer:
+${USER_SIDES.join(", ")}
+
+INSTRUCCIONES:
+1. Los almuerzos lun-vie deben ser prep meal: un bowl/tupper armado con ingredientes de la lista de tuppers. Cada tupper debe tener UN plato principal O guarnición (indicar cuál) + acompañamientos. Ejemplo: "Bowl de quinoa + atún + huevo duro + palta + rúcula + tomate cherry (~35g P)"
+2. Las cenas deben ser uno de los platos principales + una guarnición de la lista
+3. Fines de semana más libre/flexible
+4. Días de entreno: más proteína y carbohidratos
+5. Días de descanso: proteína igual de alta, carbos algo menores
+6. Siempre indicar proteína estimada en gramos
+7. Para las tartas: si lleva pollo/huevo/ricota = plato principal; si es de verdura = guarnición
+8. Podés sugerir platos o ingredientes adicionales que complementen bien el perfil del usuario y aumenten la proteína (especialmente tempeh, edamame, cottage, quark, clara de huevo)
+
+Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 {
-  "proteinTarget": "Xg/dia aproximado",
+  "proteinTarget": "${protMin}-${protMax}g/dia",
+  "weightUsed": "${weightKg}kg",
   "prepMeal": {
-    "name": "nombre del plato",
-    "description": "descripcion breve",
-    "proteinPer100g": X,
-    "estimatedProteinPerServing": X,
-    "ingredients": ["item1 - cantidad para 5 porciones", "item2 - cantidad"]
+    "name": "nombre del tupper de la semana",
+    "mainComponent": "plato principal O guarnición base",
+    "mainIsMain": true,
+    "description": "descripción breve apetitosa",
+    "estimatedProteinPerServing": 0,
+    "ingredients": ["ingrediente - cantidad para 5 porciones"],
+    "assembly": "cómo armar el tupper"
   },
   "days": [
     {
       "day": "Lunes",
       "isTraining": true,
-      "trainingName": "Full Body A",
+      "trainingName": "nombre del entrenamiento",
       "meals": {
-        "desayuno": {"option1": "descripcion con proteina estimada (Xg P)", "option2": "alternativa"},
-        "almuerzo": {"option1": "prep meal: nombre (Xg P)"},
-        "merienda": {"option1": "descripcion (Xg P)", "option2": "alternativa"},
-        "cena": {"option1": "descripcion (Xg P)", "option2": "alternativa mas rapida"}
+        "desayuno": {"option1": "descripción (~Xg P)", "option2": "alternativa (~Xg P)"},
+        "almuerzo": {"option1": "prep meal: descripción (~Xg P)"},
+        "merienda": {"option1": "descripción (~Xg P)", "option2": "alternativa (~Xg P)"},
+        "cena": {
+          "option1": "plato principal + guarnición (~Xg P)",
+          "option2": "alternativa más rápida (~Xg P)"
+        }
       },
-      "proteinEstimate": "Xg"
+      "proteinEstimate": "~Xg"
     }
   ],
   "shoppingList": {
-    "Proteinas": ["pollo 1kg", "atun 4 latas"],
-    "Lacteos": ["yogur griego x4"],
-    "Carbohidratos": ["arroz 500g"],
-    "Verduras": ["brocoli 500g"],
-    "Otros": ["aceite de oliva"]
-  }
-}
-Incluye los 7 dias. Dias de entreno mas proteina y carbos, dias de descanso algo mas liviano pero siempre proteina alta.`;
+    "Proteínas y huevos": [],
+    "Verduras y frescos": [],
+    "Granos y secos": [],
+    "Lácteos y fríos": [],
+    "Despensa": []
+  },
+  "proteinTips": ["tip1 especifico para este usuario", "tip2"]
+}`;
+
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})});
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3500,messages:[{role:"user",content:prompt}]})});
       const d=await r.json();if(d.error)throw new Error(d.error.message);
       const txt=d.content?.map(c=>c.text||"").join("")||"";
       const clean=txt.replace(/```json|```/g,"").trim();
@@ -699,10 +764,18 @@ Incluye los 7 dias. Dias de entreno mas proteina y carbos, dias de descanso algo
       </div>}
       {plan.prepMeal&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:14}}>
         <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>🥘 PREP MEAL DEL DOMINGO</div>
-        <div style={{fontSize:15,color:"#FFF",fontWeight:700,marginBottom:4}}>{plan.prepMeal.name}</div>
+        <div style={{fontSize:15,color:"#FFF",fontWeight:700,marginBottom:2}}>{plan.prepMeal.name}</div>
+        {plan.prepMeal.mainComponent&&<div style={{fontSize:12,color:"#AAA",marginBottom:6}}>
+          <span style={{color:plan.prepMeal.mainIsMain?"#FF6B35":"#3498DB",fontWeight:600}}>{plan.prepMeal.mainIsMain?"Plato principal":"Guarnición base"}: </span>{plan.prepMeal.mainComponent}
+        </div>}
         <p style={{fontSize:12,color:"#CCC",marginBottom:8}}>{plan.prepMeal.description}</p>
-        {plan.prepMeal.estimatedProteinPerServing&&<div style={{fontSize:13,color:"#2ECC71",fontWeight:700,marginBottom:8}}>~{plan.prepMeal.estimatedProteinPerServing}g proteína por porción</div>}
-        {plan.prepMeal.ingredients&&<div>{plan.prepMeal.ingredients.map((ing,i)=><div key={i} style={{fontSize:12,color:"#AAA",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{ing}</div>)}</div>}
+        {plan.prepMeal.estimatedProteinPerServing>0&&<div style={{fontSize:13,color:"#2ECC71",fontWeight:700,marginBottom:8}}>~{plan.prepMeal.estimatedProteinPerServing}g proteína por porción</div>}
+        {plan.prepMeal.ingredients&&<div style={{marginBottom:8}}>{plan.prepMeal.ingredients.map((ing,i)=><div key={i} style={{fontSize:12,color:"#AAA",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{ing}</div>)}</div>}
+        {plan.prepMeal.assembly&&<div style={{fontSize:12,color:"#CCC",fontStyle:"italic",marginTop:6,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:8}}>📦 {plan.prepMeal.assembly}</div>}
+      </div>}
+      {plan.proteinTips?.length>0&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.05)",marginBottom:14}}>
+        <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>💪 TIPS DE PROTEÍNA</div>
+        {plan.proteinTips.map((tip,i)=><div key={i} style={{fontSize:12,color:"#CCC",padding:"4px 0",display:"flex",gap:8,alignItems:"flex-start"}}><span style={{color:"#2ECC71"}}>→</span><span>{tip}</span></div>)}
       </div>}
       {(plan.days||[]).map((day,i)=><div key={i} style={{...S.cd,marginBottom:10,borderLeft:"3px solid "+(day.isTraining?"#FF6B35":"#444")}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
