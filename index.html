@@ -563,50 +563,67 @@ PERFIL DEL USUARIO:
 - Dias de entreno: ${trainDays}
 - Dias de descanso: ${restDays}
 - Estilo de cocina: PESCATARIANO + PLANT-BASED. Casi no cocina carne.
-- Proteínas animales que SÍ usa: pescado frecuente (merluza, brotola, lenguado, salmón), huevo, atún en lata, pollo solo domingos para prep meal, milanesa de carne muy ocasional.
+- Proteínas animales: pescado frecuente (merluza, brotola, lenguado, salmón), huevo, atún en lata, pollo solo domingos para prep, milanesa de carne muy ocasional.
 - Proteínas vegetales: tofu, tempeh, soja texturizada, legumbres (lentejas, garbanzos, porotos negros), frutos secos.
-- NO cocina: cortes de carne vacuno, cerdo. La bolognesa y el pastel de papa los hace con soja texturizada.
-- Lácteos: sí (queso, yogur, ricota).
+- NO cocina: cortes de carne vacuno ni cerdo.
+- Lácteos: sí (queso, yogur griego, ricota).
 - Come de todo en restaurantes.
-
-RUTINA SEMANAL:
-- Los DOMINGOS cocina prep meal (tuppers) para los ALMUERZOS de lun-vie. El domingo también puede hacer pollo a la plancha como base proteica.
-- Las CENAS son mas flexibles: cocina algo rico o sale a restaurante.
 - Le gusta cocinar y tiene maña en la cocina.
 
-INGREDIENTES PARA TUPPERS (almuerzo prep meal):
+DINÁMICA DE ALMUERZOS — MUY IMPORTANTE:
+El domingo hace una SESIÓN DE COCINA donde prepara varios componentes por separado (no un único tupper). Durante la semana combina esos componentes de forma diferente cada día para variar. NO es el mismo plato repetido 5 veces.
+
+Ejemplo de sesión de cocina dominical:
+- Cocina quinoa (400g cruda)
+- Asa garbanzos con especias (1 lata)
+- Hace huevos duros (8 unidades)
+- Pollo a la plancha (600g)
+- Asa verduras (zucchini, morrón, berenjena)
+- Lava y prepara hojas (lechuga, rúcula)
+- Prepara zanahoria rallada, remolacha en cubos
+
+Con esos componentes arma almuerzos distintos cada día:
+- Lunes: bowl de quinoa + pollo + palta + rúcula
+- Martes: bowl de garbanzos + huevo duro + zanahoria + tomate
+- Miércoles: ensalada de hojas + pollo + remolacha + frutos secos
+- etc.
+
+INGREDIENTES DISPONIBLES PARA TUPPERS:
 ${USER_TUPPERS.join(", ")}
 
-PLATOS PRINCIPALES que sabe y le gustan:
+PLATOS PRINCIPALES PARA CENAS (cocina fresco cada noche):
 ${USER_MAINS.join(", ")}
 
-GUARNICIONES que suele hacer:
+GUARNICIONES:
 ${USER_SIDES.join(", ")}
 
 INSTRUCCIONES:
-1. Los almuerzos lun-vie deben ser prep meal: un bowl/tupper con ingredientes reales de la lista. Incluir siempre una proteína clara. Ejemplo: "Bowl de quinoa + pollo + huevo duro + palta + rúcula (~38g P)"
-2. Las cenas: plato principal de la lista + guarnición. Privilegiar pescado, huevo, tofu.
-3. Sábado y domingo: más libre, puede cocinar algo especial o salir.
-4. Días de entreno: más proteína y carbohidratos complejos pre/post entreno.
-5. Días de descanso: proteína igual de alta, carbos algo menores.
-6. SIEMPRE indicar proteína estimada en gramos entre paréntesis.
-7. Para tartas: si lleva pollo/huevo/ricota = plato principal; si es de verdura = guarnición.
-8. Sugerí ingredientes que suban la proteína plant-based: tempeh, edamame, quark, cottage, clara de huevo extra, proteína de arveja en batido.
-9. El objetivo de ${protMin}-${protMax}g/dia puede ser difícil con dieta pescatariana — sé honesto con las estimaciones y sugerí estrategias concretas.
-10. Para CADA opción de comida, incluir el campo "optionXq" con un array de ingredientes con cantidades exactas (gramos para balanza, o unidades claras: "2 huevos", "1 lata de atún 170g", "½ palta"). Ser preciso, estas cantidades se usan para cocinar y para la lista de compras.
+1. "sundayCookingSession": lista de todo lo que prepara el domingo, con cantidades exactas para cubrir los 5 almuerzos de la semana. Incluir instrucción de preparación breve para cada componente.
+2. Almuerzos lun-vie: combinaciones DISTINTAS cada día usando los componentes del domingo. Cada almuerzo con proteína estimada.
+3. Cenas: plato fresco (de USER_MAINS) + guarnición. Independiente del prep del domingo. Privilegiar pescado, huevo, tofu.
+4. Desayunos y meriendas: opciones concretas con cantidades.
+5. Días de entreno: más proteína y carbohidratos.
+6. Días de descanso: proteína igual de alta, carbos algo menores.
+7. SIEMPRE indicar proteína estimada (~Xg P) en cada comida.
+8. Incluir campo "quantities" con array de ingredientes y cantidades exactas para cada opción de comida.
+9. Sugerí ingredientes extra que suban la proteína plant-based: tempeh, edamame, quark, cottage, claras adicionales.
+10. El objetivo de ${protMin}-${protMax}g/dia es desafiante con dieta pescatariana — sé honesto y estratégico.
 
 Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 {
   "proteinTarget": "${protMin}-${protMax}g/dia",
   "weightUsed": "${weightKg}kg",
-  "prepMeal": {
-    "name": "nombre del tupper de la semana",
-    "mainComponent": "plato principal O guarnición base",
-    "mainIsMain": true,
-    "description": "descripción breve apetitosa",
-    "estimatedProteinPerServing": 0,
-    "ingredients": ["ingrediente - cantidad para 5 porciones"],
-    "assembly": "cómo armar el tupper"
+  "sundayCookingSession": {
+    "title": "Sesión de cocina del domingo",
+    "estimatedTime": "X horas",
+    "components": [
+      {
+        "name": "Pollo a la plancha",
+        "quantity": "600g pechuga",
+        "prep": "Condimentar con ajo, limón y hierbas. Plancha 6 min por lado. Cortar en tiras.",
+        "protein": "~180g proteína total"
+      }
+    ]
   },
   "days": [
     {
@@ -616,24 +633,24 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       "meals": {
         "desayuno": {
           "option1": "descripción limpia (~Xg P)",
-          "option1q": ["3 huevos enteros", "50g ricota", "2 tostadas integrales"],
+          "option1q": ["3 huevos", "50g ricota", "2 tostadas integrales"],
           "option2": "alternativa (~Xg P)",
           "option2q": ["200g yogur griego", "30g granola", "20g frutos secos", "1 banana"]
         },
         "almuerzo": {
-          "option1": "prep meal: descripción (~Xg P)",
-          "option1q": ["150g pollo cocido", "80g quinoa cruda (=~200g cocida)", "1 huevo duro", "½ palta", "puñado de rúcula", "6 tomates cherry"]
+          "option1": "combinación con componentes del domingo (~Xg P)",
+          "option1q": ["150g pollo (del domingo)", "80g quinoa cocida (del domingo)", "½ palta", "puñado de rúcula", "6 tomates cherry", "aceite de oliva + limón"]
         },
         "merienda": {
           "option1": "descripción (~Xg P)",
-          "option1q": ["30g proteína en polvo", "1 banana", "40g avena"],
+          "option1q": ["cantidad ingrediente 1", "cantidad ingrediente 2"],
           "option2": "alternativa (~Xg P)",
-          "option2q": ["2 tostadas", "½ palta", "1 huevo duro"]
+          "option2q": ["cantidad ingrediente 1", "cantidad ingrediente 2"]
         },
         "cena": {
-          "option1": "plato principal + guarnición (~Xg P)",
+          "option1": "plato fresco + guarnición (~Xg P)",
           "option1q": ["200g filet de salmón", "150g batata", "150g brócoli", "aceite de oliva c/n"],
-          "option2": "alternativa más rápida (~Xg P)",
+          "option2": "alternativa (~Xg P)",
           "option2q": ["200g tofu firme", "80g arroz integral crudo", "verduras salteadas c/n"]
         }
       },
@@ -648,11 +665,11 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
     "Granos, legumbres y secos": [],
     "Despensa y condimentos": []
   },
-  "proteinTips": ["tip1 concreto para dieta pescatariana/plant-based", "tip2", "tip3"]
+  "proteinTips": ["tip concreto 1", "tip concreto 2", "tip concreto 3"]
 }`;
 
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3500,messages:[{role:"user",content:prompt}]})});
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4500,messages:[{role:"user",content:prompt}]})});
       const d=await r.json();if(d.error)throw new Error(d.error.message);
       const txt=d.content?.map(c=>c.text||"").join("")||"";
       const clean=txt.replace(/```json|```/g,"").trim();
@@ -794,16 +811,28 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       {plan.proteinTarget&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.06)",marginBottom:14}}>
         <span style={{fontSize:13,color:"#2ECC71",fontWeight:700}}>💪 Objetivo proteico: {plan.proteinTarget}</span>
       </div>}
-      {plan.prepMeal&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:14}}>
-        <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>🥘 PREP MEAL DEL DOMINGO</div>
-        <div style={{fontSize:15,color:"#FFF",fontWeight:700,marginBottom:2}}>{plan.prepMeal.name}</div>
-        {plan.prepMeal.mainComponent&&<div style={{fontSize:12,color:"#AAA",marginBottom:6}}>
-          <span style={{color:plan.prepMeal.mainIsMain?"#FF6B35":"#3498DB",fontWeight:600}}>{plan.prepMeal.mainIsMain?"Plato principal":"Guarnición base"}: </span>{plan.prepMeal.mainComponent}
-        </div>}
-        <p style={{fontSize:12,color:"#CCC",marginBottom:8}}>{plan.prepMeal.description}</p>
-        {plan.prepMeal.estimatedProteinPerServing>0&&<div style={{fontSize:13,color:"#2ECC71",fontWeight:700,marginBottom:8}}>~{plan.prepMeal.estimatedProteinPerServing}g proteína por porción</div>}
-        {plan.prepMeal.ingredients&&<div style={{marginBottom:8}}>{plan.prepMeal.ingredients.map((ing,i)=><div key={i} style={{fontSize:12,color:"#AAA",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{ing}</div>)}</div>}
-        {plan.prepMeal.assembly&&<div style={{fontSize:12,color:"#CCC",fontStyle:"italic",marginTop:6,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:8}}>📦 {plan.prepMeal.assembly}</div>}
+      {plan.sundayCookingSession&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1}}>🥘 SESIÓN DE COCINA — DOMINGO</div>
+          {plan.sundayCookingSession.estimatedTime&&<div style={{fontSize:11,color:"#888"}}>⏱ {plan.sundayCookingSession.estimatedTime}</div>}
+        </div>
+        <p style={{fontSize:12,color:"#AAA",marginBottom:10}}>Preparar estos componentes por separado. Durante la semana los combinás distinto cada día.</p>
+        {(plan.sundayCookingSession.components||[]).map((comp,i)=>{
+          const eKey="sunday_"+i;const open=expandedMeals[eKey];
+          return <div key={i} style={{marginBottom:6}}>
+            <button onClick={()=>setExpandedMeals(p=>({...p,[eKey]:!p[eKey]}))} style={{width:"100%",background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"rgba(255,255,255,0.04)",borderRadius:8,border:"1px solid rgba(255,255,255,0.06)"}}>
+                <div>
+                  <span style={{fontSize:13,color:"#FFF",fontWeight:600}}>{comp.name}</span>
+                  <span style={{fontSize:12,color:"#FF6B35",marginLeft:8}}>{comp.quantity}</span>
+                  {comp.protein&&<span style={{fontSize:11,color:"#2ECC71",marginLeft:8}}>{comp.protein}</span>}
+                </div>
+                <span style={{fontSize:10,color:"#555"}}>{open?"▲":"▼"}</span>
+              </div>
+            </button>
+            {open&&comp.prep&&<div style={{fontSize:12,color:"#CCC",padding:"8px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"0 0 8px 8px",borderLeft:"2px solid rgba(255,107,53,0.3)",marginTop:-2,lineHeight:1.5}}>{comp.prep}</div>}
+          </div>;
+        })}
       </div>}
       {plan.proteinTips?.length>0&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.05)",marginBottom:14}}>
         <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>💪 TIPS DE PROTEÍNA</div>
