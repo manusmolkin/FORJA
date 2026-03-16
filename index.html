@@ -508,7 +508,6 @@ function NutritionTab({data,setData,apiKey}){
   const sumP=ms=>Math.round(ms.filter(m=>m.protein).reduce((s,m)=>s+m.protein,0));
   const sumK=ms=>Math.round(ms.filter(m=>m.kcal).reduce((s,m)=>s+m.kcal,0));
 
-  // ── USER FOOD PROFILE ──
   const USER_TUPPERS=[
     "Quinoa","Arroz","Lentejas","Porotos negros","Garbanzos",
     "Tomate cherry","Huevo duro","Lechuga","Rúcula","Zanahoria rallada",
@@ -519,13 +518,23 @@ function NutritionTab({data,setData,apiKey}){
     "Tarta de acelga (guarnición)","Tarta de pollo (principal)","Tarta de ricota/huevo (principal)",
   ];
   const USER_MAINS=[
-    "Pescado al horno","Wok de verduras con tofu o pollo","Milanesas de berenjena",
-    "Milanesas de zucchini","Milanesas de carne","Hamburguesas veganas (lenteja/berenjena/zanahoria)",
-    "Katsu curry (tofu o calabaza empanado con arroz y curry japonés)",
-    "Ensalada completa con proteína","Pizzetas de calabaza con queso",
-    "Pastel de papa con soja texturizada","Risotto de verduras o hongos",
-    "Guiso de lentejas","Revuelto de huevos y verduras","Omelette de claras",
-    "Salmón a la plancha","Pollo al horno con hierbas","Bowl de proteína (base + proteína + toppings)",
+    "Pescado al horno: merluza, brotola, lenguado o salmón (frecuente)",
+    "Wok de verduras con tofu o pescado",
+    "Milanesas de berenjena al horno","Milanesas de zucchini al horno",
+    "Milanesas de carne al horno (ocasional, no frecuente)",
+    "Pollo a la plancha (solo domingos para prep meal)",
+    "Hamburguesas veganas de lenteja con berenjena o zanahoria",
+    "Katsu curry: tofu o calabaza empanada con arroz y curry japonés",
+    "Ensalada completa con proteína (atún, huevo, tofu o legumbres)",
+    "Pizzetas de calabaza con queso",
+    "Pastel de papa con soja texturizada (sin carne)",
+    "Bolognesa con soja texturizada (sin carne)",
+    "Risotto de verduras, hongos o mariscos",
+    "Guiso de lentejas",
+    "Revuelto o omelette de huevos y verduras",
+    "Bowl de proteína (base de cereal + proteína + toppings)",
+    "Tempeh salteado o marinado",
+    "Tofu firme a la plancha o al horno",
   ];
   const USER_SIDES=[
     "Arroz blanco o integral","Quinoa","Verduras asadas al horno","Ensalada verde",
@@ -552,13 +561,17 @@ PERFIL DEL USUARIO:
 - Entrena fuerza e hipertrofia, fase: ${ph.name} (sem ${ph.wk}, ${ph.days} dias/semana)
 - Dias de entreno: ${trainDays}
 - Dias de descanso: ${restDays}
-- Cocina bastante plant-based pero come de todo (pescado, huevo, algo de carne)
-- Come de todo, sin restricciones
+- Estilo de cocina: PESCATARIANO + PLANT-BASED. Casi no cocina carne.
+- Proteínas animales que SÍ usa: pescado frecuente (merluza, brotola, lenguado, salmón), huevo, atún en lata, pollo solo domingos para prep meal, milanesa de carne muy ocasional.
+- Proteínas vegetales: tofu, tempeh, soja texturizada, legumbres (lentejas, garbanzos, porotos negros), frutos secos.
+- NO cocina: cortes de carne vacuno, cerdo. La bolognesa y el pastel de papa los hace con soja texturizada.
+- Lácteos: sí (queso, yogur, ricota).
+- Come de todo en restaurantes.
 
 RUTINA SEMANAL:
-- Los DOMINGOS cocina prep meal (tuppers) para los ALMUERZOS de lun-vie
-- Las CENAS son mas flexibles: cocina algo o sale a restaurante
-- Le gusta cocinar y tiene mana en la cocina
+- Los DOMINGOS cocina prep meal (tuppers) para los ALMUERZOS de lun-vie. El domingo también puede hacer pollo a la plancha como base proteica.
+- Las CENAS son mas flexibles: cocina algo rico o sale a restaurante.
+- Le gusta cocinar y tiene maña en la cocina.
 
 INGREDIENTES PARA TUPPERS (almuerzo prep meal):
 ${USER_TUPPERS.join(", ")}
@@ -570,14 +583,15 @@ GUARNICIONES que suele hacer:
 ${USER_SIDES.join(", ")}
 
 INSTRUCCIONES:
-1. Los almuerzos lun-vie deben ser prep meal: un bowl/tupper armado con ingredientes de la lista de tuppers. Cada tupper debe tener UN plato principal O guarnición (indicar cuál) + acompañamientos. Ejemplo: "Bowl de quinoa + atún + huevo duro + palta + rúcula + tomate cherry (~35g P)"
-2. Las cenas deben ser uno de los platos principales + una guarnición de la lista
-3. Fines de semana más libre/flexible
-4. Días de entreno: más proteína y carbohidratos
-5. Días de descanso: proteína igual de alta, carbos algo menores
-6. Siempre indicar proteína estimada en gramos
-7. Para las tartas: si lleva pollo/huevo/ricota = plato principal; si es de verdura = guarnición
-8. Podés sugerir platos o ingredientes adicionales que complementen bien el perfil del usuario y aumenten la proteína (especialmente tempeh, edamame, cottage, quark, clara de huevo)
+1. Los almuerzos lun-vie deben ser prep meal: un bowl/tupper con ingredientes reales de la lista. Incluir siempre una proteína clara. Ejemplo: "Bowl de quinoa + pollo + huevo duro + palta + rúcula (~38g P)"
+2. Las cenas: plato principal de la lista + guarnición. Privilegiar pescado, huevo, tofu.
+3. Sábado y domingo: más libre, puede cocinar algo especial o salir.
+4. Días de entreno: más proteína y carbohidratos complejos pre/post entreno.
+5. Días de descanso: proteína igual de alta, carbos algo menores.
+6. SIEMPRE indicar proteína estimada en gramos entre paréntesis.
+7. Para tartas: si lleva pollo/huevo/ricota = plato principal; si es de verdura = guarnición.
+8. Sugerí ingredientes que suban la proteína plant-based: tempeh, edamame, quark, cottage, clara de huevo extra, proteína de arveja en batido.
+9. El objetivo de ${protMin}-${protMax}g/dia puede ser difícil con dieta pescatariana — sé honesto con las estimaciones y sugerí estrategias concretas.
 
 Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 {
@@ -610,13 +624,14 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
     }
   ],
   "shoppingList": {
-    "Proteínas y huevos": [],
+    "Pescados y proteína animal": [],
+    "Tofu, tempeh y proteína vegetal": [],
+    "Huevos y lácteos": [],
     "Verduras y frescos": [],
-    "Granos y secos": [],
-    "Lácteos y fríos": [],
-    "Despensa": []
+    "Granos, legumbres y secos": [],
+    "Despensa y condimentos": []
   },
-  "proteinTips": ["tip1 especifico para este usuario", "tip2"]
+  "proteinTips": ["tip1 concreto para dieta pescatariana/plant-based", "tip2", "tip3"]
 }`;
 
     try{
