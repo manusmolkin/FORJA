@@ -487,6 +487,7 @@ function NutritionTab({data,setData,apiKey}){
   const[aiPlan,setAiPlan]=useState(data.weeklyNutrPlan||null);
   const[aiLoad,setAiLoad]=useState(false);
   const[checkedItems,setCheckedItems]=useState({});
+  const[expandedMeals,setExpandedMeals]=useState({});
 
   const doSave=()=>{
     const meal={id:gi(),date,type,food:food.trim(),qty:qty?Number(qty):null,kcal:kcal?Number(kcal):null,protein:protein?Number(protein):null,carbs:carbs?Number(carbs):null,fat:fat?Number(fat):null,notes:notes.trim()||null};
@@ -592,6 +593,7 @@ INSTRUCCIONES:
 7. Para tartas: si lleva pollo/huevo/ricota = plato principal; si es de verdura = guarnición.
 8. Sugerí ingredientes que suban la proteína plant-based: tempeh, edamame, quark, cottage, clara de huevo extra, proteína de arveja en batido.
 9. El objetivo de ${protMin}-${protMax}g/dia puede ser difícil con dieta pescatariana — sé honesto con las estimaciones y sugerí estrategias concretas.
+10. Para CADA opción de comida, incluir el campo "optionXq" con un array de ingredientes con cantidades exactas (gramos para balanza, o unidades claras: "2 huevos", "1 lata de atún 170g", "½ palta"). Ser preciso, estas cantidades se usan para cocinar y para la lista de compras.
 
 Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 {
@@ -612,12 +614,27 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       "isTraining": true,
       "trainingName": "nombre del entrenamiento",
       "meals": {
-        "desayuno": {"option1": "descripción (~Xg P)", "option2": "alternativa (~Xg P)"},
-        "almuerzo": {"option1": "prep meal: descripción (~Xg P)"},
-        "merienda": {"option1": "descripción (~Xg P)", "option2": "alternativa (~Xg P)"},
+        "desayuno": {
+          "option1": "descripción limpia (~Xg P)",
+          "option1q": ["3 huevos enteros", "50g ricota", "2 tostadas integrales"],
+          "option2": "alternativa (~Xg P)",
+          "option2q": ["200g yogur griego", "30g granola", "20g frutos secos", "1 banana"]
+        },
+        "almuerzo": {
+          "option1": "prep meal: descripción (~Xg P)",
+          "option1q": ["150g pollo cocido", "80g quinoa cruda (=~200g cocida)", "1 huevo duro", "½ palta", "puñado de rúcula", "6 tomates cherry"]
+        },
+        "merienda": {
+          "option1": "descripción (~Xg P)",
+          "option1q": ["30g proteína en polvo", "1 banana", "40g avena"],
+          "option2": "alternativa (~Xg P)",
+          "option2q": ["2 tostadas", "½ palta", "1 huevo duro"]
+        },
         "cena": {
           "option1": "plato principal + guarnición (~Xg P)",
-          "option2": "alternativa más rápida (~Xg P)"
+          "option1q": ["200g filet de salmón", "150g batata", "150g brócoli", "aceite de oliva c/n"],
+          "option2": "alternativa más rápida (~Xg P)",
+          "option2q": ["200g tofu firme", "80g arroz integral crudo", "verduras salteadas c/n"]
         }
       },
       "proteinEstimate": "~Xg"
@@ -804,8 +821,23 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
           const mt=MEAL_TYPES.find(t=>t.id===mtype);if(!mt||!opts)return null;
           return <div key={mtype} style={{marginBottom:8}}>
             <div style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:0.5,textTransform:"uppercase",marginBottom:3}}>{mt.i} {mt.l}</div>
-            {opts.option1&&<div style={{fontSize:12,color:"#DDD",paddingLeft:8,borderLeft:"2px solid rgba(255,107,53,0.3)",marginBottom:2}}>① {opts.option1}</div>}
-            {opts.option2&&<div style={{fontSize:12,color:"#999",paddingLeft:8,borderLeft:"2px solid rgba(255,255,255,0.1)"}}>② {opts.option2}</div>}
+            {[{txt:opts.option1,qty:opts.option1q,num:"①"},{txt:opts.option2,qty:opts.option2q,num:"②"}].filter(o=>o.txt).map((o,oi)=>{
+              const eKey=`${i}_${mtype}_${oi}`;
+              const open=expandedMeals[eKey];
+              return <div key={oi} style={{marginBottom:4}}>
+                <button onClick={()=>setExpandedMeals(p=>({...p,[eKey]:!p[eKey]}))} style={{width:"100%",background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:6,paddingLeft:8,borderLeft:"2px solid "+(oi===0?"rgba(255,107,53,0.35)":"rgba(255,255,255,0.1)")}}>
+                    <span style={{fontSize:12,color:oi===0?"#DDD":"#999",flex:1,lineHeight:1.4}}>{o.num} {o.txt}</span>
+                    {o.qty?.length>0&&<span style={{fontSize:10,color:"#555",marginTop:1,flexShrink:0}}>{open?"▲":"▼"}</span>}
+                  </div>
+                </button>
+                {open&&o.qty?.length>0&&<div style={{marginLeft:8,marginTop:4,paddingLeft:8,borderLeft:"2px solid rgba(255,255,255,0.06)"}}>
+                  {o.qty.map((q,qi)=><div key={qi} style={{fontSize:11,color:"#888",padding:"2px 0",display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{color:"#FF6B35",fontSize:9}}>●</span>{q}
+                  </div>)}
+                </div>}
+              </div>;
+            })}
           </div>;
         })}
       </div>)}
