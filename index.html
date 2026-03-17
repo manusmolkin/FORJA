@@ -71,6 +71,127 @@ const ANTHRO=[
 {id:"body_fat",l:"% Grasa corporal",u:"%"},{id:"muscle_mass",l:"Masa muscular",u:"kg"},
 ];
 
+// ─── CLINICAL STUDIES CONSTANTS ───
+const STUDY_TYPES=[
+  {id:"blood",l:"Analítica de sangre",i:"🩸",color:"#E74C3C"},
+  {id:"urine",l:"Analítica de orina",i:"🧪",color:"#F39C12"},
+  {id:"spirometry",l:"Espirometría",i:"🫁",color:"#3498DB"},
+  {id:"sleep",l:"SOH / Polisomnografía",i:"😴",color:"#9B59B6"},
+  {id:"xray",l:"Radiografía",i:"📋",color:"#95A5A6"},
+  {id:"echo",l:"Ecocardiograma",i:"❤️",color:"#E91E63"},
+  {id:"ecg",l:"ECG",i:"📈",color:"#1ABC9C"},
+  {id:"ultrasound",l:"Ecografía",i:"🔵",color:"#2980B9"},
+  {id:"other",l:"Otro estudio",i:"📄",color:"#7F8C8D"},
+];
+const BLOOD_PANELS=[
+  {id:"hemogram",l:"Hemograma",fields:[
+    {id:"hb",l:"Hemoglobina",u:"g/dL",ref:"H:13.5-17.5 / M:12-15.5"},
+    {id:"hto",l:"Hematocrito",u:"%",ref:"H:41-53 / M:36-46"},
+    {id:"vcm",l:"VCM",u:"fL",ref:"80-100"},
+    {id:"hcm",l:"HCM",u:"pg",ref:"27-33"},
+    {id:"rdw",l:"RDW",u:"%",ref:"11.5-14.5"},
+    {id:"wbc",l:"Leucocitos",u:"x10³/µL",ref:"4.5-11"},
+    {id:"neutro",l:"Neutrófilos",u:"%",ref:"50-70"},
+    {id:"lympho",l:"Linfocitos",u:"%",ref:"20-40"},
+    {id:"plaq",l:"Plaquetas",u:"x10³/µL",ref:"150-400"},
+  ]},
+  {id:"lipids",l:"Perfil Lipídico",fields:[
+    {id:"ct",l:"Colesterol total",u:"mg/dL",ref:"<200"},
+    {id:"ldl",l:"LDL",u:"mg/dL",ref:"<130 (ideal <100)"},
+    {id:"hdl",l:"HDL",u:"mg/dL",ref:"H:>40 / M:>50"},
+    {id:"tg",l:"Triglicéridos",u:"mg/dL",ref:"<150"},
+    {id:"non_hdl",l:"No-HDL",u:"mg/dL",ref:"<160"},
+    {id:"ct_hdl",l:"Índice CT/HDL",u:"",ref:"<5"},
+  ]},
+  {id:"glucose",l:"Glucemia y Diabetes",fields:[
+    {id:"glucose",l:"Glucemia en ayunas",u:"mg/dL",ref:"70-100"},
+    {id:"hba1c",l:"HbA1c",u:"%",ref:"<5.7"},
+    {id:"insulin",l:"Insulina basal",u:"µUI/mL",ref:"2-25"},
+    {id:"homa",l:"HOMA-IR",u:"",ref:"<2.5"},
+  ]},
+  {id:"liver",l:"Función Hepática",fields:[
+    {id:"got",l:"GOT (AST)",u:"U/L",ref:"H:<40 / M:<31"},
+    {id:"gpt",l:"GPT (ALT)",u:"U/L",ref:"H:<41 / M:<31"},
+    {id:"ggt",l:"GGT",u:"U/L",ref:"H:<60 / M:<40"},
+    {id:"fa",l:"Fosfatasa alcalina",u:"U/L",ref:"44-147"},
+    {id:"bil_t",l:"Bilirrubina total",u:"mg/dL",ref:"0.2-1.2"},
+    {id:"albumin",l:"Albúmina",u:"g/dL",ref:"3.5-5"},
+  ]},
+  {id:"kidney",l:"Función Renal",fields:[
+    {id:"creat",l:"Creatinina",u:"mg/dL",ref:"H:0.7-1.2 / M:0.5-1"},
+    {id:"urea",l:"Urea",u:"mg/dL",ref:"10-50"},
+    {id:"bun",l:"BUN",u:"mg/dL",ref:"7-25"},
+    {id:"uric",l:"Ácido úrico",u:"mg/dL",ref:"H:3.4-7 / M:2.4-5.7"},
+    {id:"egfr",l:"eFG (CKD-EPI)",u:"mL/min/1.73m²",ref:">60"},
+  ]},
+  {id:"thyroid",l:"Tiroides",fields:[
+    {id:"tsh",l:"TSH",u:"µUI/mL",ref:"0.5-4.5"},
+    {id:"t4l",l:"T4 libre",u:"ng/dL",ref:"0.8-1.8"},
+    {id:"t3l",l:"T3 libre",u:"pg/mL",ref:"2.3-4.2"},
+  ]},
+  {id:"iron",l:"Hierro y Ferritina",fields:[
+    {id:"iron",l:"Hierro sérico",u:"µg/dL",ref:"H:65-175 / M:50-170"},
+    {id:"ferrit",l:"Ferritina",u:"ng/mL",ref:"H:30-400 / M:13-150"},
+    {id:"transf",l:"Transferrina",u:"mg/dL",ref:"200-360"},
+    {id:"sat_transf",l:"Saturación transferrina",u:"%",ref:"20-50"},
+    {id:"tibc",l:"TIBC",u:"µg/dL",ref:"250-370"},
+  ]},
+  {id:"vitamins",l:"Vitaminas y Minerales",fields:[
+    {id:"vitd",l:"Vitamina D (25-OH)",u:"ng/mL",ref:"30-100 (óptimo >40)"},
+    {id:"vitb12",l:"Vitamina B12",u:"pg/mL",ref:"200-900"},
+    {id:"folate",l:"Folato",u:"ng/mL",ref:">4"},
+    {id:"magnes",l:"Magnesio",u:"mg/dL",ref:"1.7-2.4"},
+    {id:"calcium",l:"Calcio",u:"mg/dL",ref:"8.5-10.5"},
+    {id:"potass",l:"Potasio",u:"mEq/L",ref:"3.5-5.1"},
+    {id:"sodium",l:"Sodio",u:"mEq/L",ref:"135-145"},
+  ]},
+  {id:"inflam",l:"Inflamación",fields:[
+    {id:"crp",l:"PCR (ultrasensible)",u:"mg/L",ref:"<1 (bajo riesgo CV)"},
+    {id:"vsg",l:"VSG",u:"mm/h",ref:"H:<15 / M:<20"},
+    {id:"fibrin",l:"Fibrinógeno",u:"mg/dL",ref:"200-400"},
+  ]},
+  {id:"hormones",l:"Hormonas",fields:[
+    {id:"test",l:"Testosterona total",u:"ng/dL",ref:"H:300-1000"},
+    {id:"test_free",l:"Testosterona libre",u:"pg/mL",ref:"H:50-210"},
+    {id:"shbg",l:"SHBG",u:"nmol/L",ref:"H:10-57"},
+    {id:"cortisol",l:"Cortisol matutino",u:"µg/dL",ref:"6-23"},
+    {id:"igf1",l:"IGF-1",u:"ng/mL",ref:"Variable por edad"},
+  ]},
+];
+const URINE_FIELDS=[
+  {id:"ph",l:"pH",u:"",ref:"4.5-8"},
+  {id:"density",l:"Densidad",u:"",ref:"1.005-1.030"},
+  {id:"protein_u",l:"Proteínas",u:"",ref:"Negativo"},
+  {id:"glucose_u",l:"Glucosa",u:"",ref:"Negativo"},
+  {id:"ketones",l:"Cetonas",u:"",ref:"Negativo"},
+  {id:"blood_u",l:"Sangre",u:"",ref:"Negativo"},
+  {id:"leuco_u",l:"Leucocitos",u:"/campo",ref:"<5"},
+  {id:"nitrite",l:"Nitritos",u:"",ref:"Negativo"},
+  {id:"microalb",l:"Microalbuminuria",u:"mg/g Cr",ref:"<30"},
+  {id:"creat_u",l:"Creatinina en orina",u:"mg/dL",ref:"Variable"},
+];
+const SPIROMETRY_FIELDS=[
+  {id:"fvc",l:"FVC",u:"L / %pred",ref:">80%"},
+  {id:"fev1",l:"FEV1",u:"L / %pred",ref:">80%"},
+  {id:"fev1_fvc",l:"FEV1/FVC",u:"%",ref:">70%"},
+  {id:"pef",l:"PEF",u:"L/s / %pred",ref:">80%"},
+  {id:"fef25_75",l:"FEF 25-75%",u:"L/s / %pred",ref:">70%"},
+  {id:"broncho",l:"Respuesta broncodilatadora",u:"",ref:"Negativa (<12% y <200mL)"},
+  {id:"pattern",l:"Patrón",u:"",ref:"Normal"},
+  {id:"severity",l:"Severidad (si hay patrón)",u:"",ref:""},
+];
+const SLEEP_FIELDS=[
+  {id:"iah",l:"IAH (índice apnea-hipopnea)",u:"eventos/h",ref:"<5 normal; 5-15 leve; 15-30 mod; >30 grave"},
+  {id:"desatMin",l:"SpO2 mínima",u:"%",ref:">90%"},
+  {id:"t90",l:"Tiempo con SpO2 <90%",u:"%",ref:"<1%"},
+  {id:"odi",l:"ODI (índice de desaturación)",u:"eventos/h",ref:"<5"},
+  {id:"eficiency",l:"Eficiencia de sueño",u:"%",ref:">85%"},
+  {id:"rem",l:"REM",u:"%",ref:"20-25%"},
+  {id:"deep",l:"Sueño profundo (N3)",u:"%",ref:"15-20%"},
+  {id:"arousal",l:"Índice de arousal",u:"/h",ref:"<10"},
+];
+const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","other"];
+
 // Phases for someone returning after months off
 const PHASES=[
 {name:"Readaptacion",wk:"1-3",days:3,c:"#2ECC71",ic:"\u{1F331}",
@@ -224,7 +345,7 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[]};
 
 // ─── NUTRITION CONSTANTS ───
 const MEAL_TYPES=[
@@ -296,7 +417,7 @@ stl:{fontSize:11,color:"#888",display:"block",marginTop:4,textTransform:"upperca
 function Logo({size=40}){return <svg width={size} height={size} viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="url(#fg2)"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#D62828"/></linearGradient></defs><path d="M25 65 L75 65 L70 55 L65 45 L35 45 L30 55 Z" fill="#FFF" opacity="0.95"/><rect x="40" y="30" width="20" height="18" rx="3" fill="#FFF" opacity="0.95"/><rect x="20" y="65" width="60" height="6" rx="3" fill="#FFF" opacity="0.7"/><circle cx="72" cy="32" r="3" fill="#FFD166"/><circle cx="78" cy="26" r="2" fill="#FFD166" opacity="0.7"/><circle cx="65" cy="28" r="1.5" fill="#FFD166" opacity="0.5"/></svg>}
 
 function TabBar({active,onChange}){
-  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
+  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"health",l:"Salud",i:"\u{1FA7A}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
   return <div style={S.tbar}>{tabs.map(t=><button key={t.id} onClick={()=>onChange(t.id)} style={{...S.tab,...(active===t.id?S.tabA:{})}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontWeight:active===t.id?700:400}}>{t.l}</span></button>)}</div>;
 }
 
@@ -346,36 +467,6 @@ function PlanTab({data,setData}){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===(data.phase||0)?p.c:"#888"}}>{p.ic} {p.name}</span><span style={{fontSize:11,color:"#888"}}>Sem {p.wk} - {p.days}d/sem</span></div>
       </div>)}
     </div>
-  </div>;
-}
-
-// ─── BODY TAB ───
-function BodyTab({data,setData}){
-  const[adding,setAdding]=useState(false);
-  const[vals,setVals]=useState({});
-  const[date,setDate]=useState(td());
-  const[selM,setSelM]=useState(null);
-  const doSave=()=>{const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date,...vals}]};setData(nd);sv(nd);setAdding(false);setVals({})};
-  if(selM){const f=ANTHRO.find(x=>x.id===selM);const pts=(data.anthropometry||[]).filter(a=>a[selM]).sort((a,b)=>a.date.localeCompare(b.date));const vs=pts.map(p=>Number(p[selM]));const mx=vs.length?Math.max(...vs):0;const mn=vs.length?Math.min(...vs):0;const rng=mx-mn||1;
-    return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setSelM(null)} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>{f.l}</h2></div>
-    {pts.length>1&&<div style={S.cd}><h4 style={{fontSize:13,color:"#888",margin:"0 0 12px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCION</h4><div style={{display:"flex",alignItems:"flex-end",gap:4,height:120}}>{pts.map((p,i)=>{const v=Number(p[selM]);const h=((v-mn)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#AAA"}}>{v}</span><div style={{width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#FF6B35,#D62828)",borderRadius:4}}/><span style={{fontSize:8,color:"#666"}}>{p.date.slice(5)}</span></div>})}</div></div>}
-    {pts.map((p,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#888"}}>{fd(p.date)}</span><span style={{fontSize:14,color:"#FF6B35",fontWeight:700}}>{p[selM]} {f.u}</span></div>)}
-    {pts.length===0&&<p style={{color:"#888",textAlign:"center",fontSize:14}}>Sin mediciones.</p>}
-    </div>}
-  if(adding)return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setAdding(false)} style={S.sm}>&#8592;</button><h2 style={S.t1}>Nueva medicion</h2></div>
-    <label style={S.lbl}>Fecha</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
-    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completa solo lo que tengas. No hace falta todo.</p>
-    {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-      <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
-      <input type="number" value={vals[f.id]||""} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
-      <span style={{fontSize:11,color:"#888",width:24}}>{f.u}</span>
-    </div>)}
-    <button onClick={doSave} disabled={!Object.keys(vals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(vals).length?1:0.5}}>Guardar</button>
-  </div>;
-  const latest=(data.anthropometry||[]).length?(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
-  return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4D0}"} Cuerpo</h2><button onClick={()=>setAdding(true)} style={{...S.btn,width:"100%",marginBottom:20}}>+ Nueva medicion</button>
-    {latest&&<div style={{marginBottom:16}}><h3 style={{...S.t1,fontSize:14}}>Ultima medicion - {fd(latest.date)}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}</div></div>}
-    {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Hacete una antropometria con un nutricionista deportivo (certificacion ISAK) y carga los datos aca.</p></div>}
   </div>;
 }
 
@@ -959,22 +1050,717 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
   </div>;
 }
 
+// ─── HEALTH TAB (fusionado: Estudios + Antropometría + Timeline) ───
+function HealthTab({data,setData,apiKey}){
+  const[view,setView]=useState("home"); // home | add | study | timeline | anthro | anthro_add | anthro_detail
+  const[step,setStep]=useState(1);
+  const[studyType,setStudyType]=useState(null);
+  const[studyDate,setStudyDate]=useState(td());
+  const[studyTitle,setStudyTitle]=useState("");
+  const[studyVals,setStudyVals]=useState({});
+  const[studyText,setStudyText]=useState("");
+  const[selPanel,setSelPanel]=useState(null);
+  const[selStudy,setSelStudy]=useState(null);
+  const[aiRes,setAiRes]=useState("");
+  const[aiLoad,setAiLoad]=useState(false);
+  const[timelineMarker,setTimelineMarker]=useState(null);
+  // Anthropometry state
+  const[anthroAdding,setAnthroAdding]=useState(false);
+  const[anthroVals,setAnthroVals]=useState({});
+  const[anthroDate,setAnthroDate]=useState(td());
+  const[selAnthroMetric,setSelAnthroMetric]=useState(null);
+
+  const studies=data.clinicalStudies||[];
+  const stInfo=st=>STUDY_TYPES.find(x=>x.id===st)||STUDY_TYPES[8];
+
+  const resetAdd=()=>{setStep(1);setStudyType(null);setStudyDate(td());setStudyTitle("");setStudyVals({});setStudyText("");setSelPanel(null)};
+
+  const doSave=()=>{
+    const st=stInfo(studyType);
+    const study={
+      id:gi(),date:studyDate,type:studyType,
+      title:studyTitle||st.l,
+      vals:studyVals,
+      text:studyText||null,
+    };
+    const nd={...data,clinicalStudies:[...studies,study]};
+    setData(nd);sv(nd);
+    resetAdd();setView("home");
+  };
+
+  const doDelete=id=>{
+    if(!window.confirm("¿Eliminar este estudio?"))return;
+    const nd={...data,clinicalStudies:studies.filter(s=>s.id!==id)};
+    setData(nd);sv(nd);
+    setSelStudy(null);setView("home");
+  };
+
+  const buildClinicalPrompt=(study)=>{
+    const st=stInfo(study.type);
+    // Collect all values into readable text
+    let valTxt="";
+    if(study.type==="blood"){
+      BLOOD_PANELS.forEach(panel=>{
+        const entries=panel.fields.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="");
+        if(entries.length){
+          valTxt+=`\n${panel.l}:\n`;
+          entries.forEach(f=>{valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;});
+        }
+      });
+    }else if(study.type==="urine"){
+      URINE_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
+        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
+      });
+    }else if(study.type==="spirometry"){
+      SPIROMETRY_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
+        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
+      });
+    }else if(study.type==="sleep"){
+      SLEEP_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
+        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
+      });
+    }
+    if(study.text)valTxt+=`\nInforme/texto libre:\n${study.text}\n`;
+
+    // Previous studies of same type
+    const prev=studies.filter(s=>s.id!==study.id&&s.type===study.type).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+    let prevTxt="";
+    if(prev.length){
+      prevTxt="\n\nESTUDIOS ANTERIORES DEL MISMO TIPO:\n";
+      prev.forEach(p=>{
+        prevTxt+=`\nEstudio del ${fd(p.date)}:\n`;
+        if(p.type==="blood"){
+          BLOOD_PANELS.forEach(panel=>{
+            const entries=panel.fields.filter(f=>p.vals[f.id]!==undefined&&p.vals[f.id]!=="");
+            if(entries.length){
+              prevTxt+=`  ${panel.l}: `;
+              prevTxt+=entries.map(f=>`${f.l}=${p.vals[f.id]}${f.u?" "+f.u:""}`).join(", ")+"\n";
+            }
+          });
+        }
+        if(p.text)prevTxt+=`  Informe: ${p.text.slice(0,200)}...\n`;
+      });
+    }
+
+    // Training context last 30 days
+    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+    const cutStr=cutoff.toISOString().slice(0,10);
+    const recentSessions=(data.sessions||[]).filter(s=>s.date>=cutStr);
+    const recentCardio=(data.cardioSessions||[]).filter(s=>s.date>=cutStr);
+    const recentMeals=(data.meals||[]).filter(m=>m.date>=cutStr);
+    const totalProt=Math.round(recentMeals.filter(m=>m.protein).reduce((s,m)=>s+m.protein,0)/Math.max(recentMeals.length/6,1));
+
+    let ctxTxt=`\nCONTEXTO DEL PACIENTE (últimos 30 días):\n`;
+    ctxTxt+=`- Sesiones de fuerza: ${recentSessions.length}\n`;
+    ctxTxt+=`- Sesiones de cardio: ${recentCardio.length}\n`;
+    ctxTxt+=`- Fase de entrenamiento: ${PHASES[data.phase||0]?.name||"No registrado"}\n`;
+    if(totalProt>0)ctxTxt+=`- Ingesta proteica promedio estimada: ~${totalProt}g/día\n`;
+    ctxTxt+=`- Dieta: pescatariano/plant-based (pescado frecuente, huevos, legumbres, tofu, tempeh; sin cortes de carne vacuno ni cerdo)\n`;
+    const latestAnthro=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(latestAnthro){
+      ctxTxt+=`\nANTROPOMETRÍA (última medición ${fd(latestAnthro.date)}):\n`;
+      if(latestAnthro.weight)ctxTxt+=`- Peso: ${latestAnthro.weight} kg\n`;
+      if(latestAnthro.height)ctxTxt+=`- Talla: ${latestAnthro.height} cm\n`;
+      if(latestAnthro.weight&&latestAnthro.height){const bmi=(latestAnthro.weight/((latestAnthro.height/100)**2)).toFixed(1);ctxTxt+=`- IMC calculado: ${bmi} kg/m²\n`;}
+      if(latestAnthro.body_fat)ctxTxt+=`- % grasa corporal: ${latestAnthro.body_fat}%\n`;
+      if(latestAnthro.muscle_mass)ctxTxt+=`- Masa muscular: ${latestAnthro.muscle_mass} kg\n`;
+      if(latestAnthro.waist_p)ctxTxt+=`- Perímetro cintura: ${latestAnthro.waist_p} cm\n`;
+      if(latestAnthro.hip_p)ctxTxt+=`- Perímetro cadera: ${latestAnthro.hip_p} cm\n`;
+    }
+
+    return `Sos un médico clínico con formación en medicina interna, medicina del deporte y preventiva. Trabajás con las guías actualizadas de las siguientes sociedades científicas internacionales y nacionales:
+
+CARDIOLOGÍA Y METABOLISMO CARDIOVASCULAR:
+- ACC/AHA 2023 (Guías de colesterol, hipertensión, prevención cardiovascular)
+- ESC 2021-2023 (Guías de dislipemia, prevención CV, diabetes cardiovascular)
+- SAC - Sociedad Argentina de Cardiología (Consensos nacionales vigentes)
+- NHLBI / ATP-IV guidelines
+
+DIABETES Y METABOLISMO:
+- ADA Standards of Care 2024 (American Diabetes Association)
+- EASD 2023 (European Association for the Study of Diabetes)
+- SAD - Sociedad Argentina de Diabetes
+- AACE/ACE Comprehensive Diabetes Guidelines 2022
+- Criterios diagnósticos OMS actualizados
+
+TIROIDES Y ENDOCRINOLOGÍA:
+- ATA 2023 (American Thyroid Association)
+- ETA (European Thyroid Association)
+- FASEN / SAEM (Sociedades argentinas de endocrinología)
+- AACE/ACE Endocrine guidelines
+
+FUNCIÓN RENAL:
+- KDIGO 2022 (Kidney Disease: Improving Global Outcomes)
+- ERA (European Renal Association)
+- NKF/KDOQI guidelines
+- SLAN (Sociedad Latinoamericana de Nefrología)
+
+HEMATOLOGÍA:
+- ASH 2023 (American Society of Hematology)
+- BSH (British Society for Haematology)
+- AAHI (Asociación Argentina de Hemato-Inmunología)
+- WHO Blood Disorders guidelines
+
+FUNCIÓN HEPÁTICA:
+- AASLD 2023 (American Association for the Study of Liver Diseases)
+- EASL 2023 (European Association for the Study of the Liver)
+- AANEH (Asociación Argentina de Hepatología)
+
+FUNCIÓN RESPIRATORIA Y ESPIROMETRÍA:
+- ATS/ERS 2022 (Interpretación espirométrica, EPOC, asma)
+- GINA 2023 (Global Initiative for Asthma)
+- GOLD 2024 (Global Initiative for COPD)
+- AAMR / SAER (Sociedades argentinas de neumología)
+- ATS Statement on spirometry interpretation 2022
+
+SUEÑO Y SOH:
+- AASM 2023 (American Academy of Sleep Medicine) - Criterios AASM 2020 para SAOS
+- ESRS (European Sleep Research Society)
+- OSAS severity scoring: leve 5-15, moderado 15-30, grave >30 eventos/h IAH
+- ASAARO (Asociación Argentina de Medicina del Sueño)
+
+MEDICINA DEL DEPORTE Y EJERCICIO:
+- ACSM 2023 (American College of Sports Medicine - Exercise is Medicine)
+- NSCA guidelines para poblaciones entrenadas
+- ESC Sports Cardiology Guidelines 2020
+- FEMEDE (Federación Española de Medicina del Deporte)
+- SAMA (Sociedad Argentina de Medicina del Deporte)
+- Guías de anemia del deportista (ferropenia sin anemia: ferritina <30 en atletas)
+
+VITAMINAS, MICRONUTRIENTES Y NUTRICIÓN CLÍNICA:
+- EFSA 2023 (European Food Safety Authority)
+- Dietary Reference Intakes - NIH/USDA 2020
+- Consenso SLANP/FELANPE para deficiencias nutricionales
+- Vitamina D: Endocrine Society 2024 guidelines (deficiencia <20 ng/mL, insuficiencia 20-30, óptimo >40)
+- Hierro: WHO/INACG guidelines para deficiencia funcional en deportistas
+
+HORMONAS Y EJES ENDÓCRINOS:
+- Endocrine Society Clinical Guidelines 2023
+- ASRM (función reproductiva)
+- ISEAM (medicina deportiva hormonal)
+- Testosterona: rangos de laboratorio + contexto clínico + variación circadiana
+
+INFLAMACIÓN Y RIESGO CARDIOVASCULAR:
+- PCR-us: ACC/AHA Pooled Cohort Equations + Reynolds Risk Score
+- Clasificación de riesgo SCORE2 (ESC 2021)
+- Metainflamación en atletas de alto volumen
+
+LABORATORIO CLÍNICO:
+- CLACB (Confederación Latinoamericana de Bioquímica Clínica)
+- COLABIOCLI (Confederación Latinoamericana de Bioquímica)
+- ISO 15189 para calidad analítica
+- CLIA (Clinical Laboratory Improvement Amendments)
+
+---
+
+ESTUDIO A ANALIZAR:
+Tipo: ${st.l}
+Fecha: ${fd(study.date)}
+${study.title!==st.l?`Título/descripción: ${study.title}\n`:""}
+${valTxt}${prevTxt}${ctxTxt}
+
+---
+
+INSTRUCCIONES DE ANÁLISIS:
+
+1. EVALUACIÓN DE VALORES: Para cada valor registrado, evaluá si está dentro del rango óptimo según las guías más recientes de la sociedad médica más relevante para ese marcador. Indicá claramente cuáles están FUERA de rango con ↑ o ↓, cuáles están en zona de alerta (aunque dentro de rango "normal"), y cuáles son óptimos. Para marcadores con rangos sexo-dependientes o edad-dependientes, aplicá los correctos.
+
+2. INTERACCIONES ENTRE MARCADORES: Si hay múltiples marcadores, analizá las relaciones entre ellos (ej: LDL + HDL + TG + PCR-us juntos dicen más que cada uno por separado; ferritina baja con RDW alto sugiere inicio de ferropenia funcional).
+
+3. TENDENCIAS Y EVOLUCIÓN: Si hay estudios anteriores, analizá la trayectoria temporal. ¿Los valores van mejorando, empeorando o estables? ¿Hay cambios que coincidan con el inicio del entrenamiento o cambios de dieta?
+
+4. CONTEXTO DEPORTE + NUTRICIÓN: Considerá que el paciente entrena fuerza con progresión, es pescatariano/plant-based. ¿El ejercicio puede estar influyendo en estos valores? ¿La dieta puede causar o prevenir algo de lo que se ve? (ej: si hay ferritina baja y es plant-based → riesgo real; si hay creatinina levemente elevada y tiene mucha masa muscular → puede ser fisiológico).
+
+5. RECOMENDACIONES CLÍNICAS CONCRETAS: Sé específico: "Repetir perfil lipídico en 3 meses", "Consultar endocrinólogo por TSH > 4 con síntomas", "Agregar vitamina D 2000 UI/día y controlar en 3 meses", "No requiere acción, seguir con control anual". Priorizá por urgencia.
+
+6. SEMÁFORO GLOBAL AL INICIO DE LA RESPUESTA:
+   🟢 Todo en orden — seguir con controles de rutina
+   🟡 Valores a monitorear — acciones preventivas sugeridas
+   🔴 Requiere atención médica — derivación o intervención recomendada
+
+Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. Directo y clínico. Máximo 450 palabras. No alarmes innecesariamente, pero no minimices hallazgos relevantes. Citá la guía cuando sea pertinente (ej: "según ACC/AHA 2023...").`;
+  };
+
+  const doAnalyze=async(study)=>{
+    if(!apiKey){alert("Necesitás API key en Config.");return;}
+    setAiLoad(true);setAiRes("");
+    try{
+      const prompt=buildClinicalPrompt(study);
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:prompt}]})});
+      const d=await r.json();if(d.error)throw new Error(d.error.message);
+      const txt=d.content?.map(c=>c.text||"").join("")||"Sin respuesta.";
+      // Save analysis to study
+      const nd={...data,clinicalStudies:studies.map(s=>s.id===study.id?{...s,lastAnalysis:{text:txt,date:td()}}:s)};
+      setData(nd);sv(nd);
+      setAiRes(txt);
+    }catch(e){setAiRes("Error: "+e.message);}
+    setAiLoad(false);
+  };
+
+  // ── Timeline view: track a specific blood marker over time ──
+  const getBloodHistory=(markerId)=>{
+    return studies
+      .filter(s=>s.type==="blood"&&s.vals[markerId]!==undefined&&s.vals[markerId]!=="")
+      .sort((a,b)=>a.date.localeCompare(b.date))
+      .map(s=>({date:s.date,val:parseFloat(s.vals[markerId])}))
+      .filter(x=>!isNaN(x.val));
+  };
+
+  const allBloodMarkers=()=>{
+    const markers=new Set();
+    studies.filter(s=>s.type==="blood").forEach(s=>{
+      Object.keys(s.vals).forEach(k=>{if(s.vals[k]!=="")markers.add(k);});
+    });
+    return [...markers];
+  };
+
+  // ── VIEW: ADD STUDY ──
+  if(view==="add"){
+    // Step 1: choose type
+    if(step===1)return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>{resetAdd();setView("home");}} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Nuevo estudio</h2>
+      </div>
+      <p style={{fontSize:13,color:"#888",marginBottom:14}}>¿Qué tipo de estudio querés cargar?</p>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {STUDY_TYPES.map(st=><button key={st.id} onClick={()=>{setStudyType(st.id);setStep(2);}} style={{...S.eo,borderLeft:"3px solid "+st.color}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>{st.i}</span>
+            <span style={{fontSize:15,color:"#FFF",fontWeight:600}}>{st.l}</span>
+          </div>
+          <span style={{color:st.color,fontSize:18}}>&#8594;</span>
+        </button>)}
+      </div>
+    </div>;
+
+    // Step 2: enter data
+    const st=stInfo(studyType);
+    const isFreeText=FREE_TEXT_STUDIES.includes(studyType);
+
+    // Determine fields to show
+    const getFields=()=>{
+      if(studyType==="blood")return null; // handled by panels
+      if(studyType==="urine")return URINE_FIELDS;
+      if(studyType==="spirometry")return SPIROMETRY_FIELDS;
+      if(studyType==="sleep")return SLEEP_FIELDS;
+      return null;
+    };
+    const fields=getFields();
+
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setStep(1)} style={S.sm}>&#8592;</button>
+        <span style={{fontSize:20}}>{st.i}</span>
+        <h2 style={{...S.t1,margin:0}}>{st.l}</h2>
+      </div>
+
+      <label style={S.lbl}>Fecha del estudio</label>
+      <input type="date" value={studyDate} onChange={e=>setStudyDate(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+
+      <label style={S.lbl}>Título / descripción <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(opcional)</span></label>
+      <input value={studyTitle} onChange={e=>setStudyTitle(e.target.value)} placeholder={st.l} style={{...S.inp,marginBottom:16}}/>
+
+      {/* BLOOD: panel selector */}
+      {studyType==="blood"&&<div>
+        <p style={{fontSize:12,color:"#888",marginBottom:10}}>Seleccioná los paneles que tiene tu analítica y completá los valores. Podés dejar en blanco los que no tengas.</p>
+        {BLOOD_PANELS.map(panel=>{
+          const open=selPanel===panel.id;
+          const filled=panel.fields.filter(f=>studyVals[f.id]!==undefined&&studyVals[f.id]!=="").length;
+          return <div key={panel.id} style={{marginBottom:8}}>
+            <button onClick={()=>setSelPanel(open?null:panel.id)} style={{...S.eo,borderLeft:"3px solid "+(filled>0?"#2ECC71":"rgba(255,255,255,0.1)"),marginBottom:0}}>
+              <div>
+                <span style={{fontWeight:700,color:"#FFF"}}>{panel.l}</span>
+                {filled>0&&<span style={{fontSize:11,color:"#2ECC71",marginLeft:8}}>{filled} valor{filled>1?"es":""}</span>}
+              </div>
+              <span style={{fontSize:12,color:"#888"}}>{open?"▲":"▼"}</span>
+            </button>
+            {open&&<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderTop:"none",borderRadius:"0 0 10px 10px",padding:"12px 14px"}}>
+              {panel.fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,color:"#CCC"}}>{f.l}</div>
+                  <div style={{fontSize:10,color:"#555"}}>{f.ref}</div>
+                </div>
+                <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right"}} placeholder="-"/>
+                {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
+              </div>)}
+            </div>}
+          </div>;
+        })}
+      </div>}
+
+      {/* URINE / SPIROMETRY / SLEEP: structured fields */}
+      {fields&&<div>
+        <p style={{fontSize:12,color:"#888",marginBottom:10}}>Completá los valores disponibles en tu informe.</p>
+        {fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:"#CCC"}}>{f.l}</div>
+            {f.ref&&<div style={{fontSize:10,color:"#555"}}>ref: {f.ref}</div>}
+          </div>
+          <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right"}} placeholder="-"/>
+          {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
+        </div>)}
+      </div>}
+
+      {/* Free text: all types get this, but it's the primary for xray/echo/ecg/etc */}
+      <div style={{marginTop:isFreeText?0:16}}>
+        <label style={S.lbl}>
+          {isFreeText?"Texto del informe / hallazgos":"Observaciones / informe adicional"}
+          {!isFreeText&&<span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}> (opcional)</span>}
+        </label>
+        <textarea value={studyText} onChange={e=>setStudyText(e.target.value)}
+          placeholder={isFreeText
+            ?"Pegá aquí el texto del informe o escribí los hallazgos principales. El LLM clínico va a extraer e interpretar los datos."
+            :"Notas adicionales, comentarios del médico, hallazgos relevantes..."}
+          style={{...S.ta,minHeight:isFreeText?160:80}} rows={isFreeText?8:3}/>
+      </div>
+
+      <button onClick={doSave}
+        disabled={studyType==="blood"?Object.keys(studyVals).length===0&&!studyText:(!Object.keys(studyVals).length&&!studyText)}
+        style={{...S.btn,width:"100%",marginTop:16,
+          opacity:(studyType==="blood"?Object.keys(studyVals).length===0&&!studyText:(!Object.keys(studyVals).length&&!studyText))?0.4:1}}>
+        Guardar estudio
+      </button>
+    </div>;
+  }
+
+  // ── VIEW: STUDY DETAIL + ANALYSIS ──
+  if(view==="study"&&selStudy){
+    const st=stInfo(selStudy.type);
+    const analysis=selStudy.lastAnalysis;
+
+    const renderVals=()=>{
+      if(!selStudy.vals||Object.keys(selStudy.vals).length===0)return null;
+      if(selStudy.type==="blood")return BLOOD_PANELS.map(panel=>{
+        const entries=panel.fields.filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
+        if(!entries.length)return null;
+        return <div key={panel.id} style={{marginBottom:12}}>
+          <div style={{fontSize:11,color:"#E74C3C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
+          {entries.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
+            <div style={{textAlign:"right"}}>
+              <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
+              {f.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{f.u}</span>}
+            </div>
+          </div>)}
+        </div>;
+      });
+      const getFields=()=>{
+        if(selStudy.type==="urine")return URINE_FIELDS;
+        if(selStudy.type==="spirometry")return SPIROMETRY_FIELDS;
+        if(selStudy.type==="sleep")return SLEEP_FIELDS;
+        return [];
+      };
+      const fields=getFields().filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
+      return fields.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
+        <div style={{textAlign:"right"}}>
+          <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
+          {f.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{f.u}</span>}
+        </div>
+      </div>);
+    };
+
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+        <button onClick={()=>{setView("home");setSelStudy(null);setAiRes("");}} style={S.sm}>&#8592;</button>
+        <span style={{fontSize:22}}>{st.i}</span>
+        <h2 style={{...S.t1,margin:0,flex:1}}>{selStudy.title}</h2>
+        <button onClick={()=>doDelete(selStudy.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
+      </div>
+      <p style={{fontSize:12,color:"#888",marginBottom:16}}>{fd(selStudy.date)}</p>
+
+      {/* Values */}
+      {Object.keys(selStudy.vals||{}).length>0&&<div style={S.cd}>{renderVals()}</div>}
+
+      {/* Free text informe */}
+      {selStudy.text&&<div style={{...S.cd,marginTop:8}}>
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>INFORME</div>
+        <p style={{fontSize:13,color:"#CCC",lineHeight:1.6,whiteSpace:"pre-wrap",margin:0}}>{selStudy.text}</p>
+      </div>}
+
+      {/* Previous analysis */}
+      {analysis&&!aiRes&&<div style={{...S.aicd,marginTop:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:20}}>🧠</span>
+            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,fontWeight:700,color:"#FF6B35"}}>ANÁLISIS CLÍNICO IA</span>
+          </div>
+          <span style={{fontSize:11,color:"#888"}}>{fd(analysis.date)}</span>
+        </div>
+        <p style={{fontSize:13,lineHeight:1.65,whiteSpace:"pre-wrap",color:"#E0E0E0",margin:0}}>{analysis.text}</p>
+      </div>}
+
+      {/* Fresh analysis result */}
+      {aiRes&&<div style={{...S.aicd,marginTop:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+          <span style={{fontSize:20}}>🧠</span>
+          <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,fontWeight:700,color:"#FF6B35"}}>ANÁLISIS CLÍNICO IA</span>
+        </div>
+        <p style={{fontSize:13,lineHeight:1.65,whiteSpace:"pre-wrap",color:"#E0E0E0",margin:0}}>{aiRes}</p>
+      </div>}
+
+      {/* Analyze button */}
+      <button onClick={()=>doAnalyze(selStudy)} disabled={aiLoad}
+        style={{...S.btn,width:"100%",marginTop:14,opacity:aiLoad?0.6:1,
+          background:aiRes?"rgba(255,107,53,0.15)":"linear-gradient(135deg,#FF6B35,#D62828)",
+          border:aiRes?"1px solid rgba(255,107,53,0.4)":"none",
+          color:aiRes?"#FF6B35":"#FFF"}}>
+        {aiLoad?"⏳ Analizando con guías clínicas...":(aiRes||analysis)?"🔄 Re-analizar":"🧠 Analizar con IA clínica"}
+      </button>
+      {!apiKey&&<p style={{fontSize:11,color:"#666",textAlign:"center",marginTop:6}}>Necesitás API key en Config.</p>}
+    </div>;
+  }
+
+  // ── VIEW: TIMELINE ──
+  if(view==="timeline"){
+    const markers=allBloodMarkers();
+    if(timelineMarker){
+      const hist=getBloodHistory(timelineMarker);
+      const field=BLOOD_PANELS.flatMap(p=>p.fields).find(f=>f.id===timelineMarker)||{l:timelineMarker,u:"",ref:""};
+      const vals=hist.map(h=>h.val);
+      const mx=vals.length?Math.max(...vals):1,mn=vals.length?Math.min(...vals):0;
+      const rng=mx-mn||1;
+      return <div style={S.pg}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+          <button onClick={()=>setTimelineMarker(null)} style={S.sm}>&#8592;</button>
+          <h2 style={{...S.t1,margin:0}}>{field.l}</h2>
+        </div>
+        {field.ref&&<div style={{...S.cd,borderLeft:"3px solid rgba(255,255,255,0.2)",marginBottom:16}}>
+          <span style={{fontSize:11,color:"#888"}}>Referencia: </span>
+          <span style={{fontSize:12,color:"#CCC"}}>{field.ref}</span>
+          {field.u&&<span style={{fontSize:11,color:"#666"}}> ({field.u})</span>}
+        </div>}
+        {hist.length>1&&<div style={{...S.cd,marginBottom:12}}>
+          <h4 style={{fontSize:12,color:"#888",margin:"0 0 14px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCIÓN</h4>
+          <div style={{display:"flex",alignItems:"flex-end",gap:4,height:130}}>
+            {hist.map((h,i)=>{const hPct=((h.val-mn)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <span style={{fontSize:10,color:"#FFF",fontWeight:700}}>{h.val}</span>
+              <div style={{width:"100%",height:hPct+"%",minHeight:4,background:"linear-gradient(180deg,#1ABC9C,#16A085)",borderRadius:4}}/>
+              <span style={{fontSize:8,color:"#666"}}>{h.date.slice(5)}</span>
+            </div>;})}
+          </div>
+        </div>}
+        {hist.length<=1&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Necesitás al menos 2 estudios con este marcador para ver la evolución.</p></div>}
+        {hist.map((h,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}>
+          <span style={{fontSize:13,color:"#888"}}>{fd(h.date)}</span>
+          <div>
+            <span style={{fontSize:16,color:"#1ABC9C",fontWeight:700}}>{h.val}</span>
+            {field.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{field.u}</span>}
+          </div>
+        </div>)}
+      </div>;
+    }
+    // Marker selector
+    if(!markers.length)return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Timeline de marcadores</h2>
+      </div>
+      <div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Todavía no hay analíticas de sangre cargadas para trackear evolución.</p></div>
+    </div>;
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>📈 Timeline de marcadores</h2>
+      </div>
+      <p style={{fontSize:12,color:"#888",marginBottom:14}}>Seleccioná un marcador para ver su evolución en el tiempo.</p>
+      {BLOOD_PANELS.map(panel=>{
+        const available=panel.fields.filter(f=>markers.includes(f.id));
+        if(!available.length)return null;
+        return <div key={panel.id} style={{marginBottom:14}}>
+          <div style={{fontSize:11,color:"#E74C3C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
+          {available.map(f=>{
+            const hist=getBloodHistory(f.id);
+            return <button key={f.id} onClick={()=>setTimelineMarker(f.id)} style={{...S.eo,marginBottom:4}}>
+              <span style={{fontSize:13}}>{f.l}</span>
+              <div style={{textAlign:"right"}}>
+                {hist.length>0&&<span style={{fontSize:13,color:"#1ABC9C",fontWeight:700}}>{hist.at(-1).val} {f.u}</span>}
+                <span style={{fontSize:11,color:"#888",marginLeft:6}}>{hist.length} dato{hist.length!==1?"s":""}</span>
+              </div>
+            </button>;
+          })}
+        </div>;
+      })}
+    </div>;
+  }
+
+  // ── ANTHROPOMETRY: detail for one metric ──
+  if(view==="anthro_detail"&&selAnthroMetric){
+    const f=ANTHRO.find(x=>x.id===selAnthroMetric);
+    const pts=(data.anthropometry||[]).filter(a=>a[selAnthroMetric]).sort((a,b)=>a.date.localeCompare(b.date));
+    const vs=pts.map(p=>Number(p[selAnthroMetric]));
+    const mx=vs.length?Math.max(...vs):0,mn2=vs.length?Math.min(...vs):0,rng=mx-mn2||1;
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>{setSelAnthroMetric(null);setView("anthro");}} style={S.sm}>&#8592;</button>
+        <h2 style={{...S.t1,margin:0}}>{f.l}</h2>
+      </div>
+      {pts.length>1&&<div style={S.cd}>
+        <h4 style={{fontSize:12,color:"#888",margin:"0 0 12px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCIÓN</h4>
+        <div style={{display:"flex",alignItems:"flex-end",gap:4,height:120}}>
+          {pts.map((p,i)=>{const v=Number(p[selAnthroMetric]);const h=((v-mn2)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+            <span style={{fontSize:10,color:"#AAA"}}>{v}</span>
+            <div style={{width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#FF6B35,#D62828)",borderRadius:4}}/>
+            <span style={{fontSize:8,color:"#666"}}>{p.date.slice(5)}</span>
+          </div>;})}
+        </div>
+      </div>}
+      {pts.map((p,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}>
+        <span style={{fontSize:13,color:"#888"}}>{fd(p.date)}</span>
+        <span style={{fontSize:14,color:"#FF6B35",fontWeight:700}}>{p[selAnthroMetric]} {f.u}</span>
+      </div>)}
+      {pts.length===0&&<p style={{color:"#888",textAlign:"center",fontSize:14}}>Sin mediciones todavía.</p>}
+    </div>;
+  }
+
+  // ── ANTHROPOMETRY: add new measurement ──
+  if(view==="anthro_add"){
+    const doSaveAnthro=()=>{
+      const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date:anthroDate,...anthroVals}]};
+      setData(nd);sv(nd);setAnthroVals({});setView("anthro");
+    };
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("anthro")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Nueva medición</h2>
+      </div>
+      <label style={S.lbl}>Fecha</label>
+      <input type="date" value={anthroDate} onChange={e=>setAnthroDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
+      <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completá solo lo que tengas. No hace falta todo.</p>
+      {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
+        <input type="number" value={anthroVals[f.id]||""} onChange={e=>{const nv={...anthroVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setAnthroVals(nv);}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
+        <span style={{fontSize:11,color:"#888",width:24}}>{f.u}</span>
+      </div>)}
+      <button onClick={doSaveAnthro} disabled={!Object.keys(anthroVals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(anthroVals).length?1:0.5}}>Guardar</button>
+    </div>;
+  }
+
+  // ── ANTHROPOMETRY: main view ──
+  if(view==="anthro"){
+    const allMeasurements=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date));
+    const latest=allMeasurements[0]||null;
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>📐 Antropometría</h2>
+      </div>
+      <button onClick={()=>setView("anthro_add")} style={{...S.btn,width:"100%",marginBottom:16}}>+ Nueva medición</button>
+      {!latest&&<div style={S.cd}>
+        <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Cargá tus mediciones antropométricas — peso, perímetros, pliegues y composición corporal. Idealmente con un profesional con certificación ISAK.</p>
+      </div>}
+      {latest&&<div style={{marginBottom:16}}>
+        <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          {ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>{setSelAnthroMetric(f.id);setView("anthro_detail");}} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0,textAlign:"left"}}>
+            <span style={{fontSize:11,color:"#888",display:"block"}}>{f.l}</span>
+            <span style={{...S.stv,fontSize:20,marginTop:4,display:"block"}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span>
+          </button>)}
+        </div>
+      </div>}
+      {allMeasurements.length>1&&<div>
+        <h3 style={{...S.t1,fontSize:14}}>Historial</h3>
+        {allMeasurements.slice(1).map((m,i)=><div key={i} style={{...S.cd,padding:12}}>
+          <div style={{fontSize:12,color:"#888",marginBottom:6}}>{fd(m.date)}</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+            {ANTHRO.filter(f=>m[f.id]).map(f=><span key={f.id} style={{fontSize:12,color:"#CCC"}}>{f.l}: <span style={{color:"#FF6B35",fontWeight:700}}>{m[f.id]}{f.u}</span></span>)}
+          </div>
+        </div>)}
+      </div>}
+    </div>;
+  }
+
+  // ── VIEW: HOME ──
+  const byType={};
+  studies.forEach(s=>{if(!byType[s.type])byType[s.type]=[];byType[s.type].push(s);});
+  const lastStudy=studies.length?studies.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+
+  return <div style={S.pg}>
+    <h2 style={S.t1}>🩺 Salud</h2>
+
+    {/* Quick actions */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+      <button onClick={()=>setView("add")} style={{...S.btn,padding:"14px 12px",fontSize:14}}>+ Cargar estudio</button>
+      <button onClick={()=>setView("timeline")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"14px 12px",border:"1px solid rgba(26,188,156,0.3)"}}>
+        <div style={{fontSize:20,marginBottom:2}}>📈</div>
+        <div style={{fontSize:12,color:"#1ABC9C",fontWeight:600}}>Timeline</div>
+      </button>
+    </div>
+
+    {/* Anthropometry card */}
+    {(()=>{
+      const latest=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;
+      return <button onClick={()=>setView("anthro")} style={{...S.cd,cursor:"pointer",width:"100%",textAlign:"left",marginBottom:14,borderLeft:"3px solid #FF6B35",display:"block"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:20}}>📐</span>
+            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:15,color:"#FFF",fontWeight:700}}>Antropometría</span>
+          </div>
+          <span style={{fontSize:18,color:"#FF6B35"}}>&#8594;</span>
+        </div>
+        {latest?<div style={{display:"flex",gap:16,marginTop:8,flexWrap:"wrap"}}>
+          {latest.weight&&<span style={{fontSize:12,color:"#CCC"}}>Peso: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.weight} kg</span></span>}
+          {latest.body_fat&&<span style={{fontSize:12,color:"#CCC"}}>%Grasa: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.body_fat}%</span></span>}
+          {latest.muscle_mass&&<span style={{fontSize:12,color:"#CCC"}}>Masa musc: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.muscle_mass} kg</span></span>}
+          <span style={{fontSize:11,color:"#888"}}>{fd(latest.date)}</span>
+        </div>:<p style={{fontSize:12,color:"#666",margin:"6px 0 0"}}>Sin mediciones. Tocá para cargar.</p>}
+      </button>;
+    })()}
+
+    {/* Cross-context summary */}
+    {studies.length>0&&<div style={{...S.cd,borderLeft:"3px solid rgba(26,188,156,0.4)",background:"rgba(26,188,156,0.04)",marginBottom:14}}>
+      <div style={{fontSize:11,color:"#1ABC9C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>CONTEXTO INTEGRADO</div>
+      <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{studies.length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Estudios</span></div>
+        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.anthropometry||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Mediciones</span></div>
+        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.sessions||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Sesiones</span></div>
+        {lastStudy&&<div><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Último estudio:</span><span style={{fontSize:12,color:"#CCC"}}>{fd(lastStudy.date)}</span></div>}
+      </div>
+    </div>}
+
+    {/* Studies by type */}
+    {studies.length===0&&(data.anthropometry||[]).length===0&&<div style={S.cd}>
+      <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Cargá tus estudios clínicos y mediciones antropométricas. El médico IA los analiza con guías ACC/AHA, ESC, ADA, ERS, AASM, SAC y más.</p>
+    </div>}
+
+    {Object.entries(byType).map(([type,sts])=>{
+      const st=stInfo(type);
+      const sorted=[...sts].sort((a,b)=>b.date.localeCompare(a.date));
+      return <div key={type} style={{marginBottom:16}}>
+        <div style={{fontSize:11,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",color:st.color,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:14}}>{st.i}</span>{st.l}
+          <span style={{fontSize:10,color:"#666",marginLeft:4}}>({sorted.length})</span>
+        </div>
+        {sorted.map(s=><button key={s.id} onClick={()=>{setSelStudy({...s,lastAnalysis:s.lastAnalysis});setView("study");setAiRes("");}} style={{...S.eo,marginBottom:5,borderLeft:"3px solid "+st.color}}>
+          <div>
+            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{s.title}</div>
+            <div style={{fontSize:12,color:"#888",marginTop:2}}>{fd(s.date)}</div>
+            {s.lastAnalysis&&<div style={{fontSize:11,color:"#FF6B35",marginTop:2}}>🧠 Analizado {fd(s.lastAnalysis.date)}</div>}
+          </div>
+          <span style={{color:st.color,fontSize:18}}>&#8594;</span>
+        </button>)}
+      </div>;
+    })}
+  </div>;
+}
+
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
-    <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>ENTRENA CON CIENCIA</span></div>
+    <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>SALUD CON CIENCIA</span></div>
     <div style={S.cnt}>
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
-      {tab==="body"&&<BodyTab data={data} setData={setData}/>}
+      {tab==="health"&&<HealthTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
-      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/>}
+      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/> }
     </div>
     <TabBar active={tab} onChange={setTab}/>
   </div>;
