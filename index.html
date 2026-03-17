@@ -73,23 +73,29 @@ const ANTHRO=[
 
 // ─── CLINICAL STUDIES CONSTANTS ───
 const STUDY_TYPES=[
-  {id:"blood",      l:"Analítica de sangre",         i:"🩸", color:"#E74C3C", group:"lab"},
-  {id:"urine",      l:"Analítica de orina",          i:"🧪", color:"#F39C12", group:"lab"},
-  {id:"digestive",  l:"Estudio digestivo",           i:"🫃", color:"#8B4513", group:"digestive"},
-  {id:"urology",    l:"Estudio urológico",           i:"🫘", color:"#E67E22", group:"urology"},
-  {id:"gynecology", l:"Estudio ginecológico",        i:"🌸", color:"#FF69B4", group:"gynecology"},
-  {id:"neurology",  l:"Estudio neurológico",         i:"🧠", color:"#8E44AD", group:"neurology"},
-  {id:"ophthalmology",l:"Estudio oftalmológico",     i:"👁️", color:"#2980B9", group:"ophthalmology"},
-  {id:"ent",        l:"ORL — Otorrinolaringología",  i:"👂", color:"#27AE60", group:"ent"},
-  {id:"spirometry", l:"Espirometría",                i:"🫁", color:"#3498DB", group:"resp"},
-  {id:"sleep",      l:"Polisomnografía / PSG",       i:"😴", color:"#9B59B6", group:"sleep"},
-  {id:"echo",       l:"Ecocardiograma",              i:"❤️", color:"#E91E63", group:"cardio"},
-  {id:"ecg",        l:"ECG",                         i:"📈", color:"#1ABC9C", group:"cardio"},
-  {id:"xray",       l:"Radiografía",                 i:"🩻", color:"#95A5A6", group:"imaging"},
-  {id:"ultrasound", l:"Ecografía",                   i:"🔵", color:"#2980B9", group:"imaging"},
-  {id:"mammo",      l:"Mamografía",                  i:"🩷", color:"#C0392B", group:"gynecology"},
-  {id:"dexa",       l:"Densitometría ósea (DEXA)",   i:"🦴", color:"#BDC3C7", group:"bone"},
-  {id:"other",      l:"Otro estudio",                i:"📄", color:"#7F8C8D", group:"other"},
+  {id:"blood",        l:"Analítica de sangre",              i:"🩸", color:"#E74C3C", group:"lab"},
+  {id:"urine",        l:"Analítica de orina",               i:"🧪", color:"#F39C12", group:"lab"},
+  {id:"digestive",    l:"Estudio digestivo / hepático",     i:"👅", color:"#8B4513", group:"digestive"},
+  {id:"nephrology",   l:"Estudio nefrológico",              i:"💧", color:"#1A6B8A", group:"nephrology"},
+  {id:"urology",      l:"Estudio urológico",                i:"🫘", color:"#E67E22", group:"urology"},
+  {id:"gynecology",   l:"Estudio ginecológico",             i:"🌸", color:"#FF69B4", group:"gynecology"},
+  {id:"dermatology",  l:"Estudio dermatológico",            i:"🧴", color:"#D4A017", group:"dermatology"},
+  {id:"traumatology", l:"Traumatología / Ortopedia",        i:"🦴", color:"#626567", group:"traumatology"},
+  {id:"neurology",    l:"Estudio neurológico",              i:"🧠", color:"#8E44AD", group:"neurology"},
+  {id:"ophthalmology",l:"Estudio oftalmológico",            i:"👁️", color:"#2980B9", group:"ophthalmology"},
+  {id:"ent",          l:"ORL — Otorrinolaringología",       i:"👂", color:"#27AE60", group:"ent"},
+  {id:"psychiatry",   l:"Psiquiatría / Salud mental",       i:"🧘", color:"#5D6D7E", group:"psychiatry"},
+  {id:"dentistry",    l:"Odontología",                      i:"🦷", color:"#85C1E9", group:"dentistry"},
+  {id:"nutrition",    l:"Nutrición clínica / Metabólico",   i:"⚖️", color:"#FF6B35", group:"nutrition"},
+  {id:"spirometry",   l:"Espirometría",                     i:"🫁", color:"#3498DB", group:"resp"},
+  {id:"sleep",        l:"Polisomnografía / PSG",            i:"😴", color:"#9B59B6", group:"sleep"},
+  {id:"echo",         l:"Ecocardiograma",                   i:"❤️", color:"#E91E63", group:"cardio"},
+  {id:"ecg",          l:"ECG / Holter / Ergometría",        i:"📈", color:"#1ABC9C", group:"cardio"},
+  {id:"xray",         l:"Radiografía",                      i:"🩻", color:"#95A5A6", group:"imaging"},
+  {id:"ultrasound",   l:"Ecografía",                        i:"🔵", color:"#2980B9", group:"imaging"},
+  {id:"mammo",        l:"Mamografía",                       i:"🩷", color:"#C0392B", group:"gynecology"},
+  {id:"dexa",         l:"Densitometría ósea (DEXA)",        i:"📐", color:"#BDC3C7", group:"bone"},
+  {id:"other",        l:"Otro estudio",                     i:"📄", color:"#7F8C8D", group:"other"},
 ];
 // Sub-tipos de estudios digestivos (para el selector interno)
 const DIGESTIVE_SUBTYPES=[
@@ -352,7 +358,199 @@ const DEXA_FIELDS=[
   {id:"dexa_musculo",   l:"Masa magra total",       u:"kg",        ref:"Variable"},
   {id:"dexa_almi",      l:"ALMI (índice masa apendicular)",u:"kg/m²",ref:"H:≥7.0; M:≥5.5"},
 ];
-const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","urology","gynecology","neurology","ophthalmology","ent","mammo","dexa","other"];
+const NEPHROLOGY_FIELDS=[
+  // Función renal avanzada
+  {id:"neph_egfr",      l:"eFG (CKD-EPI 2021)",       u:"mL/min/1.73m²", ref:"≥60 (G1:≥90; G2:60-89; G3a:45-59; G3b:30-44; G4:15-29; G5:<15)"},
+  {id:"neph_creat",     l:"Creatinina sérica",         u:"mg/dL",         ref:"H:0.7-1.2 / M:0.5-1.0"},
+  {id:"neph_cistat",    l:"Cistatina C",               u:"mg/L",          ref:"0.62-1.15"},
+  {id:"neph_urea",      l:"Urea",                      u:"mg/dL",         ref:"10-50"},
+  {id:"neph_bun",       l:"BUN",                       u:"mg/dL",         ref:"7-25"},
+  // Proteinuria
+  {id:"neph_microalb",  l:"Microalbuminuria (orina 24h)",u:"mg/24h",      ref:"<30 normal; 30-300 micro; >300 macroalbuminuria"},
+  {id:"neph_prot_creat",l:"Índice prot/creatinina",    u:"mg/g",          ref:"<150 normal; >300 nefrótico"},
+  {id:"neph_prot_24h",  l:"Proteinuria 24h",           u:"g/24h",         ref:"<0.15"},
+  {id:"neph_alb_creat", l:"Índice alb/creatinina (ACR)",u:"mg/g Cr",      ref:"<30 A1; 30-300 A2; >300 A3"},
+  // Electrolitos y ácido-base
+  {id:"neph_sodium",    l:"Sodio",                     u:"mEq/L",         ref:"135-145"},
+  {id:"neph_potass",    l:"Potasio",                   u:"mEq/L",         ref:"3.5-5.1"},
+  {id:"neph_bicarb",    l:"Bicarbonato",               u:"mEq/L",         ref:"22-26"},
+  {id:"neph_ph_a",      l:"pH arterial",               u:"",              ref:"7.35-7.45"},
+  {id:"neph_phos",      l:"Fósforo",                   u:"mg/dL",         ref:"2.5-4.5"},
+  {id:"neph_pth",       l:"PTH intacta",               u:"pg/mL",         ref:"15-65"},
+  {id:"neph_uricacid",  l:"Ácido úrico",               u:"mg/dL",         ref:"H:3.4-7 / M:2.4-5.7"},
+  // Biopsia renal / Sedimento
+  {id:"neph_sediment",  l:"Sedimento urinario",        u:"",              ref:"Normal (sin cilindros patológicos)"},
+  {id:"neph_hematuria", l:"Hematuria",                 u:"/campo",        ref:"<3 eritrocitos/campo"},
+  {id:"neph_cylinders", l:"Cilindros",                 u:"",              ref:"Ausentes (patológicos)"},
+];
+const DERMATOLOGY_FIELDS=[
+  // Biopsia / histología
+  {id:"derm_biopsy",    l:"Resultado biopsia cutánea", u:"",              ref:""},
+  {id:"derm_histology", l:"Histología",                u:"",              ref:""},
+  {id:"derm_breslow",   l:"Índice de Breslow (melanoma)",u:"mm",          ref:"<0.8mm T1a; 0.8-1mm T1b; 1-2mm T2; 2-4mm T3; >4mm T4"},
+  {id:"derm_clark",     l:"Nivel de Clark",            u:"",              ref:"I-V"},
+  {id:"derm_ulcer",     l:"Ulceración",                u:"",              ref:"Ausente"},
+  {id:"derm_mitosis",   l:"Índice mitótico",           u:"/mm²",         ref:"<1 bajo riesgo"},
+  // Dermatoscopía
+  {id:"derm_dermato",   l:"Dermatoscopía resultado",   u:"",              ref:""},
+  {id:"derm_pattern",   l:"Patrón dermatoscópico",     u:"",              ref:""},
+  // Laboratorio específico
+  {id:"derm_ige",       l:"IgE total",                 u:"UI/mL",         ref:"<100 (varía por edad)"},
+  {id:"derm_ige_spec",  l:"IgE específica (alérgeno)", u:"kU/L",          ref:"<0.35 clase 0 (negativo)"},
+  {id:"derm_prick",     l:"Prick test resultado",      u:"",              ref:"Negativo"},
+  {id:"derm_ana",       l:"ANA (anticuerpos antinucleares)",u:"título",   ref:"<1:80 negativo"},
+  {id:"derm_ena",       l:"ENA (anti-Ro, La, Sm, RNP)",u:"",             ref:"Negativos"},
+  {id:"derm_imunofl",   l:"Inmunofluorescencia directa",u:"",             ref:"Negativa"},
+  // Cultivos
+  {id:"derm_culture",   l:"Cultivo micológico/bacteriano",u:"",           ref:"Negativo"},
+  {id:"derm_koh",       l:"Examen directo KOH",        u:"",              ref:"Negativo"},
+];
+const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","nephrology","urology","gynecology","dermatology","traumatology","neurology","ophthalmology","ent","psychiatry","dentistry","nutrition","mammo","dexa","other"];
+
+const TRAUMA_FIELDS=[
+  // Imágenes articulares
+  {id:"tr_study",     l:"Tipo de estudio",              u:"",        ref:""},
+  {id:"tr_region",    l:"Región anatómica",             u:"",        ref:""},
+  {id:"tr_mri",       l:"RMN resultado",                u:"",        ref:"Normal"},
+  {id:"tr_ct",        l:"TC resultado",                 u:"",        ref:"Normal"},
+  {id:"tr_rx",        l:"Radiografía resultado",        u:"",        ref:"Normal"},
+  {id:"tr_artro",     l:"Artroscopía resultado",        u:"",        ref:""},
+  // Columna
+  {id:"tr_disc",      l:"Discopatía / Hernia discal",   u:"",        ref:"Ausente"},
+  {id:"tr_stenosis",  l:"Estenosis de canal",           u:"",        ref:"Ausente"},
+  {id:"tr_spondy",    l:"Espondilolistesis",            u:"",        ref:"Ausente (grado I-IV si presente)"},
+  // Rodilla
+  {id:"tr_meniscus",  l:"Meniscos",                     u:"",        ref:"Íntegros"},
+  {id:"tr_lca",       l:"LCA",                          u:"",        ref:"Íntegro"},
+  {id:"tr_lcp",       l:"LCP",                          u:"",        ref:"Íntegro"},
+  {id:"tr_cartilage", l:"Cartílago articular",          u:"",        ref:"Normal (Outerbridge I-IV si lesión)"},
+  // Hombro
+  {id:"tr_rotator",   l:"Manguito rotador",             u:"",        ref:"Íntegro"},
+  {id:"tr_labrum",    l:"Labrum glenoideo",             u:"",        ref:"Íntegro"},
+  // General
+  {id:"tr_fracture",  l:"Fractura",                     u:"",        ref:"Ausente"},
+  {id:"tr_edema",     l:"Edema óseo / Contusión",       u:"",        ref:"Ausente"},
+  {id:"tr_effusion",  l:"Derrame articular",            u:"mL",      ref:"Ausente"},
+  {id:"tr_kellgren",  l:"Escala Kellgren-Lawrence (OA)",u:"grado",   ref:"0 normal; I-IV si artrosis"},
+];
+const PSYCH_FIELDS=[
+  // Escalas validadas
+  {id:"ps_phq9",      l:"PHQ-9 (depresión)",            u:"pts",     ref:"0-4 mín; 5-9 leve; 10-14 mod; 15-19 mod-grav; ≥20 grave"},
+  {id:"ps_gad7",      l:"GAD-7 (ansiedad)",             u:"pts",     ref:"0-4 mín; 5-9 leve; 10-14 mod; ≥15 grave"},
+  {id:"ps_psqi",      l:"PSQI (calidad sueño)",         u:"pts",     ref:"≤5 buena calidad; >5 mala calidad"},
+  {id:"ps_bdi",       l:"BDI-II (Beck depresión)",      u:"pts",     ref:"0-13 mín; 14-19 leve; 20-28 mod; 29-63 grave"},
+  {id:"ps_bai",       l:"BAI (Beck ansiedad)",          u:"pts",     ref:"0-7 mín; 8-15 leve; 16-25 mod; 26-63 grave"},
+  {id:"ps_ymrs",      l:"YMRS (manía)",                 u:"pts",     ref:"<12 remisión; 12-19 leve; 20-25 mod; >25 grave"},
+  {id:"ps_panss",     l:"PANSS (psicosis)",             u:"pts",     ref:"30-58 leve; 59-75 mod; 76-90 mod-grav; >90 grave"},
+  {id:"ps_audit",     l:"AUDIT (alcohol)",              u:"pts",     ref:"0-7 bajo riesgo; 8-15 riesgo; 16-19 dañino; ≥20 dependencia"},
+  {id:"ps_cage",      l:"CAGE (alcohol)",               u:"pts",     ref:"0-1 normal; ≥2 sospecha dependencia"},
+  {id:"ps_dass21",    l:"DASS-21",                      u:"pts",     ref:"Depresión/ansiedad/estrés: normal <10/<8/<15"},
+  {id:"ps_pcl5",      l:"PCL-5 (PTSD)",                u:"pts",     ref:"≥33 sospecha PTSD"},
+  {id:"ps_oci",       l:"OCI-R (TOC)",                  u:"pts",     ref:"≥21 sospecha TOC"},
+  {id:"ps_adhd",      l:"ASRS-v1.1 (ADHD adultos)",    u:"pts",     ref:"≥4 en parte A sospecha ADHD"},
+  {id:"ps_mmse",      l:"MMSE (deterioro cognitivo)",   u:"pts",     ref:"≥27 normal; 21-26 leve; 11-20 mod; ≤10 grave"},
+  {id:"ps_moca",      l:"MoCA (deterioro cognitivo)",   u:"pts",     ref:"≥26 normal; <26 sospecha deterioro"},
+  // EEG / neuroimagen funcional
+  {id:"ps_eeg",       l:"EEG psiquiátrico",             u:"",        ref:"Normal"},
+  {id:"ps_dx",        l:"Diagnóstico DSM-5 / CIE-11",  u:"",        ref:""},
+];
+const DENT_FIELDS=[
+  {id:"dt_study",     l:"Tipo de estudio",              u:"",        ref:""},
+  // Radiografías
+  {id:"dt_panoramic", l:"Radiografía panorámica",       u:"",        ref:"Normal"},
+  {id:"dt_periapical",l:"Radiografía periapical",       u:"",        ref:"Normal"},
+  {id:"dt_bite",      l:"Radiografía bite-wing",        u:"",        ref:"Sin caries interproximales"},
+  {id:"dt_cbct",      l:"CBCT / TC dental",             u:"",        ref:"Normal"},
+  // Estado dental
+  {id:"dt_caries",    l:"Índice CPOD",                  u:"",        ref:"0 muy bajo; 1-3 bajo; 4-6 mod; ≥7 alto (OMS)"},
+  {id:"dt_perio",     l:"Profundidad bolsas (perio)",   u:"mm",      ref:"≤3mm normal; 4-5 leve; 6-7 mod; ≥8 grave"},
+  {id:"dt_cal",       l:"Pérdida adherencia clínica",   u:"mm",      ref:"0 sin pérdida"},
+  {id:"dt_bop",       l:"Sangrado al sondaje (BOP)",    u:"%",       ref:"<10%"},
+  {id:"dt_plaque",    l:"Índice de placa",              u:"%",       ref:"<20% aceptable"},
+  {id:"dt_wisdom",    l:"Estado de terceros molares",   u:"",        ref:""},
+  {id:"dt_implant",   l:"Estado implantes",             u:"",        ref:"Osteointegrados sin pérdida ósea"},
+  {id:"dt_occlusion", l:"Oclusión",                     u:"",        ref:"Clase I molar/canina ideal"},
+  {id:"dt_bruxism",   l:"Bruxismo / ATM",               u:"",        ref:"Sin hallazgos"},
+  {id:"dt_saliva",    l:"pH salival / flujo",           u:"",        ref:"pH 6.5-7.5; flujo ≥0.3 mL/min estimulado"},
+];
+const ECG_ADV_FIELDS=[
+  // ECG básico
+  {id:"ecg_hr",       l:"Frecuencia cardíaca",          u:"lpm",     ref:"60-100"},
+  {id:"ecg_pr",       l:"Intervalo PR",                 u:"ms",      ref:"120-200"},
+  {id:"ecg_qrs",      l:"QRS",                          u:"ms",      ref:"<120"},
+  {id:"ecg_qt",       l:"QT / QTc",                     u:"ms",      ref:"QTc H:<450; M:<460"},
+  {id:"ecg_axis",     l:"Eje eléctrico",                u:"°",       ref:"-30° a +90°"},
+  {id:"ecg_rhythm",   l:"Ritmo",                        u:"",        ref:"Sinusal"},
+  {id:"ecg_result",   l:"Conclusión ECG",               u:"",        ref:"Normal"},
+  // Holter
+  {id:"holt_hr_min",  l:"Holter — FC mínima",           u:"lpm",     ref:""},
+  {id:"holt_hr_max",  l:"Holter — FC máxima",           u:"lpm",     ref:""},
+  {id:"holt_pauses",  l:"Holter — Pausas (>2.5s)",      u:"n°",      ref:"0"},
+  {id:"holt_sve",     l:"Holter — Extrasístoles SV",    u:"n°/24h",  ref:"<1% del total"},
+  {id:"holt_ve",      l:"Holter — Extrasístoles V",     u:"n°/24h",  ref:"<1% (>10% frecuentes)"},
+  {id:"holt_tv",      l:"Holter — TV sostenida",        u:"",        ref:"Ausente"},
+  {id:"holt_fa",      l:"Holter — FA paroxística",      u:"",        ref:"Ausente"},
+  {id:"holt_result",  l:"Holter — Conclusión",          u:"",        ref:"Normal"},
+  // Ergometría / Test de esfuerzo
+  {id:"ergo_protocol",l:"Ergometría — protocolo",       u:"",        ref:"Bruce / modificado"},
+  {id:"ergo_mets",    l:"METs alcanzados",              u:"METs",    ref:"≥10 buena capacidad"},
+  {id:"ergo_fc_max",  l:"% FC máxima alcanzada",        u:"%",       ref:"≥85% submáxima"},
+  {id:"ergo_st",      l:"Cambios ST",                   u:"mm",      ref:"Sin descenso >1mm"},
+  {id:"ergo_symptoms",l:"Síntomas durante esfuerzo",    u:"",        ref:"Asintomático"},
+  {id:"ergo_result",  l:"Ergometría — conclusión",      u:"",        ref:"Negativa para isquemia"},
+  // Ecocardiograma
+  {id:"echo_fevi",    l:"FEVI (fracción eyección VI)",  u:"%",       ref:"≥55%"},
+  {id:"echo_dtdvi",   l:"Diámetro VI diastólico",       u:"mm",      ref:"H:42-59; M:39-53"},
+  {id:"echo_septum",  l:"Grosor septo IV",              u:"mm",      ref:"6-11"},
+  {id:"echo_pp",      l:"Grosor pared posterior",       u:"mm",      ref:"6-11"},
+  {id:"echo_ai",      l:"Diámetro aurícula izquierda",  u:"mm",      ref:"<40"},
+  {id:"echo_ao",      l:"Diámetro aorta",               u:"mm",      ref:"H:<40; M:<38"},
+  {id:"echo_valves",  l:"Válvulas",                     u:"",        ref:"Sin estenosis ni insuficiencia relevante"},
+  {id:"echo_paps",    l:"PAPS estimada (TT)",           u:"mmHg",    ref:"<35"},
+  {id:"echo_peri",    l:"Pericardio",                   u:"",        ref:"Sin derrame"},
+];
+const NUTRITION_FIELDS=[
+  // Antropometría completa (migrado desde BodyTab)
+  {id:"weight",       l:"Peso",                         u:"kg",      ref:""},
+  {id:"height",       l:"Talla",                        u:"cm",      ref:""},
+  {id:"bmi",          l:"IMC",                          u:"kg/m²",   ref:"18.5-24.9 normal; 25-29.9 sobrepeso; ≥30 obesidad"},
+  {id:"chest_p",      l:"Perímetro pecho",              u:"cm",      ref:""},
+  {id:"waist_p",      l:"Perímetro cintura",            u:"cm",      ref:"H:<94 normal; M:<80 normal (IDF)"},
+  {id:"hip_p",        l:"Perímetro cadera",             u:"cm",      ref:""},
+  {id:"icc",          l:"Índice cintura/cadera",        u:"",        ref:"H:<0.90; M:<0.85"},
+  {id:"arm_p",        l:"Perímetro brazo",              u:"cm",      ref:""},
+  {id:"thigh_p",      l:"Perímetro muslo",              u:"cm",      ref:""},
+  {id:"calf_p",       l:"Perímetro pantorrilla",        u:"cm",      ref:""},
+  // Pliegues
+  {id:"triceps_f",    l:"Pliegue tríceps",              u:"mm",      ref:""},
+  {id:"subscap_f",    l:"Pliegue subescapular",         u:"mm",      ref:""},
+  {id:"supra_f",      l:"Pliegue suprailíaco",          u:"mm",      ref:""},
+  {id:"abd_f",        l:"Pliegue abdominal",            u:"mm",      ref:""},
+  // Composición corporal
+  {id:"body_fat",     l:"% Grasa corporal",             u:"%",       ref:"H: atleta 6-13%; fitness 14-17%; saludable 18-24% / M: atleta 14-20%; fitness 21-24%; saludable 25-31%"},
+  {id:"muscle_mass",  l:"Masa muscular",                u:"kg",      ref:""},
+  {id:"fat_mass",     l:"Masa grasa",                   u:"kg",      ref:""},
+  {id:"lean_mass",    l:"Masa magra total",             u:"kg",      ref:""},
+  {id:"visceral_fat", l:"Grasa visceral",               u:"nivel",   ref:"≤9 normal (Tanita); VAT <100cm² normal"},
+  // Bioimpedancia
+  {id:"bia_hydration",l:"Hidratación corporal total",   u:"%",       ref:"H:55-65%; M:50-60%"},
+  {id:"bia_phase",    l:"Ángulo de fase (BIA)",         u:"°",       ref:"H:5-7°; M:4-6° (marcador nutricional)"},
+  // Metabólico
+  {id:"bmr",          l:"Tasa metabólica basal (calorimetría)",u:"kcal/día",ref:"Variable por peso/sexo/edad"},
+  {id:"ree",          l:"Gasto energético en reposo",   u:"kcal/día",ref:"Variable"},
+];
+
+
+// ─── MEDICATIONS / SUPPLEMENTS ───
+const MED_CATEGORIES=[
+  {id:"prescription", l:"Medicamento recetado",  i:"💊", color:"#E74C3C"},
+  {id:"otc",          l:"Medicamento sin receta", i:"🔴", color:"#E67E22"},
+  {id:"supplement",   l:"Suplemento",             i:"🟡", color:"#F39C12"},
+  {id:"vitamin",      l:"Vitamina / mineral",     i:"🟢", color:"#2ECC71"},
+  {id:"herbal",       l:"Fitoterapia / herbal",   i:"🌿", color:"#27AE60"},
+  {id:"probiotic",    l:"Probiótico / prebiótico",i:"🦠", color:"#3498DB"},
+  {id:"hormone",      l:"Hormona / anticonceptivo",i:"⚗️",color:"#9B59B6"},
+];
 
 // Phases for someone returning after months off
 const PHASES=[
@@ -507,7 +705,7 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[],medications:[]};
 
 // ─── NUTRITION CONSTANTS ───
 const MEAL_TYPES=[
@@ -1298,7 +1496,7 @@ Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`
       if(autoText)setStudyText(autoText.trim());
       if(parsed.values?.length){
         const nv={};
-        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS,...UROLOGY_FIELDS,...GYNECOLOGY_FIELDS,...NEUROLOGY_FIELDS,...OPHTHALMOLOGY_FIELDS,...ENT_FIELDS,...DEXA_FIELDS];
+        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS,...NEPHROLOGY_FIELDS,...UROLOGY_FIELDS,...GYNECOLOGY_FIELDS,...DERMATOLOGY_FIELDS,...TRAUMA_FIELDS,...NEUROLOGY_FIELDS,...OPHTHALMOLOGY_FIELDS,...ENT_FIELDS,...PSYCH_FIELDS,...DENT_FIELDS,...ECG_ADV_FIELDS,...NUTRITION_FIELDS,...DEXA_FIELDS];
         BLOOD_PANELS.forEach(p=>p.fields.forEach(f=>allFields.push(f)));
         parsed.values.forEach(v=>{
           const lbl=(v.label||"").toLowerCase();
@@ -1362,7 +1560,7 @@ Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`
       });
     }else{
       // Generic handler for urology, gynecology, neurology, ophthalmology, ent, dexa, mammo
-      const fieldMap={urology:UROLOGY_FIELDS,gynecology:GYNECOLOGY_FIELDS,neurology:NEUROLOGY_FIELDS,ophthalmology:OPHTHALMOLOGY_FIELDS,ent:ENT_FIELDS,dexa:DEXA_FIELDS};
+      const fieldMap={nephrology:NEPHROLOGY_FIELDS,urology:UROLOGY_FIELDS,gynecology:GYNECOLOGY_FIELDS,dermatology:DERMATOLOGY_FIELDS,traumatology:TRAUMA_FIELDS,neurology:NEUROLOGY_FIELDS,ophthalmology:OPHTHALMOLOGY_FIELDS,ent:ENT_FIELDS,psychiatry:PSYCH_FIELDS,dentistry:DENT_FIELDS,ecg:ECG_ADV_FIELDS,echo:ECG_ADV_FIELDS,nutrition:NUTRITION_FIELDS,dexa:DEXA_FIELDS};
       const fArr=fieldMap[study.type]||[];
       fArr.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
         valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
@@ -1606,6 +1804,103 @@ OSTEOLOGÍA Y REUMATOLOGÍA:
 - NOF 2023 — tratamiento farmacológico: umbral FRAX ≥20% fractura mayor o ≥3% cadera
 - ISCD — ALMI (índice masa apendicular magra) para diagnóstico de sarcopenia
 
+NEFROLOGÍA:
+- KDIGO 2024 — CKD, ERC, glomérulonefritis, proteinuria, potasio; clasificación G1-G5 × A1-A3
+- KDIGO 2022 — diabetes y riñón; hipertensión y riñón; anemia en ERC
+- ERA 2023 (European Renal Association) — diálisis, trasplante, ERC avanzada
+- SLAN / SANefro — consensos latinoamericanos/argentinos
+- Cistatina C como marcador complementario de eFG en estadios tempranos
+- RAAS: intervención con IECA/ARA-II si ACR ≥30 mg/g (diabéticos); ≥300 (no diabéticos)
+- Síndrome nefrótico (proteinuria >3.5g/24h + hipoalbuminemia) vs nefrítico (hematuria + HTA + edema)
+- Biopsia renal: clasificación Oxford para nefropatía IgA; criterios de indicación KDIGO
+
+DERMATOLOGÍA:
+- AAD 2023 (American Academy of Dermatology) — melanoma, psoriasis, dermatitis atópica, acné, urticaria
+- EDF / EADV 2023 — guías europeas de dermatología clínica
+- SAD (Sociedad Argentina de Dermatología)
+- NCCN Melanoma 2024 — estadificación AJCC 8ª ed.; Breslow, Clark, ulceración, mitosis
+- Dermoscopía: algoritmo ABCDE + 7 puntos Glasgow + algoritmo Menzies
+- PASI: leve <10, moderada 10-20, grave >20
+- Dermatitis atópica: SCORAD, IGA; criterios Hanifin-Rajka
+- EAACI/GA²LEN 2022 — urticaria: clasificación, antihistamínicos, anti-IgE (omalizumab)
+- Inmunofluorescencia directa: pénfigo (IgG intercelular), penfigoide (IgG lineal BMZ)
+- KOH y cultivo: tiña, candidiasis, onicomicosis
+
+TRAUMATOLOGÍA Y ORTOPEDIA:
+- AAOS 2023 (American Academy of Orthopaedic Surgeons) — guías de práctica clínica para OA, lesiones de rodilla, columna, hombro
+- AOTrauma / AO Foundation — clasificación de fracturas (AO/OTA), principios de osteosíntesis
+- ESSKA 2023 (European Society for Sports Traumatology, Knee Surgery & Arthroscopy) — ligamentos, meniscos, cartílago
+- ISAKOS — lesiones del hombro, inestabilidad, manguito rotador
+- NASS 2022 (North American Spine Society) — hernia discal, estenosis, dolor lumbar
+- EUROSPINE — columna vertebral: clasificación, indicaciones quirúrgicas
+- OARSI 2023 (Osteoarthritis Research Society International) — guías de OA de cadera y rodilla
+- SAOT (Sociedad Argentina de Ortopedia y Traumatología)
+- Clasificación Kellgren-Lawrence: OA grado 0-IV en radiografía simple
+- Clasificación Outerbridge: lesiones cartilaginosas grado I-IV en artroscopía
+- Clasificación AO/OTA de fracturas: estándar internacional
+- Criterios RMN: protocolo MOAKS para OA; WORMS para cartílago
+- Lumbalgia: guías NICE 2016 + ACP 2017 — primero tratamiento conservador (fisioterapia, AINES)
+
+CARDIOLOGÍA AVANZADA (ECG, HOLTER, ERGOMETRÍA, ECOCARDIOGRAMA):
+- ACC/AHA 2022 — guías de ECG: intervalos normales, bloqueos, WPW, síndromes de repolarización
+- ESC 2022 — clasificación arritmias, FA, extrasistolia, síncope
+- AHA/ACC Holter guidelines — indicaciones y clasificación de hallazgos Holter
+- AECG (Association for the Advancement of Medical Instrumentation) — estándares Holter
+- ACC/AHA/ACSM 2022 — ergometría: protocolos (Bruce, modificado), criterios de positividad, capacidad funcional en METs
+- ASE 2015/2019 (American Society of Echocardiography) — valores normales ecocardiográficos, función sistólica/diastólica, valvulopatías
+- EAE/EACVI — ecocardiograma europeo
+- ACC/AHA Valvular Disease 2021 — clasificación valvulopatías, umbrales de intervención
+- FEVI: sistólica reducida <40%, intermedia 40-49%, conservada ≥50% (ESC 2021 HF guidelines)
+- QTc: riesgo torsades si >500ms; umbral de preocupación >460ms mujeres / >450ms hombres
+- SAC — Sociedad Argentina de Cardiología — consensos locales
+
+PSIQUIATRÍA Y SALUD MENTAL:
+- APA 2022 (American Psychiatric Association) — DSM-5-TR: diagnósticos, criterios, specifiers
+- WHO — CIE-11 (ICD-11 2022): clasificación internacional de enfermedades mentales
+- NICE 2022 (National Institute for Health and Care Excellence) — guías de depresión, ansiedad, PTSD, ADHD, psicosis
+- WFSBP (World Federation of Societies of Biological Psychiatry) — farmacoterapia en trastornos del humor
+- CANMAT 2023 (Canadian Network for Mood and Anxiety Treatments) — depresión y bipolaridad
+- BAP 2023 (British Association for Psychopharmacology) — ansiedad, PTSD, TOC
+- ISBD (International Society for Bipolar Disorders)
+- AASM 2023 — insomnio: criterios diagnósticos y tratamiento cognitivo-conductual
+- CHADD / CADDAC — ADHD en adultos
+- APSA (Asociación de Psiquiatras Argentinos)
+- Escalas validadas: PHQ-9 (sensibilidad 88% depresión ≥10), GAD-7 (corte ≥10 moderado), PSQI (>5 mala calidad sueño)
+- MoCA: sensibilidad 90% para deterioro cognitivo leve con corte <26/30
+- AUDIT: instrumento OMS de detección alcohol; CAGE: 4 preguntas rápidas
+- PCL-5: PTSD probable con ≥33 puntos
+- ASRS-v1.1: 6 ítems parte A; ≥4 positivos = alta probabilidad ADHD adulto
+
+ODONTOLOGÍA Y SALUD ORAL:
+- ADA 2023 (American Dental Association) — periodoncia, caries, endodoncia, implantes
+- AAP 2018 (American Academy of Periodontology) + EFP (European Federation of Periodontology) — nueva clasificación de periodontitis: estadios I-IV × grados A-B-C
+- IADR (International Association for Dental Research)
+- AAE (American Association of Endodontists) — endodoncia, diagnóstico pulpar
+- WHO Oral Health 2022 — salud oral universal, índice CPOD
+- Índice CPOD/CAOD: OMS — 0=muy bajo, 1-3=bajo, 4-6=moderado, ≥7=alto
+- Profundidad de bolsa: sano ≤3mm; periodontitis leve 4-5mm; moderada 6-7mm; grave ≥8mm (AAP 2018)
+- BOP (sangrado al sondaje): >10% indica inflamación activa
+- SAOD (Sociedad Argentina de Odontología) — consensos locales
+- Relación sistémica: periodontitis severa ↑ riesgo CV (OR 2.0), DM y periodontitis bidireccionales, salud oral y endocarditis bacteriana (profilaxis antibiótica AHA 2021)
+
+NUTRICIÓN CLÍNICA, METABOLISMO Y COMPOSICIÓN CORPORAL:
+- ASPEN 2022 (American Society for Parenteral and Enteral Nutrition) — evaluación nutricional, malnutrición
+- ESPEN 2023 (European Society for Clinical Nutrition and Metabolism) — guías nutrición clínica, sarcopenia
+- EWGSOP2 2019 (European Working Group on Sarcopenia in Older People) — diagnóstico sarcopenia: masa + fuerza + rendimiento físico; ALMI <7.0 kg/m² H / <5.5 M
+- ISAK (International Society for the Advancement of Kinanthropometry) — protocolo antropometría; restringe + perfil limitado
+- ACSM/AND/DC 2016 — nutrición para el deporte: recomendaciones por tipo de entrenamiento
+- Clasificación IMC OMS: <18.5 bajo peso; 18.5-24.9 normal; 25-29.9 sobrepeso; 30-34.9 ob I; 35-39.9 ob II; ≥40 ob III
+- Perímetro cintura: IDF — riesgo H ≥94cm; M ≥80cm; riesgo muy alto H ≥102cm; M ≥88cm
+- % Grasa DEXA vs bioimpedancia vs pliegues: DEXA es gold standard; bioimpedancia afectada por hidratación
+- Ángulo de fase BIA: marcador de integridad celular y estado nutricional; <5° H / <4° M = riesgo nutricional
+- Grasa visceral: TAC gold standard; VAT >100 cm² riesgo metabólico; bioimpedancia nivel >9 Tanita como proxy
+- Relación composición corporal y salud: masa muscular protectora CV; grasa visceral ↑ riesgo DM, dislipemia, HTA
+
+MEDICAMENTOS Y SUPLEMENTOS EN CONTEXTO CLÍNICO:
+${(data.medications||[]).length>0?`El paciente está tomando los siguientes medicamentos y suplementos — considerá posibles efectos sobre los valores del estudio, interacciones, y si algún valor puede explicarse por estos:
+${(data.medications||[]).map(m=>`- ${m.name}${m.dose?" "+m.dose:""}${m.frequency?" ("+m.frequency+")":""}${m.category?" ["+m.category+"]":""}${m.notes?" — "+m.notes:""}`).join("\n")}`:
+"Sin medicamentos ni suplementos registrados en el perfil."}
+
 
 
 ESTUDIO A ANALIZAR:
@@ -1674,17 +1969,23 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
     // Step 1: choose type
     if(step===1){
       const groups=[
-        {label:"Laboratorio",       color:"#E74C3C", ids:["blood","urine"]},
-        {label:"Digestivo",         color:"#8B4513", ids:["digestive"]},
-        {label:"Urología / Andrología", color:"#E67E22", ids:["urology"]},
-        {label:"Ginecología / Mujer",   color:"#FF69B4", ids:["gynecology","mammo"]},
-        {label:"Cardiología",       color:"#E91E63", ids:["echo","ecg"]},
-        {label:"Respiratorio / Sueño",  color:"#3498DB", ids:["spirometry","sleep"]},
-        {label:"Neurología",        color:"#8E44AD", ids:["neurology"]},
-        {label:"Oftalmología",      color:"#2980B9", ids:["ophthalmology"]},
-        {label:"ORL",               color:"#27AE60", ids:["ent"]},
-        {label:"Imágenes / Óseo",   color:"#95A5A6", ids:["xray","ultrasound","dexa"]},
-        {label:"Otro",              color:"#7F8C8D", ids:["other"]},
+        {label:"Laboratorio",             color:"#E74C3C", ids:["blood","urine"]},
+        {label:"Digestivo / Hepático",    color:"#8B4513", ids:["digestive"]},
+        {label:"Nefrológico",             color:"#1A6B8A", ids:["nephrology"]},
+        {label:"Urología / Andrología",   color:"#E67E22", ids:["urology"]},
+        {label:"Ginecología / Mujer",     color:"#FF69B4", ids:["gynecology","mammo"]},
+        {label:"Dermatología",            color:"#D4A017", ids:["dermatology"]},
+        {label:"Traumatología / Ortopedia",color:"#626567",ids:["traumatology"]},
+        {label:"Cardiología",             color:"#E91E63", ids:["echo","ecg"]},
+        {label:"Respiratorio / Sueño",    color:"#3498DB", ids:["spirometry","sleep"]},
+        {label:"Neurología",              color:"#8E44AD", ids:["neurology"]},
+        {label:"Oftalmología",            color:"#2980B9", ids:["ophthalmology"]},
+        {label:"ORL",                     color:"#27AE60", ids:["ent"]},
+        {label:"Psiquiatría / Salud mental",color:"#5D6D7E",ids:["psychiatry"]},
+        {label:"Odontología",             color:"#85C1E9", ids:["dentistry"]},
+        {label:"Nutrición clínica / Metabólico",color:"#FF6B35",ids:["nutrition","dexa"]},
+        {label:"Imágenes",                color:"#95A5A6", ids:["xray","ultrasound"]},
+        {label:"Otro",                    color:"#7F8C8D", ids:["other"]},
       ];
       return <div style={S.pg}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
@@ -1719,11 +2020,19 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       if(studyType==="spirometry")return SPIROMETRY_FIELDS;
       if(studyType==="sleep")return SLEEP_FIELDS;
       if(studyType==="digestive")return DIGESTIVE_FIELDS;
+      if(studyType==="nephrology")return NEPHROLOGY_FIELDS;
       if(studyType==="urology")return UROLOGY_FIELDS;
       if(studyType==="gynecology")return GYNECOLOGY_FIELDS;
+      if(studyType==="dermatology")return DERMATOLOGY_FIELDS;
+      if(studyType==="traumatology")return TRAUMA_FIELDS;
       if(studyType==="neurology")return NEUROLOGY_FIELDS;
       if(studyType==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
       if(studyType==="ent")return ENT_FIELDS;
+      if(studyType==="psychiatry")return PSYCH_FIELDS;
+      if(studyType==="dentistry")return DENT_FIELDS;
+      if(studyType==="ecg")return ECG_ADV_FIELDS;
+      if(studyType==="echo")return ECG_ADV_FIELDS;
+      if(studyType==="nutrition")return NUTRITION_FIELDS;
       if(studyType==="dexa")return DEXA_FIELDS;
       return null;
     };
@@ -1946,11 +2255,19 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         if(selStudy.type==="spirometry")return SPIROMETRY_FIELDS;
         if(selStudy.type==="sleep")return SLEEP_FIELDS;
         if(selStudy.type==="digestive")return DIGESTIVE_FIELDS;
+        if(selStudy.type==="nephrology")return NEPHROLOGY_FIELDS;
         if(selStudy.type==="urology")return UROLOGY_FIELDS;
         if(selStudy.type==="gynecology")return GYNECOLOGY_FIELDS;
+        if(selStudy.type==="dermatology")return DERMATOLOGY_FIELDS;
+        if(selStudy.type==="traumatology")return TRAUMA_FIELDS;
         if(selStudy.type==="neurology")return NEUROLOGY_FIELDS;
         if(selStudy.type==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
         if(selStudy.type==="ent")return ENT_FIELDS;
+        if(selStudy.type==="psychiatry")return PSYCH_FIELDS;
+        if(selStudy.type==="dentistry")return DENT_FIELDS;
+        if(selStudy.type==="ecg")return ECG_ADV_FIELDS;
+        if(selStudy.type==="echo")return ECG_ADV_FIELDS;
+        if(selStudy.type==="nutrition")return NUTRITION_FIELDS;
         if(selStudy.type==="dexa")return DEXA_FIELDS;
         return [];
       };
@@ -2202,22 +2519,137 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
     </div>;
   }
 
+  // ── VIEW: MEDICATIONS ──
+  if(view==="meds"){
+    const meds=data.medications||[];
+    const[medAdd,setMedAdd]=useState(false);
+    const[medName,setMedName]=useState("");
+    const[medDose,setMedDose]=useState("");
+    const[medFreq,setMedFreq]=useState("");
+    const[medCat,setMedCat]=useState("prescription");
+    const[medNotes,setMedNotes]=useState("");
+    const[medActive,setMedActive]=useState(true);
+    const saveMed=()=>{
+      if(!medName.trim())return;
+      const m={id:gi(),name:medName.trim(),dose:medDose.trim(),frequency:medFreq.trim(),category:medCat,notes:medNotes.trim(),active:medActive,since:td()};
+      const nd={...data,medications:[...meds,m]};setData(nd);sv(nd);
+      setMedName("");setMedDose("");setMedFreq("");setMedNotes("");setMedActive(true);setMedAdd(false);
+    };
+    const delMed=id=>{const nd={...data,medications:meds.filter(m=>m.id!==id)};setData(nd);sv(nd);};
+    const toggleActive=id=>{const nd={...data,medications:meds.map(m=>m.id===id?{...m,active:!m.active}:m)};setData(nd);sv(nd);};
+    const activeMeds=meds.filter(m=>m.active!==false);
+    const inactiveMeds=meds.filter(m=>m.active===false);
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>💊 Medicamentos y suplementos</h2>
+      </div>
+      {!medAdd&&<button onClick={()=>setMedAdd(true)} style={{...S.btn,width:"100%",marginBottom:16}}>+ Agregar</button>}
+      {medAdd&&<div style={{...S.cd,marginBottom:16,borderLeft:"3px solid #FF6B35"}}>
+        <h3 style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:"#FF6B35",margin:"0 0 12px"}}>NUEVO</h3>
+        <label style={S.lbl}>Nombre *</label>
+        <input value={medName} onChange={e=>setMedName(e.target.value)} placeholder="Ej: Levotiroxina, Omega-3, Vitamina D..." style={{...S.inp,marginBottom:10}}/>
+        <label style={S.lbl}>Categoría</label>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
+          {MED_CATEGORIES.map(c=><button key={c.id} onClick={()=>setMedCat(c.id)}
+            style={{...S.mb2,padding:"8px 6px",border:medCat===c.id?"2px solid "+c.color:"1px solid rgba(255,255,255,0.08)",background:medCat===c.id?"rgba(255,107,53,0.12)":"rgba(255,255,255,0.03)",flexDirection:"row",gap:6,justifyContent:"flex-start"}}>
+            <span style={{fontSize:14}}>{c.i}</span><span style={{fontSize:11,color:medCat===c.id?"#FFF":"#AAA"}}>{c.l}</span>
+          </button>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          <div><label style={S.lbl}>Dosis</label><input value={medDose} onChange={e=>setMedDose(e.target.value)} placeholder="Ej: 50mcg, 1g" style={S.inp}/></div>
+          <div><label style={S.lbl}>Frecuencia</label><input value={medFreq} onChange={e=>setMedFreq(e.target.value)} placeholder="Ej: 1x día, 2x sem" style={S.inp}/></div>
+        </div>
+        <label style={S.lbl}>Notas <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(indicación, marca, etc.)</span></label>
+        <textarea value={medNotes} onChange={e=>setMedNotes(e.target.value)} style={{...S.ta,minHeight:60}} placeholder="Indicado por..., para..."/>
+        <div style={{display:"flex",gap:8,marginTop:12}}>
+          <button onClick={saveMed} disabled={!medName.trim()} style={{...S.btn,flex:1,opacity:medName.trim()?1:0.4}}>Guardar</button>
+          <button onClick={()=>setMedAdd(false)} style={{...S.sm,padding:"12px 16px"}}>Cancelar</button>
+        </div>
+      </div>}
+      {meds.length===0&&!medAdd&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Registrá tus medicamentos y suplementos. El médico IA los tendrá en cuenta al analizar tus estudios.</p></div>}
+      {activeMeds.length>0&&<div>
+        <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>EN USO ACTUALMENTE ({activeMeds.length})</div>
+        {activeMeds.map(m=>{
+          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
+          return <div key={m.id} style={{...S.cd,marginBottom:8,borderLeft:"3px solid "+cat.color}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                  <span style={{fontSize:14}}>{cat.i}</span>
+                  <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{m.name}</span>
+                </div>
+                {(m.dose||m.frequency)&&<div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:4}}>
+                  {m.dose&&<span style={{fontSize:12,color:"#FF6B35",fontWeight:600}}>{m.dose}</span>}
+                  {m.frequency&&<span style={{fontSize:12,color:"#AAA"}}>{m.frequency}</span>}
+                </div>}
+                <span style={{fontSize:11,color:cat.color,background:cat.color+"18",padding:"1px 6px",borderRadius:4}}>{cat.l}</span>
+                {m.notes&&<p style={{fontSize:11,color:"#888",margin:"6px 0 0",fontStyle:"italic"}}>{m.notes}</p>}
+              </div>
+              <div style={{display:"flex",gap:4,marginLeft:8}}>
+                <button onClick={()=>toggleActive(m.id)} style={{...S.sm,fontSize:11,color:"#F39C12",borderColor:"rgba(243,156,18,0.3)"}} title="Pausar">⏸</button>
+                <button onClick={()=>delMed(m.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>}
+      {inactiveMeds.length>0&&<div style={{marginTop:12}}>
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>PAUSADOS / HISTÓRICO ({inactiveMeds.length})</div>
+        {inactiveMeds.map(m=>{
+          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
+          return <div key={m.id} style={{...S.cd,marginBottom:6,opacity:0.5,borderLeft:"3px solid #444"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:13,color:"#AAA"}}>{cat.i} {m.name} {m.dose&&<span style={{color:"#888"}}>· {m.dose}</span>}</span>
+              <div style={{display:"flex",gap:4}}>
+                <button onClick={()=>toggleActive(m.id)} style={{...S.sm,fontSize:11,color:"#2ECC71",borderColor:"rgba(46,204,113,0.3)"}} title="Reactivar">▶</button>
+                <button onClick={()=>delMed(m.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>}
+    </div>;
+  }
+
   // ── VIEW: HOME ──
   const byType={};
   studies.forEach(s=>{if(!byType[s.type])byType[s.type]=[];byType[s.type].push(s);});
-  const lastStudy=studies.length?studies.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+  const lastStudy=studies.length?[...studies].sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+  const activeMedCount=(data.medications||[]).filter(m=>m.active!==false).length;
 
   return <div style={S.pg}>
     <h2 style={S.t1}>🩺 Salud</h2>
 
     {/* Quick actions */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-      <button onClick={()=>setView("add")} style={{...S.btn,padding:"14px 12px",fontSize:14}}>+ Cargar estudio</button>
-      <button onClick={()=>setView("timeline")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"14px 12px",border:"1px solid rgba(26,188,156,0.3)"}}>
-        <div style={{fontSize:20,marginBottom:2}}>📈</div>
-        <div style={{fontSize:12,color:"#1ABC9C",fontWeight:600}}>Timeline</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+      <button onClick={()=>setView("add")} style={{...S.btn,padding:"12px 8px",fontSize:13}}>+ Estudio</button>
+      <button onClick={()=>setView("meds")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"12px 8px",border:"1px solid rgba(255,107,53,0.3)"}}>
+        <div style={{fontSize:18,marginBottom:2}}>💊</div>
+        <div style={{fontSize:11,color:"#FF6B35",fontWeight:600}}>Medicamentos{activeMedCount>0?` (${activeMedCount})`:""}</div>
+      </button>
+      <button onClick={()=>setView("timeline")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"12px 8px",border:"1px solid rgba(26,188,156,0.3)"}}>
+        <div style={{fontSize:18,marginBottom:2}}>📈</div>
+        <div style={{fontSize:11,color:"#1ABC9C",fontWeight:600}}>Timeline</div>
       </button>
     </div>
+
+    {/* Medications summary if any */}
+    {activeMedCount>0&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",background:"rgba(255,107,53,0.04)",marginBottom:14,cursor:"pointer"}} onClick={()=>setView("meds")}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+        <span style={{fontFamily:"'Oswald',sans-serif",fontSize:13,color:"#FF6B35",letterSpacing:1}}>💊 MEDICAMENTOS ACTIVOS</span>
+        <span style={{fontSize:18,color:"#FF6B35"}}>&#8594;</span>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+        {(data.medications||[]).filter(m=>m.active!==false).slice(0,4).map(m=>{
+          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
+          return <span key={m.id} style={{fontSize:11,color:"#CCC",background:"rgba(255,255,255,0.06)",padding:"2px 8px",borderRadius:10,display:"flex",alignItems:"center",gap:4}}>
+            <span>{cat.i}</span><span>{m.name}{m.dose?" · "+m.dose:""}</span>
+          </span>;
+        })}
+        {activeMedCount>4&&<span style={{fontSize:11,color:"#888",padding:"2px 6px"}}>+{activeMedCount-4} más</span>}
+      </div>
+    </div>}
 
     {/* Anthropometry card */}
     {(()=>{
@@ -2225,15 +2657,15 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       return <button onClick={()=>setView("anthro")} style={{...S.cd,cursor:"pointer",width:"100%",textAlign:"left",marginBottom:14,borderLeft:"3px solid #FF6B35",display:"block"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:20}}>📐</span>
-            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:15,color:"#FFF",fontWeight:700}}>Antropometría</span>
+            <span style={{fontSize:20}}>⚖️</span>
+            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:15,color:"#FFF",fontWeight:700}}>Nutrición / Antropometría</span>
           </div>
           <span style={{fontSize:18,color:"#FF6B35"}}>&#8594;</span>
         </div>
         {latest?<div style={{display:"flex",gap:16,marginTop:8,flexWrap:"wrap"}}>
           {latest.weight&&<span style={{fontSize:12,color:"#CCC"}}>Peso: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.weight} kg</span></span>}
           {latest.body_fat&&<span style={{fontSize:12,color:"#CCC"}}>%Grasa: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.body_fat}%</span></span>}
-          {latest.muscle_mass&&<span style={{fontSize:12,color:"#CCC"}}>Masa musc: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.muscle_mass} kg</span></span>}
+          {latest.muscle_mass&&<span style={{fontSize:12,color:"#CCC"}}>Músculo: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.muscle_mass} kg</span></span>}
           <span style={{fontSize:11,color:"#888"}}>{fd(latest.date)}</span>
         </div>:<p style={{fontSize:12,color:"#666",margin:"6px 0 0"}}>Sin mediciones. Tocá para cargar.</p>}
       </button>;
@@ -2245,14 +2677,15 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{studies.length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Estudios</span></div>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.anthropometry||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Mediciones</span></div>
+        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{activeMedCount}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Medicamentos</span></div>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.sessions||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Sesiones</span></div>
-        {lastStudy&&<div><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Último estudio:</span><span style={{fontSize:12,color:"#CCC"}}>{fd(lastStudy.date)}</span></div>}
+        {lastStudy&&<div><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Último:</span><span style={{fontSize:12,color:"#CCC"}}>{fd(lastStudy.date)}</span></div>}
       </div>
     </div>}
 
     {/* Studies by type */}
-    {studies.length===0&&(data.anthropometry||[]).length===0&&<div style={S.cd}>
-      <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Cargá tus estudios clínicos y mediciones antropométricas. El médico IA los analiza con guías ACC/AHA, ESC, ADA, ERS, AASM, SAC y más.</p>
+    {studies.length===0&&(data.anthropometry||[]).length===0&&activeMedCount===0&&<div style={S.cd}>
+      <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Tu hub de salud completo. Cargá estudios clínicos, registrá medicamentos y mediciones antropométricas. El médico IA analiza todo integrado con guías de más de 60 sociedades científicas.</p>
     </div>}
 
     {Object.entries(byType).map(([type,sts])=>{
@@ -2279,7 +2712,7 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];if(!d.medications)d.medications=[];setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
