@@ -73,15 +73,31 @@ const ANTHRO=[
 
 // ─── CLINICAL STUDIES CONSTANTS ───
 const STUDY_TYPES=[
-  {id:"blood",l:"Analítica de sangre",i:"🩸",color:"#E74C3C"},
-  {id:"urine",l:"Analítica de orina",i:"🧪",color:"#F39C12"},
-  {id:"spirometry",l:"Espirometría",i:"🫁",color:"#3498DB"},
-  {id:"sleep",l:"SOH / Polisomnografía",i:"😴",color:"#9B59B6"},
-  {id:"xray",l:"Radiografía",i:"📋",color:"#95A5A6"},
-  {id:"echo",l:"Ecocardiograma",i:"❤️",color:"#E91E63"},
-  {id:"ecg",l:"ECG",i:"📈",color:"#1ABC9C"},
-  {id:"ultrasound",l:"Ecografía",i:"🔵",color:"#2980B9"},
-  {id:"other",l:"Otro estudio",i:"📄",color:"#7F8C8D"},
+  {id:"blood",    l:"Analítica de sangre",      i:"🩸", color:"#E74C3C", group:"lab"},
+  {id:"urine",    l:"Analítica de orina",       i:"🧪", color:"#F39C12", group:"lab"},
+  {id:"digestive",l:"Estudio digestivo",        i:"🫃", color:"#8B4513", group:"digestive"},
+  {id:"spirometry",l:"Espirometría",            i:"🫁", color:"#3498DB", group:"resp"},
+  {id:"sleep",    l:"Polisomnografía / PSG",    i:"😴", color:"#9B59B6", group:"sleep"},
+  {id:"echo",     l:"Ecocardiograma",           i:"❤️", color:"#E91E63", group:"cardio"},
+  {id:"ecg",      l:"ECG",                      i:"📈", color:"#1ABC9C", group:"cardio"},
+  {id:"xray",     l:"Radiografía",              i:"🩻", color:"#95A5A6", group:"imaging"},
+  {id:"ultrasound",l:"Ecografía",               i:"🔵", color:"#2980B9", group:"imaging"},
+  {id:"other",    l:"Otro estudio",             i:"📄", color:"#7F8C8D", group:"other"},
+];
+// Sub-tipos de estudios digestivos (para el selector interno)
+const DIGESTIVE_SUBTYPES=[
+  {id:"soh",      l:"SOH — Sangre Oculta en Heces", i:"🔬"},
+  {id:"veda",     l:"VEDA / Endoscopía alta",        i:"🔭"},
+  {id:"vcc",      l:"Videocolonoscopía",              i:"🎥"},
+  {id:"hpylori",  l:"H. pylori",                     i:"🦠"},
+  {id:"calprotect",l:"Calprotectina fecal",           i:"💩"},
+  {id:"ecoabdom", l:"Ecografía abdominal",            i:"🔵"},
+  {id:"colonoscopy",l:"Colonoscopía",                 i:"📷"},
+  {id:"transit",  l:"Tránsito intestinal",            i:"➡️"},
+  {id:"manometry",l:"Manometría esofágica/anorrectal",i:"📊"},
+  {id:"ph_metry", l:"pH-metría / impedanciometría",   i:"⚗️"},
+  {id:"capsule",  l:"Cápsula endoscópica",            i:"💊"},
+  {id:"dig_other",l:"Otro estudio digestivo",         i:"📋"},
 ];
 const BLOOD_PANELS=[
   {id:"hemogram",l:"Hemograma",fields:[
@@ -190,7 +206,16 @@ const SLEEP_FIELDS=[
   {id:"deep",l:"Sueño profundo (N3)",u:"%",ref:"15-20%"},
   {id:"arousal",l:"Índice de arousal",u:"/h",ref:"<10"},
 ];
-const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","other"];
+const DIGESTIVE_FIELDS=[
+  {id:"dig_subtype",l:"Tipo de estudio digestivo",u:"",ref:""},
+  {id:"soh_result",l:"SOH resultado",u:"",ref:"Negativo"},
+  {id:"soh_method",l:"Método (inmunoquímico/guayaco)",u:"",ref:""},
+  {id:"hpylori_result",l:"H. pylori resultado",u:"",ref:"Negativo"},
+  {id:"hpylori_method",l:"Método H. pylori",u:"",ref:""},
+  {id:"calprotect_val",l:"Calprotectina fecal",u:"µg/g",ref:"<50 normal; 50-200 dudoso; >200 patológico"},
+  {id:"lactoferrin",l:"Lactoferrina fecal",u:"µg/g",ref:"<7.25"},
+];
+const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","other"];
 
 // Phases for someone returning after months off
 const PHASES=[
@@ -1069,11 +1094,86 @@ function HealthTab({data,setData,apiKey}){
   const[anthroVals,setAnthroVals]=useState({});
   const[anthroDate,setAnthroDate]=useState(td());
   const[selAnthroMetric,setSelAnthroMetric]=useState(null);
+  // Upload + extraction state
+  const[uploadFile,setUploadFile]=useState(null);       // File object
+  const[uploadB64,setUploadB64]=useState(null);         // base64 string
+  const[uploadMime,setUploadMime]=useState(null);       // mime type
+  const[extracting,setExtracting]=useState(false);
+  const[extracted,setExtracted]=useState(null);         // {raw, structured} from LLM
+  const[uploadStep,setUploadStep]=useState("idle");     // idle | preview | extracting | review | done
 
   const studies=data.clinicalStudies||[];
   const stInfo=st=>STUDY_TYPES.find(x=>x.id===st)||STUDY_TYPES[8];
 
-  const resetAdd=()=>{setStep(1);setStudyType(null);setStudyDate(td());setStudyTitle("");setStudyVals({});setStudyText("");setSelPanel(null)};
+  const resetAdd=()=>{setStep(1);setStudyType(null);setStudyDate(td());setStudyTitle("");setStudyVals({});setStudyText("");setSelPanel(null);setUploadFile(null);setUploadB64(null);setUploadMime(null);setExtracted(null);setUploadStep("idle");};
+
+  // Convert file to base64
+  const fileToB64=(file)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+
+  // Detect mime from file
+  const getMime=(file)=>{
+    if(file.type)return file.type;
+    if(file.name.endsWith(".pdf"))return "application/pdf";
+    if(file.name.match(/\.(jpg|jpeg)$/i))return "image/jpeg";
+    if(file.name.match(/\.png$/i))return "image/png";
+    return "image/jpeg";
+  };
+
+  // Extract structured data from uploaded file via Claude vision/docs
+  const doExtract=async(b64,mime,studyTypeId)=>{
+    if(!apiKey){alert("Necesitás API key en Config.");return;}
+    setExtracting(true);setUploadStep("extracting");
+    const st=stInfo(studyTypeId);
+    const extractPrompt=`Sos un médico especialista en interpretación de estudios clínicos. Se te proporciona la imagen o PDF de un estudio médico del tipo: ${st.l}.
+
+Tu tarea es extraer TODOS los datos del documento. Respondé EXCLUSIVAMENTE con JSON válido, sin markdown:
+{
+  "studyType": "${studyTypeId}",
+  "detectedTitle": "título del estudio",
+  "detectedDate": "YYYY-MM-DD o null",
+  "institution": "laboratorio/institución si aparece o null",
+  "requestedBy": "médico solicitante si aparece o null",
+  "values": [{"label":"nombre parámetro","value":"valor","unit":"unidad","reference":"rango referencia si aparece","status":"normal|alto|bajo|positivo|negativo|alterado|pendiente"}],
+  "findings": "hallazgos narrativos si es un informe (endoscopía, eco, rx, PSG, etc.) o null",
+  "conclusions": "conclusión o diagnóstico del informe o null",
+  "recommendations": "recomendaciones del médico si las hay o null",
+  "rawText": "texto más relevante del documento transcripto fielmente"
+}
+Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`;
+    try{
+      const isPdf=mime==="application/pdf";
+      const contentBlock=isPdf
+        ?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}
+        :{type:"image",source:{type:"base64",media_type:mime,data:b64}};
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3000,messages:[{role:"user",content:[contentBlock,{type:"text",text:extractPrompt}]}]})});
+      const d=await r.json();
+      if(d.error)throw new Error(d.error.message);
+      const txt=d.content?.map(c=>c.text||"").join("")||"{}";
+      const clean=txt.replace(/```json[\s\S]*?```|```/g,"").trim();
+      const parsed=JSON.parse(clean);
+      setExtracted(parsed);
+      if(parsed.detectedDate&&parsed.detectedDate!=="null")setStudyDate(parsed.detectedDate);
+      if(parsed.detectedTitle&&parsed.detectedTitle!=="null")setStudyTitle(parsed.detectedTitle);
+      let autoText="";
+      if(parsed.findings&&parsed.findings!=="null")autoText+=parsed.findings+"\n\n";
+      if(parsed.conclusions&&parsed.conclusions!=="null")autoText+="Conclusión: "+parsed.conclusions+"\n";
+      if(parsed.recommendations&&parsed.recommendations!=="null")autoText+="\nRecomendaciones: "+parsed.recommendations;
+      if(autoText)setStudyText(autoText.trim());
+      if(parsed.values?.length){
+        const nv={};
+        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS];
+        BLOOD_PANELS.forEach(p=>p.fields.forEach(f=>allFields.push(f)));
+        parsed.values.forEach(v=>{
+          const lbl=(v.label||"").toLowerCase();
+          const match=allFields.find(f=>lbl.includes(f.l.toLowerCase().slice(0,5))||f.l.toLowerCase().includes(lbl.slice(0,5)));
+          if(match&&v.value&&v.value!=="ilegible"&&v.value!=="null")nv[match.id]=v.value;
+        });
+        if(Object.keys(nv).length)setStudyVals(nv);
+      }
+      setUploadStep("review");
+    }catch(e){setExtracted({error:e.message});setUploadStep("review");}
+    setExtracting(false);
+  };
 
   const doSave=()=>{
     const st=stInfo(studyType);
@@ -1119,8 +1219,21 @@ function HealthTab({data,setData,apiKey}){
       SLEEP_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
         valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
       });
+    }else if(study.type==="digestive"){
+      DIGESTIVE_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
+        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
+      });
     }
     if(study.text)valTxt+=`\nInforme/texto libre:\n${study.text}\n`;
+    // Also include rich extracted data if available
+    if(study.extractedData?.values?.length){
+      valTxt+=`\nVALORES EXTRAÍDOS DEL ARCHIVO (fuente primaria):\n`;
+      study.extractedData.values.forEach(v=>{
+        valTxt+=`  ${v.label}: ${v.value}${v.unit?" "+v.unit:""} [${v.status||"?"}]${v.reference?" (ref: "+v.reference+")":""}\n`;
+      });
+    }
+    if(study.extractedData?.findings)valTxt+=`\nHallazgos del informe: ${study.extractedData.findings}\n`;
+    if(study.extractedData?.conclusions)valTxt+=`Conclusión del médico: ${study.extractedData.conclusions}\n`;
 
     // Previous studies of same type
     const prev=studies.filter(s=>s.id!==study.id&&s.type===study.type).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
@@ -1213,11 +1326,33 @@ FUNCIÓN RESPIRATORIA Y ESPIROMETRÍA:
 - AAMR / SAER (Sociedades argentinas de neumología)
 - ATS Statement on spirometry interpretation 2022
 
-SUEÑO Y SOH:
-- AASM 2023 (American Academy of Sleep Medicine) - Criterios AASM 2020 para SAOS
+SUEÑO Y MEDICINA DEL SUEÑO:
+- AASM 2023 (American Academy of Sleep Medicine) — Criterios ICSD-3 para SAOS, insomnio, narcolepsia
 - ESRS (European Sleep Research Society)
-- OSAS severity scoring: leve 5-15, moderado 15-30, grave >30 eventos/h IAH
+- SAOS severity: leve IAH 5-15, moderado 15-30, grave >30 eventos/h
+- Recomendaciones CPAP: AHA/ACC + AASM en SAOS y riesgo cardiovascular
 - ASAARO (Asociación Argentina de Medicina del Sueño)
+- Higiene del sueño y cronotipo: guías AASM 2023
+
+GASTROENTEROLOGÍA Y APARATO DIGESTIVO:
+- ACG 2023 — H. pylori (tratamiento cuádruple), ERGE, SII, EII, screening colorrectal
+- AGA 2023 — MAFLD/NASH, microbioma, dispepsia funcional, constipación crónica
+- ASGE 2023 — indicaciones VEDA y VCC, calidad endoscópica, pólipos y su manejo
+- ESGE 2022 — European Society of Gastrointestinal Endoscopy (guías técnicas)
+- ECCO 2023 — Crohn y colitis ulcerosa: diagnóstico, scores de actividad, tratamiento
+- BSG 2023 — guías inglesas de EII, screening, pólipos serrados
+- UEG 2022 — United European Gastroenterology: enfermedad celíaca, páncreas, VIH digestivo
+- EPAGE II — Appropriateness criteria for endoscopy
+- SAGE — Sociedad Argentina de Gastroenterología: consensos locales vigentes
+- ACTA — Asociación Argentina de Coloproctología
+- USPSTF 2021 — Screening colorrectal: inicio a los 45 años, métodos aprobados
+- Maastricht VI / Florencia 2022 — Consenso europeo H. pylori (test and treat, confirmación post-erradicación)
+- SOH/FIT: umbral ESGE >10 µg Hb/g heces; VCC si positivo; repetición anual si negativo
+- Calprotectina fecal: ECCO/ESGE — <50 normal; 50-200 zona gris (repetir); >200 sugestivo EII activa; >250 alta probabilidad
+- ERGE: Montreal Consensus + ACG 2022; pH-metría 24h como gold standard
+- Enfermedad celíaca: ESPGHAN 2020 + AGA 2023 (anticuerpos anti-tTG IgA + biopsia)
+- Microbioma: AGA Clinical Practice Update 2023 (probióticos, FMT)
+- Pancreatitis: ACG 2013 + IAP/APA 2013; lipasa >3x límite superior para diagnóstico
 
 MEDICINA DEL DEPORTE Y EJERCICIO:
 - ACSM 2023 (American College of Sports Medicine - Exercise is Medicine)
@@ -1334,43 +1469,150 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       </div>
     </div>;
 
-    // Step 2: enter data
+    // Step 2: upload or manual entry
     const st=stInfo(studyType);
     const isFreeText=FREE_TEXT_STUDIES.includes(studyType);
-
-    // Determine fields to show
     const getFields=()=>{
-      if(studyType==="blood")return null; // handled by panels
+      if(studyType==="blood")return null;
       if(studyType==="urine")return URINE_FIELDS;
       if(studyType==="spirometry")return SPIROMETRY_FIELDS;
       if(studyType==="sleep")return SLEEP_FIELDS;
+      if(studyType==="digestive")return DIGESTIVE_FIELDS;
       return null;
     };
     const fields=getFields();
+    const hasData=Object.keys(studyVals).length>0||studyText.trim().length>0;
 
-    return <div style={S.pg}>
+    // ── UPLOAD STEP: idle — show upload zone + manual option ──
+    if(uploadStep==="idle")return <div style={S.pg}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
         <button onClick={()=>setStep(1)} style={S.sm}>&#8592;</button>
         <span style={{fontSize:20}}>{st.i}</span>
         <h2 style={{...S.t1,margin:0}}>{st.l}</h2>
       </div>
+      {/* Upload zone */}
+      <div style={{border:"2px dashed rgba(255,107,53,0.4)",borderRadius:16,padding:"28px 20px",textAlign:"center",marginBottom:16,background:"rgba(255,107,53,0.04)",cursor:"pointer",position:"relative"}}
+        onClick={()=>document.getElementById("file-upload-input").click()}
+        onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor="rgba(255,107,53,0.9)";}}
+        onDragLeave={e=>{e.currentTarget.style.borderColor="rgba(255,107,53,0.4)";}}
+        onDrop={async e=>{
+          e.preventDefault();e.currentTarget.style.borderColor="rgba(255,107,53,0.4)";
+          const f=e.dataTransfer.files[0];if(!f)return;
+          const mime=getMime(f);setUploadFile(f);setUploadMime(mime);
+          const b64=await fileToB64(f);setUploadB64(b64);setUploadStep("preview");
+        }}>
+        <input id="file-upload-input" type="file" accept=".pdf,image/*" style={{display:"none"}} onChange={async e=>{
+          const f=e.target.files[0];if(!f)return;
+          const mime=getMime(f);setUploadFile(f);setUploadMime(mime);
+          const b64=await fileToB64(f);setUploadB64(b64);setUploadStep("preview");
+        }}/>
+        <div style={{fontSize:40,marginBottom:8}}>📎</div>
+        <div style={{fontSize:15,color:"#FFF",fontWeight:600,marginBottom:4}}>Adjuntar estudio</div>
+        <div style={{fontSize:12,color:"#888"}}>PDF o imagen · arrastrá o tocá para elegir</div>
+        <div style={{fontSize:11,color:"#FF6B35",marginTop:8}}>El LLM extrae los datos, los muestra y analiza automáticamente</div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10,margin:"0 0 16px"}}>
+        <div style={{flex:1,height:1,background:"rgba(255,255,255,0.08)"}}/>
+        <span style={{fontSize:11,color:"#666"}}>o cargá manualmente</span>
+        <div style={{flex:1,height:1,background:"rgba(255,255,255,0.08)"}}/>
+      </div>
+      <button onClick={()=>setUploadStep("review")} style={{...S.eo,justifyContent:"center",color:"#AAA",fontSize:13}}>✏️ Ingresar datos manualmente</button>
+    </div>;
+
+    // ── UPLOAD STEP: preview — show file info, confirm extraction ──
+    if(uploadStep==="preview")return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setUploadStep("idle")} style={S.sm}>&#8592;</button>
+        <h2 style={S.t1}>Archivo adjunto</h2>
+      </div>
+      <div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>{uploadMime==="application/pdf"?"📄":"🖼️"}</span>
+          <div>
+            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{uploadFile?.name}</div>
+            <div style={{fontSize:11,color:"#888"}}>{uploadMime} · {uploadFile?(uploadFile.size/1024).toFixed(0)+" KB":""}</div>
+          </div>
+        </div>
+      </div>
+      {uploadMime&&uploadMime.startsWith("image/")&&uploadB64&&
+        <img src={`data:${uploadMime};base64,${uploadB64}`} style={{width:"100%",borderRadius:12,marginBottom:16,maxHeight:260,objectFit:"contain",background:"rgba(255,255,255,0.03)"}} alt="preview"/>}
+      <button onClick={()=>doExtract(uploadB64,uploadMime,studyType)}
+        style={{...S.btn,width:"100%",marginBottom:10}}>
+        🧠 Extraer y analizar con IA
+      </button>
+      <button onClick={()=>setUploadStep("review")} style={{...S.eo,justifyContent:"center",color:"#888",fontSize:13}}>Completar manualmente sin leer el archivo</button>
+    </div>;
+
+    // ── UPLOAD STEP: extracting ──
+    if(uploadStep==="extracting")return <div style={S.pg}>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:300,gap:16}}>
+        <div style={{fontSize:48}}>🔬</div>
+        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:18,color:"#FF6B35",fontWeight:700}}>Leyendo el estudio…</div>
+        <div style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>El médico IA está extrayendo todos los valores,<br/>hallazgos y datos del documento.</div>
+        <div style={{display:"flex",gap:6,marginTop:8}}>
+          {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#FF6B35",animation:`pulse ${0.8+i*0.2}s ease-in-out infinite alternate`,opacity:0.4+i*0.3}}/>)}
+        </div>
+      </div>
+      <style>{`@keyframes pulse{from{transform:scale(1);opacity:0.4}to{transform:scale(1.4);opacity:1}}`}</style>
+    </div>;
+
+    // ── UPLOAD STEP: review — show extracted data + allow editing + save ──
+    // This is the main data entry form, pre-filled if extraction happened
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <button onClick={()=>uploadFile?setUploadStep("preview"):setStep(1)} style={S.sm}>&#8592;</button>
+        <span style={{fontSize:20}}>{st.i}</span>
+        <h2 style={{...S.t1,margin:0,flex:1}}>{st.l}</h2>
+      </div>
+
+      {/* Extraction summary banner */}
+      {extracted&&!extracted.error&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.06)",marginBottom:14}}>
+        <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>✅ EXTRACCIÓN COMPLETADA</div>
+        {extracted.institution&&<div style={{fontSize:12,color:"#CCC",marginBottom:2}}>🏥 {extracted.institution}</div>}
+        {extracted.requestedBy&&<div style={{fontSize:12,color:"#CCC",marginBottom:2}}>👨‍⚕️ Solicitado por: {extracted.requestedBy}</div>}
+        <div style={{fontSize:11,color:"#888",marginTop:4}}>{extracted.values?.length||0} valores detectados · Revisá y guardá</div>
+      </div>}
+      {extracted?.error&&<div style={{...S.cd,borderLeft:"3px solid #E74C3C",marginBottom:14}}>
+        <div style={{fontSize:12,color:"#E74C3C"}}>⚠️ Error en extracción: {extracted.error}</div>
+        <div style={{fontSize:11,color:"#888",marginTop:4}}>Completá los datos manualmente.</div>
+      </div>}
+
+      {/* Extracted values display — beautiful card view */}
+      {extracted?.values?.length>0&&<div style={{...S.cd,marginBottom:14}}>
+        <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>VALORES DETECTADOS</div>
+        {extracted.values.map((v,i)=>{
+          const statusColor=v.status==="normal"?"#2ECC71":v.status==="alto"||v.status==="positivo"||v.status==="alterado"?"#E74C3C":v.status==="bajo"?"#F39C12":"#888";
+          const statusIcon=v.status==="normal"?"✓":v.status==="alto"?"↑":v.status==="bajo"?"↓":v.status==="positivo"?"⚠":v.status==="negativo"?"✓":"·";
+          return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <div style={{flex:1}}>
+              <span style={{fontSize:12,color:"#CCC"}}>{v.label}</span>
+              {v.reference&&<span style={{fontSize:10,color:"#555",marginLeft:6}}>({v.reference})</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:14,color:statusColor,fontWeight:700}}>{v.value}</span>
+              {v.unit&&<span style={{fontSize:11,color:"#666"}}>{v.unit}</span>}
+              <span style={{fontSize:12,color:statusColor,fontWeight:700,width:14,textAlign:"center"}}>{statusIcon}</span>
+            </div>
+          </div>;
+        })}
+      </div>}
 
       <label style={S.lbl}>Fecha del estudio</label>
       <input type="date" value={studyDate} onChange={e=>setStudyDate(e.target.value)} style={{...S.inp,marginBottom:12}}/>
-
-      <label style={S.lbl}>Título / descripción <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(opcional)</span></label>
+      <label style={S.lbl}>Título <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(opcional)</span></label>
       <input value={studyTitle} onChange={e=>setStudyTitle(e.target.value)} placeholder={st.l} style={{...S.inp,marginBottom:16}}/>
 
-      {/* BLOOD: panel selector */}
+      {/* BLOOD panels */}
       {studyType==="blood"&&<div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10}}>Seleccioná los paneles que tiene tu analítica y completá los valores. Podés dejar en blanco los que no tengas.</p>
+        <p style={{fontSize:12,color:"#888",marginBottom:10}}>
+          {extracted?"Valores auto-completados desde el archivo. Revisá y ajustá si hace falta.":"Completá los paneles disponibles en tu analítica."}
+        </p>
         {BLOOD_PANELS.map(panel=>{
           const open=selPanel===panel.id;
           const filled=panel.fields.filter(f=>studyVals[f.id]!==undefined&&studyVals[f.id]!=="").length;
           return <div key={panel.id} style={{marginBottom:8}}>
             <button onClick={()=>setSelPanel(open?null:panel.id)} style={{...S.eo,borderLeft:"3px solid "+(filled>0?"#2ECC71":"rgba(255,255,255,0.1)"),marginBottom:0}}>
-              <div>
-                <span style={{fontWeight:700,color:"#FFF"}}>{panel.l}</span>
+              <div><span style={{fontWeight:700,color:"#FFF"}}>{panel.l}</span>
                 {filled>0&&<span style={{fontSize:11,color:"#2ECC71",marginLeft:8}}>{filled} valor{filled>1?"es":""}</span>}
               </div>
               <span style={{fontSize:12,color:"#888"}}>{open?"▲":"▼"}</span>
@@ -1378,10 +1620,10 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
             {open&&<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderTop:"none",borderRadius:"0 0 10px 10px",padding:"12px 14px"}}>
               {panel.fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,color:"#CCC"}}>{f.l}</div>
+                  <div style={{fontSize:12,color:studyVals[f.id]?"#FFF":"#CCC"}}>{f.l}</div>
                   <div style={{fontSize:10,color:"#555"}}>{f.ref}</div>
                 </div>
-                <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right"}} placeholder="-"/>
+                <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right",borderColor:studyVals[f.id]?"rgba(46,204,113,0.3)":"rgba(255,255,255,0.1)"}} placeholder="-"/>
                 {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
               </div>)}
             </div>}
@@ -1389,38 +1631,43 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         })}
       </div>}
 
-      {/* URINE / SPIROMETRY / SLEEP: structured fields */}
+      {/* Structured fields (urine/spirometry/sleep/digestive) */}
       {fields&&<div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10}}>Completá los valores disponibles en tu informe.</p>
+        <p style={{fontSize:12,color:"#888",marginBottom:10}}>{extracted?"Auto-completado desde archivo. Revisá.":"Completá los valores disponibles."}</p>
         {fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:12,color:"#CCC"}}>{f.l}</div>
+            <div style={{fontSize:12,color:studyVals[f.id]?"#FFF":"#CCC"}}>{f.l}</div>
             {f.ref&&<div style={{fontSize:10,color:"#555"}}>ref: {f.ref}</div>}
           </div>
-          <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right"}} placeholder="-"/>
+          <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right",borderColor:studyVals[f.id]?"rgba(46,204,113,0.3)":"rgba(255,255,255,0.1)"}} placeholder="-"/>
           {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
         </div>)}
       </div>}
 
-      {/* Free text: all types get this, but it's the primary for xray/echo/ecg/etc */}
-      <div style={{marginTop:isFreeText?0:16}}>
+      {/* Findings/conclusions/free text */}
+      <div style={{marginTop:16}}>
         <label style={S.lbl}>
-          {isFreeText?"Texto del informe / hallazgos":"Observaciones / informe adicional"}
+          {isFreeText?"Hallazgos / informe":"Observaciones adicionales"}
           {!isFreeText&&<span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}> (opcional)</span>}
         </label>
         <textarea value={studyText} onChange={e=>setStudyText(e.target.value)}
-          placeholder={isFreeText
-            ?"Pegá aquí el texto del informe o escribí los hallazgos principales. El LLM clínico va a extraer e interpretar los datos."
-            :"Notas adicionales, comentarios del médico, hallazgos relevantes..."}
-          style={{...S.ta,minHeight:isFreeText?160:80}} rows={isFreeText?8:3}/>
+          placeholder={extracted?"Extraído del documento. Podés editar.":(isFreeText?"Hallazgos principales, conclusiones del médico...":"Notas adicionales...")}
+          style={{...S.ta,minHeight:isFreeText?140:80}}/>
       </div>
 
-      <button onClick={doSave}
-        disabled={studyType==="blood"?Object.keys(studyVals).length===0&&!studyText:(!Object.keys(studyVals).length&&!studyText)}
-        style={{...S.btn,width:"100%",marginTop:16,
-          opacity:(studyType==="blood"?Object.keys(studyVals).length===0&&!studyText:(!Object.keys(studyVals).length&&!studyText))?0.4:1}}>
-        Guardar estudio
+      <button onClick={doSave} disabled={!hasData}
+        style={{...S.btn,width:"100%",marginTop:16,opacity:hasData?1:0.4}}>
+        💾 Guardar estudio
       </button>
+      {extracted&&<button onClick={()=>{
+        // Save and immediately analyze
+        const study2={id:gi(),date:studyDate,type:studyType,title:studyTitle||st.l,vals:studyVals,text:studyText||null,extractedData:extracted};
+        const nd={...data,clinicalStudies:[...studies,study2]};
+        setData(nd);sv(nd);resetAdd();setView("home");
+        setTimeout(()=>{setSelStudy({...study2});setView("study");},50);
+      }} style={{...S.btn,width:"100%",marginTop:8,background:"linear-gradient(135deg,#1ABC9C,#16A085)"}}>
+        🧠 Guardar y analizar con IA ahora
+      </button>}
     </div>;
   }
 
@@ -1428,15 +1675,17 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
   if(view==="study"&&selStudy){
     const st=stInfo(selStudy.type);
     const analysis=selStudy.lastAnalysis;
+    const ext=selStudy.extractedData;
 
     const renderVals=()=>{
       if(!selStudy.vals||Object.keys(selStudy.vals).length===0)return null;
+      const stColor=st.color||"#FF6B35";
       if(selStudy.type==="blood")return BLOOD_PANELS.map(panel=>{
         const entries=panel.fields.filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
         if(!entries.length)return null;
-        return <div key={panel.id} style={{marginBottom:12}}>
-          <div style={{fontSize:11,color:"#E74C3C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
-          {entries.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        return <div key={panel.id} style={{marginBottom:14}}>
+          <div style={{fontSize:11,color:stColor,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
+          {entries.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
             <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
             <div style={{textAlign:"right"}}>
               <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
@@ -1445,20 +1694,46 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
           </div>)}
         </div>;
       });
-      const getFields=()=>{
+      const getViewFields=()=>{
         if(selStudy.type==="urine")return URINE_FIELDS;
         if(selStudy.type==="spirometry")return SPIROMETRY_FIELDS;
         if(selStudy.type==="sleep")return SLEEP_FIELDS;
+        if(selStudy.type==="digestive")return DIGESTIVE_FIELDS;
         return [];
       };
-      const fields=getFields().filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
-      return fields.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+      const vf=getViewFields().filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
+      if(!vf.length)return null;
+      return vf.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
         <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
         <div style={{textAlign:"right"}}>
           <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
           {f.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{f.u}</span>}
         </div>
       </div>);
+    };
+
+    // Render full extracted values (rich view from file upload)
+    const renderExtracted=()=>{
+      if(!ext||!ext.values?.length)return null;
+      return <div style={{...S.cd,marginBottom:10,borderLeft:"3px solid "+st.color}}>
+        <div style={{fontSize:11,color:st.color,fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>VALORES DETECTADOS DEL ARCHIVO</div>
+        {ext.institution&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>🏥 {ext.institution}</div>}
+        {ext.requestedBy&&<div style={{fontSize:11,color:"#888",marginBottom:8}}>👨‍⚕️ {ext.requestedBy}</div>}
+        {ext.values.map((v,i)=>{
+          const sc=v.status==="normal"?"#2ECC71":v.status==="alto"||v.status==="positivo"||v.status==="alterado"?"#E74C3C":v.status==="bajo"?"#F39C12":"#CCC";
+          const si=v.status==="normal"?"✓":v.status==="alto"?"↑":v.status==="bajo"?"↓":v.status==="positivo"?"⚠":v.status==="negativo"?"✓":"·";
+          return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <div style={{flex:1}}><span style={{fontSize:12,color:"#CCC"}}>{v.label}</span>
+              {v.reference&&<span style={{fontSize:10,color:"#555",marginLeft:6}}>({v.reference})</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <span style={{fontSize:13,color:sc,fontWeight:700}}>{v.value}</span>
+              {v.unit&&<span style={{fontSize:11,color:"#666"}}>{v.unit}</span>}
+              <span style={{fontSize:12,color:sc,fontWeight:900,width:14}}>{si}</span>
+            </div>
+          </div>;
+        })}
+      </div>;
     };
 
     return <div style={S.pg}>
@@ -1468,15 +1743,18 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         <h2 style={{...S.t1,margin:0,flex:1}}>{selStudy.title}</h2>
         <button onClick={()=>doDelete(selStudy.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
       </div>
-      <p style={{fontSize:12,color:"#888",marginBottom:16}}>{fd(selStudy.date)}</p>
+      <p style={{fontSize:12,color:"#888",marginBottom:16}}>{fd(selStudy.date)}{ext?.institution?" · "+ext.institution:""}</p>
 
-      {/* Values */}
-      {Object.keys(selStudy.vals||{}).length>0&&<div style={S.cd}>{renderVals()}</div>}
+      {/* Rich extracted values from file */}
+      {renderExtracted()}
+
+      {/* Structured manual values (if no extracted or in addition) */}
+      {!ext&&Object.keys(selStudy.vals||{}).length>0&&<div style={{...S.cd,marginBottom:10}}>{renderVals()}</div>}
 
       {/* Free text informe */}
       {selStudy.text&&<div style={{...S.cd,marginTop:8}}>
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>INFORME</div>
-        <p style={{fontSize:13,color:"#CCC",lineHeight:1.6,whiteSpace:"pre-wrap",margin:0}}>{selStudy.text}</p>
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>INFORME / HALLAZGOS</div>
+        <p style={{fontSize:13,color:"#CCC",lineHeight:1.65,whiteSpace:"pre-wrap",margin:0}}>{selStudy.text}</p>
       </div>}
 
       {/* Previous analysis */}
