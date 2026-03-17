@@ -1412,7 +1412,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 
 // ─── HEALTH TAB (fusionado: Estudios + Antropometría + Timeline) ───
 function HealthTab({data,setData,apiKey}){
-  const[view,setView]=useState("home"); // home | add | study | timeline | anthro | anthro_add | anthro_detail
+  const[view,setView]=useState("home"); // home | add | study | timeline | meds
   const[step,setStep]=useState(1);
   const[studyType,setStudyType]=useState(null);
   const[studyDate,setStudyDate]=useState(td());
@@ -1424,18 +1424,13 @@ function HealthTab({data,setData,apiKey}){
   const[aiRes,setAiRes]=useState("");
   const[aiLoad,setAiLoad]=useState(false);
   const[timelineMarker,setTimelineMarker]=useState(null);
-  // Anthropometry state
-  const[anthroAdding,setAnthroAdding]=useState(false);
-  const[anthroVals,setAnthroVals]=useState({});
-  const[anthroDate,setAnthroDate]=useState(td());
-  const[selAnthroMetric,setSelAnthroMetric]=useState(null);
   // Upload + extraction state
-  const[uploadFile,setUploadFile]=useState(null);       // File object
-  const[uploadB64,setUploadB64]=useState(null);         // base64 string
-  const[uploadMime,setUploadMime]=useState(null);       // mime type
+  const[uploadFile,setUploadFile]=useState(null);
+  const[uploadB64,setUploadB64]=useState(null);
+  const[uploadMime,setUploadMime]=useState(null);
   const[extracting,setExtracting]=useState(false);
-  const[extracted,setExtracted]=useState(null);         // {raw, structured} from LLM
-  const[uploadStep,setUploadStep]=useState("idle");     // idle | preview | extracting | review | done
+  const[extracted,setExtracted]=useState(null);
+  const[uploadStep,setUploadStep]=useState("idle");
 
   const studies=data.clinicalStudies||[];
   const stInfo=st=>STUDY_TYPES.find(x=>x.id===st)||STUDY_TYPES[8];
@@ -1983,8 +1978,8 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         {label:"ORL",                     color:"#27AE60", ids:["ent"]},
         {label:"Psiquiatría / Salud mental",color:"#5D6D7E",ids:["psychiatry"]},
         {label:"Odontología",             color:"#85C1E9", ids:["dentistry"]},
-        {label:"Nutrición clínica / Metabólico",color:"#FF6B35",ids:["nutrition","dexa"]},
-        {label:"Imágenes",                color:"#95A5A6", ids:["xray","ultrasound"]},
+        {label:"Nutrición / Composición corporal",color:"#FF6B35",ids:["nutrition"]},
+        {label:"Imágenes / Óseo",         color:"#95A5A6", ids:["xray","ultrasound","dexa"]},
         {label:"Otro",                    color:"#7F8C8D", ids:["other"]},
       ];
       return <div style={S.pg}>
@@ -2433,92 +2428,6 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
     </div>;
   }
 
-  // ── ANTHROPOMETRY: detail for one metric ──
-  if(view==="anthro_detail"&&selAnthroMetric){
-    const f=ANTHRO.find(x=>x.id===selAnthroMetric);
-    const pts=(data.anthropometry||[]).filter(a=>a[selAnthroMetric]).sort((a,b)=>a.date.localeCompare(b.date));
-    const vs=pts.map(p=>Number(p[selAnthroMetric]));
-    const mx=vs.length?Math.max(...vs):0,mn2=vs.length?Math.min(...vs):0,rng=mx-mn2||1;
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>{setSelAnthroMetric(null);setView("anthro");}} style={S.sm}>&#8592;</button>
-        <h2 style={{...S.t1,margin:0}}>{f.l}</h2>
-      </div>
-      {pts.length>1&&<div style={S.cd}>
-        <h4 style={{fontSize:12,color:"#888",margin:"0 0 12px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCIÓN</h4>
-        <div style={{display:"flex",alignItems:"flex-end",gap:4,height:120}}>
-          {pts.map((p,i)=>{const v=Number(p[selAnthroMetric]);const h=((v-mn2)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-            <span style={{fontSize:10,color:"#AAA"}}>{v}</span>
-            <div style={{width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#FF6B35,#D62828)",borderRadius:4}}/>
-            <span style={{fontSize:8,color:"#666"}}>{p.date.slice(5)}</span>
-          </div>;})}
-        </div>
-      </div>}
-      {pts.map((p,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}>
-        <span style={{fontSize:13,color:"#888"}}>{fd(p.date)}</span>
-        <span style={{fontSize:14,color:"#FF6B35",fontWeight:700}}>{p[selAnthroMetric]} {f.u}</span>
-      </div>)}
-      {pts.length===0&&<p style={{color:"#888",textAlign:"center",fontSize:14}}>Sin mediciones todavía.</p>}
-    </div>;
-  }
-
-  // ── ANTHROPOMETRY: add new measurement ──
-  if(view==="anthro_add"){
-    const doSaveAnthro=()=>{
-      const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date:anthroDate,...anthroVals}]};
-      setData(nd);sv(nd);setAnthroVals({});setView("anthro");
-    };
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("anthro")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>Nueva medición</h2>
-      </div>
-      <label style={S.lbl}>Fecha</label>
-      <input type="date" value={anthroDate} onChange={e=>setAnthroDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
-      <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completá solo lo que tengas. No hace falta todo.</p>
-      {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
-        <input type="number" value={anthroVals[f.id]||""} onChange={e=>{const nv={...anthroVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setAnthroVals(nv);}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
-        <span style={{fontSize:11,color:"#888",width:24}}>{f.u}</span>
-      </div>)}
-      <button onClick={doSaveAnthro} disabled={!Object.keys(anthroVals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(anthroVals).length?1:0.5}}>Guardar</button>
-    </div>;
-  }
-
-  // ── ANTHROPOMETRY: main view ──
-  if(view==="anthro"){
-    const allMeasurements=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date));
-    const latest=allMeasurements[0]||null;
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>📐 Antropometría</h2>
-      </div>
-      <button onClick={()=>setView("anthro_add")} style={{...S.btn,width:"100%",marginBottom:16}}>+ Nueva medición</button>
-      {!latest&&<div style={S.cd}>
-        <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Cargá tus mediciones antropométricas — peso, perímetros, pliegues y composición corporal. Idealmente con un profesional con certificación ISAK.</p>
-      </div>}
-      {latest&&<div style={{marginBottom:16}}>
-        <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-          {ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>{setSelAnthroMetric(f.id);setView("anthro_detail");}} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0,textAlign:"left"}}>
-            <span style={{fontSize:11,color:"#888",display:"block"}}>{f.l}</span>
-            <span style={{...S.stv,fontSize:20,marginTop:4,display:"block"}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span>
-          </button>)}
-        </div>
-      </div>}
-      {allMeasurements.length>1&&<div>
-        <h3 style={{...S.t1,fontSize:14}}>Historial</h3>
-        {allMeasurements.slice(1).map((m,i)=><div key={i} style={{...S.cd,padding:12}}>
-          <div style={{fontSize:12,color:"#888",marginBottom:6}}>{fd(m.date)}</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-            {ANTHRO.filter(f=>m[f.id]).map(f=><span key={f.id} style={{fontSize:12,color:"#CCC"}}>{f.l}: <span style={{color:"#FF6B35",fontWeight:700}}>{m[f.id]}{f.u}</span></span>)}
-          </div>
-        </div>)}
-      </div>}
-    </div>;
-  }
-
   // ── VIEW: MEDICATIONS ──
   if(view==="meds"){
     const meds=data.medications||[];
@@ -2651,32 +2560,11 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       </div>
     </div>}
 
-    {/* Anthropometry card */}
-    {(()=>{
-      const latest=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;
-      return <button onClick={()=>setView("anthro")} style={{...S.cd,cursor:"pointer",width:"100%",textAlign:"left",marginBottom:14,borderLeft:"3px solid #FF6B35",display:"block"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:20}}>⚖️</span>
-            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:15,color:"#FFF",fontWeight:700}}>Nutrición / Antropometría</span>
-          </div>
-          <span style={{fontSize:18,color:"#FF6B35"}}>&#8594;</span>
-        </div>
-        {latest?<div style={{display:"flex",gap:16,marginTop:8,flexWrap:"wrap"}}>
-          {latest.weight&&<span style={{fontSize:12,color:"#CCC"}}>Peso: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.weight} kg</span></span>}
-          {latest.body_fat&&<span style={{fontSize:12,color:"#CCC"}}>%Grasa: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.body_fat}%</span></span>}
-          {latest.muscle_mass&&<span style={{fontSize:12,color:"#CCC"}}>Músculo: <span style={{color:"#FF6B35",fontWeight:700}}>{latest.muscle_mass} kg</span></span>}
-          <span style={{fontSize:11,color:"#888"}}>{fd(latest.date)}</span>
-        </div>:<p style={{fontSize:12,color:"#666",margin:"6px 0 0"}}>Sin mediciones. Tocá para cargar.</p>}
-      </button>;
-    })()}
-
     {/* Cross-context summary */}
     {studies.length>0&&<div style={{...S.cd,borderLeft:"3px solid rgba(26,188,156,0.4)",background:"rgba(26,188,156,0.04)",marginBottom:14}}>
       <div style={{fontSize:11,color:"#1ABC9C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>CONTEXTO INTEGRADO</div>
       <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{studies.length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Estudios</span></div>
-        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.anthropometry||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Mediciones</span></div>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{activeMedCount}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Medicamentos</span></div>
         <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.sessions||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Sesiones</span></div>
         {lastStudy&&<div><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Último:</span><span style={{fontSize:12,color:"#CCC"}}>{fd(lastStudy.date)}</span></div>}
