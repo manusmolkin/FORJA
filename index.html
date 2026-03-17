@@ -1431,6 +1431,14 @@ function HealthTab({data,setData,apiKey}){
   const[extracting,setExtracting]=useState(false);
   const[extracted,setExtracted]=useState(null);
   const[uploadStep,setUploadStep]=useState("idle");
+  // Medications state — must be at top level (React hooks rule)
+  const[medAdd,setMedAdd]=useState(false);
+  const[medName,setMedName]=useState("");
+  const[medDose,setMedDose]=useState("");
+  const[medFreq,setMedFreq]=useState("");
+  const[medCat,setMedCat]=useState("prescription");
+  const[medNotes,setMedNotes]=useState("");
+  const[medActive,setMedActive]=useState(true);
 
   const studies=data.clinicalStudies||[];
   const stInfo=st=>STUDY_TYPES.find(x=>x.id===st)||STUDY_TYPES[8];
@@ -2431,13 +2439,6 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
   // ── VIEW: MEDICATIONS ──
   if(view==="meds"){
     const meds=data.medications||[];
-    const[medAdd,setMedAdd]=useState(false);
-    const[medName,setMedName]=useState("");
-    const[medDose,setMedDose]=useState("");
-    const[medFreq,setMedFreq]=useState("");
-    const[medCat,setMedCat]=useState("prescription");
-    const[medNotes,setMedNotes]=useState("");
-    const[medActive,setMedActive]=useState(true);
     const saveMed=()=>{
       if(!medName.trim())return;
       const m={id:gi(),name:medName.trim(),dose:medDose.trim(),frequency:medFreq.trim(),category:medCat,notes:medNotes.trim(),active:medActive,since:td()};
