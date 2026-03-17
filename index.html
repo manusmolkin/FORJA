@@ -73,16 +73,23 @@ const ANTHRO=[
 
 // ─── CLINICAL STUDIES CONSTANTS ───
 const STUDY_TYPES=[
-  {id:"blood",    l:"Analítica de sangre",      i:"🩸", color:"#E74C3C", group:"lab"},
-  {id:"urine",    l:"Analítica de orina",       i:"🧪", color:"#F39C12", group:"lab"},
-  {id:"digestive",l:"Estudio digestivo",        i:"🫃", color:"#8B4513", group:"digestive"},
-  {id:"spirometry",l:"Espirometría",            i:"🫁", color:"#3498DB", group:"resp"},
-  {id:"sleep",    l:"Polisomnografía / PSG",    i:"😴", color:"#9B59B6", group:"sleep"},
-  {id:"echo",     l:"Ecocardiograma",           i:"❤️", color:"#E91E63", group:"cardio"},
-  {id:"ecg",      l:"ECG",                      i:"📈", color:"#1ABC9C", group:"cardio"},
-  {id:"xray",     l:"Radiografía",              i:"🩻", color:"#95A5A6", group:"imaging"},
-  {id:"ultrasound",l:"Ecografía",               i:"🔵", color:"#2980B9", group:"imaging"},
-  {id:"other",    l:"Otro estudio",             i:"📄", color:"#7F8C8D", group:"other"},
+  {id:"blood",      l:"Analítica de sangre",         i:"🩸", color:"#E74C3C", group:"lab"},
+  {id:"urine",      l:"Analítica de orina",          i:"🧪", color:"#F39C12", group:"lab"},
+  {id:"digestive",  l:"Estudio digestivo",           i:"🫃", color:"#8B4513", group:"digestive"},
+  {id:"urology",    l:"Estudio urológico",           i:"🫘", color:"#E67E22", group:"urology"},
+  {id:"gynecology", l:"Estudio ginecológico",        i:"🌸", color:"#FF69B4", group:"gynecology"},
+  {id:"neurology",  l:"Estudio neurológico",         i:"🧠", color:"#8E44AD", group:"neurology"},
+  {id:"ophthalmology",l:"Estudio oftalmológico",     i:"👁️", color:"#2980B9", group:"ophthalmology"},
+  {id:"ent",        l:"ORL — Otorrinolaringología",  i:"👂", color:"#27AE60", group:"ent"},
+  {id:"spirometry", l:"Espirometría",                i:"🫁", color:"#3498DB", group:"resp"},
+  {id:"sleep",      l:"Polisomnografía / PSG",       i:"😴", color:"#9B59B6", group:"sleep"},
+  {id:"echo",       l:"Ecocardiograma",              i:"❤️", color:"#E91E63", group:"cardio"},
+  {id:"ecg",        l:"ECG",                         i:"📈", color:"#1ABC9C", group:"cardio"},
+  {id:"xray",       l:"Radiografía",                 i:"🩻", color:"#95A5A6", group:"imaging"},
+  {id:"ultrasound", l:"Ecografía",                   i:"🔵", color:"#2980B9", group:"imaging"},
+  {id:"mammo",      l:"Mamografía",                  i:"🩷", color:"#C0392B", group:"gynecology"},
+  {id:"dexa",       l:"Densitometría ósea (DEXA)",   i:"🦴", color:"#BDC3C7", group:"bone"},
+  {id:"other",      l:"Otro estudio",                i:"📄", color:"#7F8C8D", group:"other"},
 ];
 // Sub-tipos de estudios digestivos (para el selector interno)
 const DIGESTIVE_SUBTYPES=[
@@ -166,12 +173,23 @@ const BLOOD_PANELS=[
     {id:"vsg",l:"VSG",u:"mm/h",ref:"H:<15 / M:<20"},
     {id:"fibrin",l:"Fibrinógeno",u:"mg/dL",ref:"200-400"},
   ]},
-  {id:"hormones",l:"Hormonas",fields:[
-    {id:"test",l:"Testosterona total",u:"ng/dL",ref:"H:300-1000"},
-    {id:"test_free",l:"Testosterona libre",u:"pg/mL",ref:"H:50-210"},
-    {id:"shbg",l:"SHBG",u:"nmol/L",ref:"H:10-57"},
+  {id:"hormones",l:"Hormonas (masculinas)",fields:[
+    {id:"test",l:"Testosterona total",u:"ng/dL",ref:"H:300-1000 / M:15-70"},
+    {id:"test_free",l:"Testosterona libre",u:"pg/mL",ref:"H:50-210 / M:1-8.5"},
+    {id:"shbg",l:"SHBG",u:"nmol/L",ref:"H:10-57 / M:18-144"},
     {id:"cortisol",l:"Cortisol matutino",u:"µg/dL",ref:"6-23"},
     {id:"igf1",l:"IGF-1",u:"ng/mL",ref:"Variable por edad"},
+    {id:"dheas",l:"DHEA-S",u:"µg/dL",ref:"H:80-560 / M:35-430"},
+  ]},
+  {id:"hormones_f",l:"Hormonas (femeninas / reproductivas)",fields:[
+    {id:"fsh_b",l:"FSH",u:"mUI/mL",ref:"Folicular:3-10; Pico ovulatorio:4-22; Lútea:1-9; Postmenop:>25"},
+    {id:"lh_b",l:"LH",u:"mUI/mL",ref:"Folicular:2-15; Pico:22-105; Lútea:0.6-19"},
+    {id:"estradiol_b",l:"Estradiol (E2)",u:"pg/mL",ref:"Folicular:30-150; Pico:150-750; Lútea:30-450; Postmenop:<30"},
+    {id:"progesterona_b",l:"Progesterona",u:"ng/mL",ref:"Folicular:<1; Lútea:5-20"},
+    {id:"amh_b",l:"AMH (reserva ovárica)",u:"ng/mL",ref:"25-35 años:1.5-4; baja reserva:<1"},
+    {id:"prolactina_b",l:"Prolactina",u:"ng/mL",ref:"M:<25 no embarazada; H:<15"},
+    {id:"testost_f_b",l:"Testosterona total (mujer)",u:"ng/dL",ref:"15-70"},
+    {id:"hcg",l:"β-hCG",u:"mUI/mL",ref:"No embarazada:<5"},
   ]},
 ];
 const URINE_FIELDS=[
@@ -215,7 +233,126 @@ const DIGESTIVE_FIELDS=[
   {id:"calprotect_val",l:"Calprotectina fecal",u:"µg/g",ref:"<50 normal; 50-200 dudoso; >200 patológico"},
   {id:"lactoferrin",l:"Lactoferrina fecal",u:"µg/g",ref:"<7.25"},
 ];
-const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","other"];
+const UROLOGY_FIELDS=[
+  // Espermograma (OMS 2021)
+  {id:"sperm_vol",      l:"Volumen",                u:"mL",        ref:"≥1.4 (OMS 2021)"},
+  {id:"sperm_conc",     l:"Concentración",          u:"M/mL",      ref:"≥16"},
+  {id:"sperm_total",    l:"Total espermatozoides",  u:"M",         ref:"≥39"},
+  {id:"sperm_motility_a",l:"Motilidad progresiva (A+B)",u:"%",     ref:"≥42%"},
+  {id:"sperm_motility_b",l:"Motilidad no progresiva (C)",u:"%",    ref:""},
+  {id:"sperm_immotile", l:"Inmóviles (D)",          u:"%",         ref:""},
+  {id:"sperm_morph",    l:"Morfología normal (Kruger)",u:"%",      ref:"≥4% (Kruger estricto)"},
+  {id:"sperm_ph",       l:"pH seminal",             u:"",          ref:"≥7.2"},
+  {id:"sperm_wbc",      l:"Leucocitos semen",       u:"M/mL",      ref:"<1"},
+  {id:"sperm_vitalidad",l:"Vitalidad",              u:"%",         ref:"≥54%"},
+  {id:"sperm_licuefac", l:"Licuefacción",           u:"min",       ref:"<60 min"},
+  {id:"sperm_fragmentacion",l:"Fragmentación ADN",  u:"%",         ref:"<15% ideal; <25% aceptable"},
+  // PSA
+  {id:"psa_total",      l:"PSA total",              u:"ng/mL",     ref:"<4 (<3 en <60 años)"},
+  {id:"psa_libre",      l:"PSA libre",              u:"ng/mL",     ref:""},
+  {id:"psa_ratio",      l:"Índice PSA libre/total", u:"%",         ref:">25% baja sospecha; <10% alta sospecha"},
+  // Uroflujometría
+  {id:"uroflow_qmax",   l:"Qmax (flujo máximo)",    u:"mL/s",      ref:"≥15 mL/s"},
+  {id:"uroflow_qmed",   l:"Q medio",                u:"mL/s",      ref:""},
+  {id:"uroflow_vol",    l:"Volumen vaciado",         u:"mL",        ref:""},
+  {id:"uroflow_resid",  l:"Orina residual posmiccional",u:"mL",    ref:"<50 mL"},
+  // Citología urinaria
+  {id:"urine_cytology", l:"Citología urinaria",     u:"",          ref:"Negativa para células malignas"},
+];
+const GYNECOLOGY_FIELDS=[
+  // PAP / Colposcopía
+  {id:"pap_result",     l:"PAP resultado",          u:"",          ref:"NILM (negativo)"},
+  {id:"pap_bethesda",   l:"Clasificación Bethesda", u:"",          ref:"NILM"},
+  {id:"hpv_result",     l:"HPV resultado",          u:"",          ref:"Negativo"},
+  {id:"hpv_type",       l:"Genotipo HPV",           u:"",          ref:""},
+  // Ecografía ginecológica / transvaginal
+  {id:"utero_size",     l:"Tamaño uterino",         u:"cm",        ref:"7-9 x 4-5 cm (premenopausia)"},
+  {id:"endometrio",     l:"Grosor endometrial",     u:"mm",        ref:"Premenop: variable; Postmenop: ≤4mm"},
+  {id:"ovario_der",     l:"Ovario derecho",         u:"cm",        ref:"2.5-5 cm"},
+  {id:"ovario_izq",     l:"Ovario izquierdo",       u:"cm",        ref:"2.5-5 cm"},
+  {id:"foliculos",      l:"Recuento folículos antrales",u:"",      ref:"5-10 por ovario (óptimo)"},
+  // Hormonas reproductivas femeninas
+  {id:"fsh_f",          l:"FSH",                    u:"mUI/mL",    ref:"Folicular: 3-10; Ovulación: 4-22; Lútea: 1-9"},
+  {id:"lh_f",           l:"LH",                     u:"mUI/mL",    ref:"Folicular: 2-15; Ovulación: 22-105"},
+  {id:"estradiol",      l:"Estradiol (E2)",         u:"pg/mL",     ref:"Folicular: 30-150; Ovulación: 150-750"},
+  {id:"progesterona",   l:"Progesterona",           u:"ng/mL",     ref:"Folicular: <1; Lútea: 5-20"},
+  {id:"amh",            l:"AMH (reserva ovárica)",  u:"ng/mL",     ref:"Edad 25-35: 1.5-4; baja <1"},
+  {id:"prolactina",     l:"Prolactina",             u:"ng/mL",     ref:"<25 (no embarazada)"},
+  {id:"testost_f",      l:"Testosterona total (mujer)",u:"ng/dL",  ref:"15-70"},
+  {id:"dheas",          l:"DHEA-S",                 u:"µg/dL",     ref:"35-430 (varía por edad)"},
+  // Densidad mamaria / hallazgos
+  {id:"birads",         l:"Categoría BI-RADS",      u:"",          ref:"1-2 negativo; 3 probab. benigno; 4-5 sospechoso"},
+  {id:"densidad_mama",  l:"Densidad mamaria",       u:"",          ref:"A-D (ACR)"},
+];
+const NEUROLOGY_FIELDS=[
+  {id:"neuro_study",    l:"Tipo de estudio",        u:"",          ref:""},
+  // EEG
+  {id:"eeg_ritmo",      l:"Ritmo de fondo (EEG)",   u:"Hz",        ref:"Alfa 8-13 Hz"},
+  {id:"eeg_result",     l:"EEG resultado",          u:"",          ref:"Normal"},
+  {id:"eeg_descargas",  l:"Descargas epileptiformes",u:"",         ref:"Ausentes"},
+  // EMG/Velocidad de conducción
+  {id:"emg_result",     l:"EMG resultado",          u:"",          ref:"Normal"},
+  {id:"vcn_motora",     l:"VCN motora",             u:"m/s",       ref:">50"},
+  {id:"vcn_sensitiva",  l:"VCN sensitiva",          u:"m/s",       ref:">50"},
+  {id:"latencia",       l:"Latencia distal",        u:"ms",        ref:"Variable por nervio"},
+  // Punción lumbar
+  {id:"lcr_presion",    l:"Presión LCR",            u:"cmH2O",     ref:"10-20"},
+  {id:"lcr_prot",       l:"Proteínas LCR",          u:"mg/dL",     ref:"15-45"},
+  {id:"lcr_glucosa",    l:"Glucosa LCR",            u:"mg/dL",     ref:"50-80 (>60% glucemia)"},
+  {id:"lcr_cells",      l:"Células LCR",            u:"/µL",       ref:"<5 (mononucleares)"},
+  // Imágenes (libre)
+  {id:"mri_result",     l:"RMN resultado",          u:"",          ref:"Normal"},
+  {id:"ct_result",      l:"TC resultado",           u:"",          ref:"Normal"},
+];
+const OPHTHALMOLOGY_FIELDS=[
+  {id:"av_od",          l:"Agudeza visual OD",      u:"",          ref:"20/20 (1.0)"},
+  {id:"av_oi",          l:"Agudeza visual OI",      u:"",          ref:"20/20 (1.0)"},
+  {id:"refraccion_od",  l:"Refracción OD",          u:"D",         ref:""},
+  {id:"refraccion_oi",  l:"Refracción OI",          u:"D",         ref:""},
+  {id:"pio_od",         l:"PIO OD (tensión ocular)",u:"mmHg",      ref:"10-21"},
+  {id:"pio_oi",         l:"PIO OI (tensión ocular)",u:"mmHg",      ref:"10-21"},
+  {id:"cornea_od",      l:"Paquimetría corneal OD", u:"µm",        ref:"520-540"},
+  {id:"cornea_oi",      l:"Paquimetría corneal OI", u:"µm",        ref:"520-540"},
+  {id:"ccf_od",         l:"Capa fibras nerviosas OD (OCT)",u:"µm", ref:">80 µm (varía por sector)"},
+  {id:"ccf_oi",         l:"Capa fibras nerviosas OI (OCT)",u:"µm", ref:">80 µm"},
+  {id:"campimetria",    l:"Campimetría",            u:"",          ref:"Normal (sin escotomas)"},
+  {id:"fondo_ojo",      l:"Fondo de ojo",           u:"",          ref:"Normal"},
+  {id:"biomicro",       l:"Biomicroscopía",         u:"",          ref:"Normal"},
+];
+const ENT_FIELDS=[
+  // Audiometría
+  {id:"aud_od_125",     l:"Umbral OD 125 Hz",       u:"dB",        ref:"≤25 dB"},
+  {id:"aud_od_500",     l:"Umbral OD 500 Hz",       u:"dB",        ref:"≤25 dB"},
+  {id:"aud_od_1k",      l:"Umbral OD 1000 Hz",      u:"dB",        ref:"≤25 dB"},
+  {id:"aud_od_2k",      l:"Umbral OD 2000 Hz",      u:"dB",        ref:"≤25 dB"},
+  {id:"aud_od_4k",      l:"Umbral OD 4000 Hz",      u:"dB",        ref:"≤25 dB"},
+  {id:"aud_oi_1k",      l:"Umbral OI 1000 Hz",      u:"dB",        ref:"≤25 dB"},
+  {id:"aud_oi_4k",      l:"Umbral OI 4000 Hz",      u:"dB",        ref:"≤25 dB"},
+  {id:"aud_tipo",       l:"Tipo hipoacusia",         u:"",          ref:"Normal"},
+  {id:"aud_grado",      l:"Grado (leve/mod/severo)", u:"",          ref:"Normal"},
+  // Timpanometría
+  {id:"timpano_od",     l:"Timpanograma OD",        u:"",          ref:"Tipo A (normal)"},
+  {id:"timpano_oi",     l:"Timpanograma OI",        u:"",          ref:"Tipo A (normal)"},
+  {id:"reflejo_od",     l:"Reflejo estapedial OD",  u:"dB",        ref:"70-100 dB"},
+  // Nasofibroscopía / Laringoscopía
+  {id:"endo_result",    l:"Endoscopía result.",     u:"",          ref:"Normal"},
+  {id:"endo_cuerdas",   l:"Cuerdas vocales",        u:"",          ref:"Móviles, simétricas"},
+  {id:"endo_mucosa",    l:"Mucosa nasofaríngea",    u:"",          ref:"Normal"},
+];
+const DEXA_FIELDS=[
+  {id:"dexa_col_t",     l:"T-score columna lumbar", u:"",          ref:"≥-1.0 normal; -1 a -2.5 osteopenia; <-2.5 osteoporosis"},
+  {id:"dexa_col_z",     l:"Z-score columna lumbar", u:"",          ref:"≥-2.0"},
+  {id:"dexa_col_dmo",   l:"DMO columna",            u:"g/cm²",     ref:"Variable por edad/sexo"},
+  {id:"dexa_fem_t",     l:"T-score cuello femoral", u:"",          ref:"≥-1.0"},
+  {id:"dexa_fem_z",     l:"Z-score cuello femoral", u:"",          ref:"≥-2.0"},
+  {id:"dexa_fem_dmo",   l:"DMO cuello femoral",     u:"g/cm²",     ref:"Variable"},
+  {id:"dexa_total_t",   l:"T-score cadera total",   u:"",          ref:"≥-1.0"},
+  {id:"dexa_frax",      l:"FRAX a 10 años (fx mayor)",u:"%",       ref:"<10% bajo riesgo"},
+  {id:"dexa_grasa",     l:"% grasa corporal (DEXA)",u:"%",         ref:"H: 10-20% atleta; M: 15-25% atleta"},
+  {id:"dexa_musculo",   l:"Masa magra total",       u:"kg",        ref:"Variable"},
+  {id:"dexa_almi",      l:"ALMI (índice masa apendicular)",u:"kg/m²",ref:"H:≥7.0; M:≥5.5"},
+];
+const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","urology","gynecology","neurology","ophthalmology","ent","mammo","dexa","other"];
 
 // Phases for someone returning after months off
 const PHASES=[
@@ -1161,7 +1298,7 @@ Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`
       if(autoText)setStudyText(autoText.trim());
       if(parsed.values?.length){
         const nv={};
-        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS];
+        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS,...UROLOGY_FIELDS,...GYNECOLOGY_FIELDS,...NEUROLOGY_FIELDS,...OPHTHALMOLOGY_FIELDS,...ENT_FIELDS,...DEXA_FIELDS];
         BLOOD_PANELS.forEach(p=>p.fields.forEach(f=>allFields.push(f)));
         parsed.values.forEach(v=>{
           const lbl=(v.label||"").toLowerCase();
@@ -1221,6 +1358,13 @@ Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`
       });
     }else if(study.type==="digestive"){
       DIGESTIVE_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
+        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
+      });
+    }else{
+      // Generic handler for urology, gynecology, neurology, ophthalmology, ent, dexa, mammo
+      const fieldMap={urology:UROLOGY_FIELDS,gynecology:GYNECOLOGY_FIELDS,neurology:NEUROLOGY_FIELDS,ophthalmology:OPHTHALMOLOGY_FIELDS,ent:ENT_FIELDS,dexa:DEXA_FIELDS};
+      const fArr=fieldMap[study.type]||[];
+      fArr.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
         valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
       });
     }
@@ -1386,7 +1530,83 @@ LABORATORIO CLÍNICO:
 - ISO 15189 para calidad analítica
 - CLIA (Clinical Laboratory Improvement Amendments)
 
----
+UROLOGÍA Y ANDROLOGÍA:
+- AUA 2023 (American Urological Association) — BPH, cáncer de próstata, disfunción eréctil, ITU, urolitiasis
+- EAU 2024 (European Association of Urology) — guías completas de urología oncológica y funcional
+- SAU (Sociedad Argentina de Urología) — consensos locales
+- OMS 2021 — Manual de laboratorio para espermograma (5ª ed.) — valores de referencia actualizados: volumen ≥1.4 mL, concentración ≥16M/mL, motilidad progresiva ≥42%, morfología Kruger ≥4%
+- ESHRE/ASRM 2023 — infertilidad masculina; fragmentación ADN espermático
+- NCCN Guidelines 2024 — cáncer de próstata, vejiga, riñón
+- Criterios PSA: ACS/USPSTF 2018 — screening entre 55-70 años con consentimiento informado; PSA libre/total <10% sospechoso
+- AUA/SUFU 2023 — incontinencia urinaria, vejiga hiperactiva, uroflujometría
+- ISSM 2022 (International Society for Sexual Medicine) — disfunción eréctil, eyaculación precoz, hipogonadismo
+- SAF (Sociedad Argentina de Fertilidad) — protocolo espermograma y factor masculino
+
+GINECOLOGÍA, SALUD DE LA MUJER Y MEDICINA REPRODUCTIVA:
+- ACOG 2023 (American College of Obstetricians and Gynecologists) — salud reproductiva, menopausia, screening ginecológico
+- ESHRE 2023 (European Society of Human Reproduction and Embryology) — SOP, endometriosis, reserva ovárica, FIV
+- SEOM / AEGO (España) — oncología ginecológica
+- SOGC 2023 (Society of Obstetricians and Gynaecologists of Canada)
+- SAMER (Sociedad Argentina de Medicina Reproductiva)
+- SAG (Sociedad Argentina de Ginecología y Obstetricia)
+- Bethesda 2014 / ASCCP 2019 — clasificación PAP y manejo de lesiones cervicales
+- IARC / WHO HPV — vacunación y screening HPV; genotipificación 16/18 alto riesgo
+- ISUOG 2023 — ecografía ginecológica y obstétrica
+- ACR / SBI 2022 — BI-RADS y screening mamario; inicio a los 40 años (ACR) o 50 años (USPSTF)
+- NCCN Breast 2024 — riesgo hereditario BRCA1/2, screening de alto riesgo
+- Criterios AMH / RFA (recuento folículos antrales): baja reserva AMH <1.2 ng/mL, alta >3.5 ng/mL (ESHRE)
+- Diagnóstico SOP: Criterios de Rotterdam 2003 (2 de 3: oligo-anovulación, hiperandrogenismo, ovarios poliquísticos)
+- NOF / ISCD 2023 — densitometría ósea en mujeres postmenopáusicas
+- The Menopause Society (NAMS) 2023 — terapia hormonal, salud cardiovascular en menopausia
+
+NEUROLOGÍA:
+- AAN 2023 (American Academy of Neurology) — epilepsia, EM, cefalea, Parkinson, demencias, neuropatías
+- EAN 2023 (European Academy of Neurology) — guías europeas de neurología clínica
+- ILAE 2022 (International League Against Epilepsy) — clasificación epilepsia, criterios diagnósticos
+- ESO 2021 (European Stroke Organisation) — ACV isquémico y hemorrágico
+- MDS 2023 (Movement Disorder Society) — criterios diagnósticos Parkinson, atrofias multisistema
+- IHS/ICHD-3 — Clasificación Internacional de Cefaleas (migraña, CTT, cefalea en racimos)
+- EFNS/EAN — esclerosis múltiple, criterios McDonald 2017
+- AANEM 2023 (American Association of Neuromuscular & Electrodiagnostic Medicine) — EMG, velocidades de conducción
+- Sociedad Argentina de Neurología (SAN)
+- Interpretación EEG: ACNS 2021 (American Clinical Neurophysiology Society)
+- LCR: rangos normales y criterios dx para meningitis, esclerosis múltiple (bandas oligoclonales), encefalitis
+
+OFTALMOLOGÍA:
+- AAO 2023 (American Academy of Ophthalmology) — glaucoma, DMAE, retinopatía diabética, cataratas, refracción
+- EGS 2021 (European Glaucoma Society) — diagnóstico y manejo del glaucoma
+- ICO (International Council of Ophthalmology) — guías globales
+- SOA (Sociedad Oftalmológica Argentina)
+- IAPB — agudeza visual y discapacidad visual (OMS)
+- ADA 2024 — retinopatía diabética: screening anual desde dx; clasificación ETDRS
+- ICO Keratoconus Guidelines 2023 — paquimetría, topografía
+- DRCR Network — edema macular diabético; anti-VEGF
+- RNFL/OCT: Heidelberg/Zeiss normative databases — capas fibras nerviosas retinianas
+- Clasificación IOP: normal 10-21 mmHg; hipertensión ocular >21; glaucoma normo-tensivo <21 con daño
+
+OTORRINOLARINGOLOGÍA (ORL):
+- AAO-HNSF 2023 (American Academy of Otolaryngology) — hipoacusia, vértigo, otitis, sinusitis, roncopatía
+- EAONO (European Academy of Otology and Neuro-Otology)
+- IFOS (International Federation of ORL Societies)
+- AAA 2023 (American Academy of Audiology) — audiometría, clasificación hipoacusia OMS
+- ASHA (American Speech-Language-Hearing Association) — audiometría conductual y logoaudiometría
+- ASAO (Asociación Argentina de ORL)
+- Clasificación hipoacusia OMS: leve 26-40 dB; moderada 41-60 dB; severa 61-80 dB; profunda >80 dB
+- Timpanometría: Tipo A (normal), Tipo B (derrame/perforación), Tipo C (disfunción tuba)
+- BPPV: criterios diagnósticos y maniobra de reposicionamiento (Epley) — AAO-HNSF 2017
+- EAONO/JOS — colesteaatoma, otitis crónica
+
+OSTEOLOGÍA Y REUMATOLOGÍA:
+- IOF 2023 (International Osteoporosis Foundation) — FRAX, umbrales de intervención
+- ISCD 2023 (International Society for Clinical Densitometry) — indicaciones DEXA, interpretación T-score y Z-score
+- ACR 2023 (American College of Rheumatology) — artritis reumatoide, lupus, gota, osteoartritis
+- SER (Sociedad Española de Reumatología)
+- SAR (Sociedad Argentina de Reumatología)
+- WHO 1994 — definición OMS de osteoporosis: T-score ≤-2.5; osteopenia -1 a -2.5
+- NOF 2023 — tratamiento farmacológico: umbral FRAX ≥20% fractura mayor o ≥3% cadera
+- ISCD — ALMI (índice masa apendicular magra) para diagnóstico de sarcopenia
+
+
 
 ESTUDIO A ANALIZAR:
 Tipo: ${st.l}
@@ -1452,22 +1672,43 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
   // ── VIEW: ADD STUDY ──
   if(view==="add"){
     // Step 1: choose type
-    if(step===1)return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>{resetAdd();setView("home");}} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>Nuevo estudio</h2>
-      </div>
-      <p style={{fontSize:13,color:"#888",marginBottom:14}}>¿Qué tipo de estudio querés cargar?</p>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {STUDY_TYPES.map(st=><button key={st.id} onClick={()=>{setStudyType(st.id);setStep(2);}} style={{...S.eo,borderLeft:"3px solid "+st.color}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:22}}>{st.i}</span>
-            <span style={{fontSize:15,color:"#FFF",fontWeight:600}}>{st.l}</span>
-          </div>
-          <span style={{color:st.color,fontSize:18}}>&#8594;</span>
-        </button>)}
-      </div>
-    </div>;
+    if(step===1){
+      const groups=[
+        {label:"Laboratorio",       color:"#E74C3C", ids:["blood","urine"]},
+        {label:"Digestivo",         color:"#8B4513", ids:["digestive"]},
+        {label:"Urología / Andrología", color:"#E67E22", ids:["urology"]},
+        {label:"Ginecología / Mujer",   color:"#FF69B4", ids:["gynecology","mammo"]},
+        {label:"Cardiología",       color:"#E91E63", ids:["echo","ecg"]},
+        {label:"Respiratorio / Sueño",  color:"#3498DB", ids:["spirometry","sleep"]},
+        {label:"Neurología",        color:"#8E44AD", ids:["neurology"]},
+        {label:"Oftalmología",      color:"#2980B9", ids:["ophthalmology"]},
+        {label:"ORL",               color:"#27AE60", ids:["ent"]},
+        {label:"Imágenes / Óseo",   color:"#95A5A6", ids:["xray","ultrasound","dexa"]},
+        {label:"Otro",              color:"#7F8C8D", ids:["other"]},
+      ];
+      return <div style={S.pg}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+          <button onClick={()=>{resetAdd();setView("home");}} style={S.sm}>&#8592;</button>
+          <h2 style={S.t1}>Nuevo estudio</h2>
+        </div>
+        <p style={{fontSize:13,color:"#888",marginBottom:14}}>¿Qué tipo de estudio querés cargar?</p>
+        {groups.map(g=>{
+          const types=STUDY_TYPES.filter(st=>g.ids.includes(st.id));
+          if(!types.length)return null;
+          return <div key={g.label} style={{marginBottom:14}}>
+            <div style={{fontSize:11,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",color:g.color,marginBottom:6}}>{g.label}</div>
+            {types.map(st=><button key={st.id} onClick={()=>{setStudyType(st.id);setStep(2);setUploadStep("idle");}}
+              style={{...S.eo,borderLeft:"3px solid "+st.color,marginBottom:5}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:20}}>{st.i}</span>
+                <span style={{fontSize:14,color:"#FFF",fontWeight:600}}>{st.l}</span>
+              </div>
+              <span style={{color:st.color,fontSize:18}}>&#8594;</span>
+            </button>)}
+          </div>;
+        })}
+      </div>;
+    }
 
     // Step 2: upload or manual entry
     const st=stInfo(studyType);
@@ -1478,6 +1719,12 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
       if(studyType==="spirometry")return SPIROMETRY_FIELDS;
       if(studyType==="sleep")return SLEEP_FIELDS;
       if(studyType==="digestive")return DIGESTIVE_FIELDS;
+      if(studyType==="urology")return UROLOGY_FIELDS;
+      if(studyType==="gynecology")return GYNECOLOGY_FIELDS;
+      if(studyType==="neurology")return NEUROLOGY_FIELDS;
+      if(studyType==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
+      if(studyType==="ent")return ENT_FIELDS;
+      if(studyType==="dexa")return DEXA_FIELDS;
       return null;
     };
     const fields=getFields();
@@ -1699,6 +1946,12 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         if(selStudy.type==="spirometry")return SPIROMETRY_FIELDS;
         if(selStudy.type==="sleep")return SLEEP_FIELDS;
         if(selStudy.type==="digestive")return DIGESTIVE_FIELDS;
+        if(selStudy.type==="urology")return UROLOGY_FIELDS;
+        if(selStudy.type==="gynecology")return GYNECOLOGY_FIELDS;
+        if(selStudy.type==="neurology")return NEUROLOGY_FIELDS;
+        if(selStudy.type==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
+        if(selStudy.type==="ent")return ENT_FIELDS;
+        if(selStudy.type==="dexa")return DEXA_FIELDS;
         return [];
       };
       const vf=getViewFields().filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
