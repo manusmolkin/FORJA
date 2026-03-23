@@ -705,7 +705,7 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[],medications:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[],medications:[],healthSync:[]};
 
 // ─── NUTRITION CONSTANTS ───
 const MEAL_TYPES=[
@@ -879,10 +879,182 @@ function ProgressTab({data}){
 }
 
 // ─── SETTINGS ───
-function SettingsTab({apiKey,onApiKeyChange}){
-  const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
+function SettingsTab({apiKey,onApiKeyChange,data,setData}){
+  const[k,setK]=useState(apiKey);
+  const[saved,setSaved]=useState(false);
+  const[importing,setImporting]=useState(false);
+  const[importMsg,setImportMsg]=useState("");
+  const[pasteMode,setPasteMode]=useState(false);
+  const[pastedJson,setPastedJson]=useState("");
+
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
-  return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
+
+  // Parse and import Apple Health JSON from Shortcut
+  const doImport=(jsonStr)=>{
+    setImporting(true);setImportMsg("");
+    try{
+      const raw=JSON.parse(jsonStr);
+      const entries=raw.healthData||raw.data||raw;
+      if(!Array.isArray(entries)&&typeof entries!=="object")throw new Error("Formato no reconocido");
+      const payload=Array.isArray(entries)?entries:[entries];
+      const now=new Date().toISOString();
+      const batch={id:Math.random().toString(36).substr(2,9),importedAt:now,source:"Apple Health / iOS Shortcut",count:0,days:{}};
+      const metricMap={
+        // Steps
+        steps:"steps",HKQuantityTypeIdentifierStepCount:"steps",
+        // HR
+        heartRate:"heartRate",HKQuantityTypeIdentifierHeartRate:"heartRate",
+        // HRV
+        hrv:"hrv",HKQuantityTypeIdentifierHeartRateVariabilitySDNN:"hrv",
+        // Sleep
+        sleep:"sleep",HKCategoryTypeIdentifierSleepAnalysis:"sleep",
+        // Calories
+        calories:"calories",activeCalories:"calories",HKQuantityTypeIdentifierActiveEnergyBurned:"calories",
+        basalCalories:"basalCalories",HKQuantityTypeIdentifierBasalEnergyBurned:"basalCalories",
+        // SpO2
+        spo2:"spo2",oxygenSaturation:"spo2",HKQuantityTypeIdentifierOxygenSaturation:"spo2",
+        // Weight
+        weight:"weight",bodyMass:"weight",HKQuantityTypeIdentifierBodyMass:"weight",
+        // Body fat
+        bodyFatPercentage:"bodyFat",HKQuantityTypeIdentifierBodyFatPercentage:"bodyFat",
+      };
+      payload.forEach(entry=>{
+        const rawType=entry.type||entry.identifier||entry.sampleType||"";
+        const metricKey=metricMap[rawType]||metricMap[rawType.replace("com.apple.health.","")]||null;
+        if(!metricKey)return;
+        const dateStr=(entry.startDate||entry.date||entry.endDate||now).slice(0,10);
+        if(!batch.days[dateStr])batch.days[dateStr]={date:dateStr};
+        const val=parseFloat(entry.value||entry.quantity||0);
+        if(isNaN(val))return;
+        // Aggregate: sum for steps/calories, avg for HR/HRV/SpO2/weight
+        const sumTypes=["steps","calories","basalCalories"];
+        if(sumTypes.includes(metricKey)){
+          batch.days[dateStr][metricKey]=(batch.days[dateStr][metricKey]||0)+val;
+        }else{
+          // Running avg
+          const prev=batch.days[dateStr][metricKey];
+          const cnt=batch.days[dateStr][metricKey+"_n"]||0;
+          batch.days[dateStr][metricKey]=prev===undefined?val:(prev*cnt+val)/(cnt+1);
+          batch.days[dateStr][metricKey+"_n"]=(cnt+1);
+        }
+        batch.count++;
+      });
+      // Clean up _n counters
+      Object.values(batch.days).forEach(day=>{
+        Object.keys(day).forEach(k=>{if(k.endsWith("_n"))delete day[k];});
+      });
+      const dayCount=Object.keys(batch.days).length;
+      if(batch.count===0)throw new Error("No se encontraron métricas reconocidas en el JSON");
+      const nd={...data,healthSync:[...(data.healthSync||[]),batch]};
+      setData(nd);
+      try{localStorage.setItem("forja-data",JSON.stringify(nd));}catch{}
+      setImportMsg(`✅ ${batch.count} lecturas importadas de ${dayCount} días`);
+      setPastedJson("");setPasteMode(false);
+    }catch(e){
+      setImportMsg("❌ Error: "+e.message);
+    }
+    setImporting(false);
+  };
+
+  const lastSync=(data.healthSync||[]).at(-1);
+  const totalDays=Object.keys(lastSync?.days||{}).length;
+
+  return <div style={S.pg}>
+    <h2 style={S.t1}>⚙️ Config</h2>
+
+    {/* API Key */}
+    <div style={S.cd}>
+      <h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3>
+      <p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p>
+      <input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/>
+      <button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"✓ Guardada":"Guardar"}</button>
+    </div>
+
+    {/* Apple Health Sync */}
+    <div style={{...S.cd,marginTop:16,borderLeft:"3px solid #FF2D55"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <span style={{fontSize:20}}>❤️</span>
+        <h3 style={{fontSize:14,color:"#FF2D55",margin:0,fontFamily:"'Oswald',sans-serif"}}>APPLE HEALTH SYNC</h3>
+      </div>
+      {lastSync&&<div style={{marginBottom:12,padding:"8px 10px",background:"rgba(255,45,85,0.08)",borderRadius:8}}>
+        <div style={{fontSize:12,color:"#CCC"}}>Última sync: <span style={{color:"#FF2D55",fontWeight:700}}>{new Date(lastSync.importedAt).toLocaleDateString("es-AR")}</span></div>
+        <div style={{fontSize:11,color:"#888",marginTop:2}}>{lastSync.count} lecturas · {totalDays} días · {lastSync.source||"Manual"}</div>
+      </div>}
+
+      {/* Automatic shortcut setup */}
+      <div style={{marginBottom:16}}>
+        <div style={{fontSize:11,color:"#FF2D55",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>⚡ SYNC AUTOMÁTICO — ATAJO iOS</div>
+        <div style={{...S.cd,padding:"12px 14px",background:"rgba(255,255,255,0.02)",marginBottom:0}}>
+          <p style={{fontSize:12,color:"#CCC",lineHeight:1.65,margin:"0 0 10px"}}>
+            Creá este Atajo en iPhone. Cada noche lo ejecuta automáticamente, lee Apple Health y abre FORJA con los datos — que se importan solos sin que hagas nada.
+          </p>
+          <div style={{fontSize:11,color:"#AAA",lineHeight:2,fontFamily:"monospace",background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
+            <div style={{color:"#FF2D55",fontWeight:700,marginBottom:4,fontFamily:"'Oswald',sans-serif",fontSize:10,letterSpacing:1}}>ACCIONES DEL ATAJO (en orden)</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Pasos</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Frec. cardíaca</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>VFC (HRV)</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Sueño</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Cal. activas</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Saturación O₂</b> → últimos 30 días</div>
+            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Peso corporal</b> → últimos 30 días</div>
+            <div>🔗 Combinar todas las variables → como <b style={{color:"#1ABC9C"}}>JSON</b></div>
+            <div>🔤 Codificar en Base64 → el JSON combinado</div>
+            <div>🌐 Abrir URL: <b style={{color:"#FF6B35"}}>FORJA_URL/?healthdata=[Base64]</b></div>
+          </div>
+          <div style={{padding:"8px 10px",background:"rgba(255,107,53,0.08)",borderRadius:8,marginBottom:8}}>
+            <div style={{fontSize:11,color:"#FF6B35",fontWeight:700,marginBottom:4}}>📌 URL de tu FORJA</div>
+            <div style={{fontSize:11,color:"#CCC",lineHeight:1.5}}>
+              En la acción "Abrir URL", reemplazá <span style={{color:"#FF6B35",fontFamily:"monospace"}}>FORJA_URL</span> por la URL donde tenés guardada tu PWA. Si la abrís desde archivo local, usá: <span style={{color:"#1ABC9C",fontFamily:"monospace",wordBreak:"break-all"}}>file:///path/to/index.html</span>
+            </div>
+          </div>
+          <div style={{padding:"8px 10px",background:"rgba(26,188,156,0.08)",borderRadius:8}}>
+            <div style={{fontSize:11,color:"#1ABC9C",fontWeight:700,marginBottom:4}}>🌙 Automatización nocturna</div>
+            <div style={{fontSize:11,color:"#CCC",lineHeight:1.5}}>En la app <b style={{color:"#FFF"}}>Atajos</b> → pestaña <b style={{color:"#FFF"}}>Automatización</b> → Nueva automatización → <b style={{color:"#FFF"}}>Hora del día</b> → elegí tu hora de dormir → ejecutar "FORJA Health"</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Manual paste fallback */}
+      <div>
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>📋 IMPORT MANUAL (alternativa)</div>
+        <p style={{fontSize:12,color:"#888",lineHeight:1.5,marginBottom:10}}>
+          Si preferís hacerlo manual: ejecutá el Atajo → copiá el JSON → pegalo acá.
+        </p>
+        {!pasteMode
+          ?<button onClick={()=>setPasteMode(true)} style={{...S.eo,justifyContent:"center",color:"#AAA",fontSize:13}}>📋 Pegar JSON de Apple Health</button>
+          :<div>
+            <textarea value={pastedJson} onChange={e=>setPastedJson(e.target.value)}
+              placeholder='Pegá aquí el JSON copiado por el Atajo iOS...'
+              style={{...S.ta,minHeight:100,fontFamily:"monospace",fontSize:11}}/>
+            <div style={{display:"flex",gap:8,marginTop:8}}>
+              <button onClick={()=>doImport(pastedJson)} disabled={!pastedJson.trim()||importing}
+                style={{...S.btn,flex:1,opacity:pastedJson.trim()&&!importing?1:0.4}}>
+                {importing?"⏳ Importando...":"⬇️ Importar"}
+              </button>
+              <button onClick={()=>{setPasteMode(false);setPastedJson("");}} style={{...S.sm,padding:"12px 14px"}}>✕</button>
+            </div>
+          </div>}
+        {importMsg&&<div style={{marginTop:10,padding:"8px 12px",background:importMsg.startsWith("✅")?"rgba(46,204,113,0.1)":"rgba(231,76,60,0.1)",borderRadius:8,fontSize:13,color:importMsg.startsWith("✅")?"#2ECC71":"#E74C3C"}}>{importMsg}</div>}
+      </div>
+    </div>
+
+    {/* Health Sync History */}
+    {(data.healthSync||[]).length>0&&<div style={{...S.cd,marginTop:16}}>
+      <h3 style={{fontSize:13,fontFamily:"'Oswald',sans-serif",color:"#888",margin:"0 0 10px"}}>HISTORIAL DE IMPORTACIONES</h3>
+      {[...(data.healthSync||[])].reverse().slice(0,5).map((s,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <span style={{fontSize:12,color:"#CCC"}}>{new Date(s.importedAt).toLocaleDateString("es-AR")}</span>
+        <span style={{fontSize:12,color:"#888"}}>{s.count} lecturas · {Object.keys(s.days).length} días</span>
+      </div>)}
+    </div>}
+
+    {/* Delete all */}
+    <div style={{...S.cd,marginTop:16}}>
+      <h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3>
+      <button onClick={()=>{if(window.confirm("¿Seguro? Se borran TODOS los datos."))
+        {localStorage.removeItem("forja-data");window.location.reload()}}}
+        style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button>
+    </div>
+  </div>;
 }
 
 // ─── FOOD DATABASE (proteinas por 100g) ───
@@ -1614,6 +1786,31 @@ Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`
     ctxTxt+=`- Fase de entrenamiento: ${PHASES[data.phase||0]?.name||"No registrado"}\n`;
     if(totalProt>0)ctxTxt+=`- Ingesta proteica promedio estimada: ~${totalProt}g/día\n`;
     ctxTxt+=`- Dieta: pescatariano/plant-based (pescado frecuente, huevos, legumbres, tofu, tempeh; sin cortes de carne vacuno ni cerdo)\n`;
+    // Apple Health sync data
+    const healthSyncs=data.healthSync||[];
+    if(healthSyncs.length>0){
+      const allDays={};
+      healthSyncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{allDays[d.date]=d;}));
+      const recentDays=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
+      if(recentDays.length>0){
+        ctxTxt+=`\nDATOS APPLE HEALTH (últimos ${recentDays.length} días disponibles):\n`;
+        const avg=(key,fmt)=>{const vals=recentDays.filter(d=>d[key]!==undefined).map(d=>d[key]);return vals.length?fmt(vals.reduce((s,v)=>s+v,0)/vals.length):null;};
+        const steps=avg("steps",v=>Math.round(v).toLocaleString());
+        const hr=avg("heartRate",v=>Math.round(v));
+        const hrv=avg("hrv",v=>Math.round(v));
+        const spo2=avg("spo2",v=>v>1?Math.round(v):Math.round(v*100));
+        const sleep=avg("sleep",v=>(v/3600).toFixed(1));
+        const cals=avg("calories",v=>Math.round(v));
+        if(steps)ctxTxt+=`- Pasos promedio: ${steps}/día\n`;
+        if(hr)ctxTxt+=`- Frecuencia cardíaca media: ${hr} lpm\n`;
+        if(hrv)ctxTxt+=`- HRV promedio: ${hrv} ms (mayor HRV = mejor recuperación)\n`;
+        if(spo2)ctxTxt+=`- SpO2 promedio: ${spo2}%\n`;
+        if(sleep)ctxTxt+=`- Sueño promedio: ${sleep} h/noche\n`;
+        if(cals)ctxTxt+=`- Calorías activas promedio: ${cals} kcal/día\n`;
+        const latest=recentDays[0];
+        if(latest.weight)ctxTxt+=`- Peso más reciente (Apple Health): ${latest.weight.toFixed(1)} kg\n`;
+      }
+    }
     const latestAnthro=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0];
     if(latestAnthro){
       ctxTxt+=`\nANTROPOMETRÍA (última medición ${fd(latestAnthro.date)}):\n`;
@@ -2522,11 +2719,88 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
     </div>;
   }
 
+  // ── VIEW: APPLE HEALTH SYNC ──
+  if(view==="health-sync"){
+    const syncs=data.healthSync||[];
+    // Merge all days across all syncs, latest wins per day
+    const allDays={};
+    syncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{
+      if(!allDays[d.date]||d.date>=(allDays[d.date]?.date||""))allDays[d.date]=d;
+    }));
+    const days=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date));
+    const metrics=[
+      {key:"steps",l:"Pasos",i:"👟",unit:"",color:"#3498DB",fmt:v=>Math.round(v).toLocaleString()},
+      {key:"heartRate",l:"FC media",i:"❤️",unit:"lpm",color:"#E74C3C",fmt:v=>Math.round(v)},
+      {key:"hrv",l:"HRV",i:"💓",unit:"ms",color:"#9B59B6",fmt:v=>Math.round(v)},
+      {key:"spo2",l:"SpO2",i:"🫁",unit:"%",color:"#1ABC9C",fmt:v=>(v>1?Math.round(v):Math.round(v*100))},
+      {key:"calories",l:"Calorías activas",i:"🔥",unit:"kcal",color:"#E67E22",fmt:v=>Math.round(v)},
+      {key:"sleep",l:"Sueño",i:"😴",unit:"h",color:"#8E44AD",fmt:v=>(v/3600).toFixed(1)},
+      {key:"weight",l:"Peso",i:"⚖️",unit:"kg",color:"#FF6B35",fmt:v=>v.toFixed(1)},
+      {key:"bodyFat",l:"% Grasa",i:"📊",unit:"%",color:"#F39C12",fmt:v=>(v>1?v.toFixed(1):(v*100).toFixed(1))},
+    ];
+    // Latest values for summary
+    const latest=days[0]||{};
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
+        <span style={{fontSize:20}}>❤️</span>
+        <h2 style={{...S.t1,margin:0}}>Apple Health</h2>
+      </div>
+      {days.length===0&&<div style={S.cd}>
+        <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Sin datos importados. Configurá el Atajo iOS en ⚙️ Config y luego pegá los datos.</p>
+        <button onClick={()=>setView("home")} style={{...S.btn,width:"100%",marginTop:10,fontSize:13}}>Ir a Config →</button>
+      </div>}
+      {days.length>0&&<>
+        {/* Latest day summary */}
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>ÚLTIMO DÍA — {latest.date}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+          {metrics.filter(m=>latest[m.key]!==undefined).map(m=><div key={m.key} style={{...S.stc,borderLeft:"3px solid "+m.color}}>
+            <div style={{fontSize:16,marginBottom:2}}>{m.i}</div>
+            <span style={{...S.stv,fontSize:20,color:m.color}}>{m.fmt(latest[m.key])}<span style={{...S.stu,fontSize:10}}> {m.unit}</span></span>
+            <span style={S.stl}>{m.l}</span>
+          </div>)}
+        </div>
+        {/* Trend chart for steps (most universal) */}
+        {days.filter(d=>d.steps).length>2&&<div style={{...S.cd,marginBottom:14}}>
+          <div style={{fontSize:11,color:"#3498DB",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>👟 PASOS — ÚLTIMOS {Math.min(days.filter(d=>d.steps).length,14)} DÍAS</div>
+          {(()=>{
+            const pts=days.filter(d=>d.steps).slice(0,14).reverse();
+            const mx=Math.max(...pts.map(d=>d.steps));
+            return <div style={{display:"flex",alignItems:"flex-end",gap:3,height:80}}>
+              {pts.map((d,i)=>{const h=(d.steps/mx)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                <div style={{width:"100%",height:h+"%",minHeight:3,background:"linear-gradient(180deg,#3498DB,#2980B9)",borderRadius:3}}/>
+                <span style={{fontSize:7,color:"#666"}}>{d.date.slice(8)}</span>
+              </div>;})}
+            </div>;
+          })()}
+        </div>}
+        {/* Full history table */}
+        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>HISTORIAL COMPLETO ({days.length} días)</div>
+        {days.slice(0,30).map((d,i)=><div key={i} style={{...S.cd,padding:"10px 12px",marginBottom:5}}>
+          <div style={{fontSize:12,color:"#888",marginBottom:5,fontWeight:700}}>{d.date}</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+            {metrics.filter(m=>d[m.key]!==undefined).map(m=><span key={m.key} style={{fontSize:12,color:"#CCC"}}>
+              {m.i} <span style={{color:m.color,fontWeight:700}}>{m.fmt(d[m.key])}</span><span style={{color:"#666",fontSize:10}}> {m.unit}</span>
+            </span>)}
+          </div>
+        </div>)}
+      </>}
+    </div>;
+  }
+
   // ── VIEW: HOME ──
   const byType={};
   studies.forEach(s=>{if(!byType[s.type])byType[s.type]=[];byType[s.type].push(s);});
   const lastStudy=studies.length?[...studies].sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
   const activeMedCount=(data.medications||[]).filter(m=>m.active!==false).length;
+  // Apple Health latest data
+  const healthSyncs=data.healthSync||[];
+  const latestHealthDay=(()=>{
+    const allDays={};
+    healthSyncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{allDays[d.date]=d;}));
+    const sorted=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date));
+    return sorted[0]||null;
+  })();
 
   return <div style={S.pg}>
     <h2 style={S.t1}>🩺 Salud</h2>
@@ -2543,6 +2817,26 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
         <div style={{fontSize:11,color:"#1ABC9C",fontWeight:600}}>Timeline</div>
       </button>
     </div>
+
+    {/* Apple Health card */}
+    <button onClick={()=>setView("health-sync")} style={{...S.cd,cursor:"pointer",width:"100%",textAlign:"left",marginBottom:14,borderLeft:"3px solid #FF2D55",display:"block"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:latestHealthDay?8:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:20}}>❤️</span>
+          <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,color:"#FFF",fontWeight:700}}>Apple Health</span>
+        </div>
+        {latestHealthDay
+          ?<span style={{fontSize:11,color:"#FF2D55"}}>{latestHealthDay.date} &#8594;</span>
+          :<span style={{fontSize:11,color:"#666"}}>Sin datos · Configurar en Config ⚙️</span>}
+      </div>
+      {latestHealthDay&&<div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+        {latestHealthDay.steps&&<span style={{fontSize:12,color:"#CCC"}}>👟 <span style={{color:"#3498DB",fontWeight:700}}>{Math.round(latestHealthDay.steps).toLocaleString()}</span></span>}
+        {latestHealthDay.heartRate&&<span style={{fontSize:12,color:"#CCC"}}>❤️ <span style={{color:"#E74C3C",fontWeight:700}}>{Math.round(latestHealthDay.heartRate)}</span><span style={{fontSize:10,color:"#666"}}> lpm</span></span>}
+        {latestHealthDay.hrv&&<span style={{fontSize:12,color:"#CCC"}}>💓 <span style={{color:"#9B59B6",fontWeight:700}}>{Math.round(latestHealthDay.hrv)}</span><span style={{fontSize:10,color:"#666"}}> ms HRV</span></span>}
+        {latestHealthDay.sleep&&<span style={{fontSize:12,color:"#CCC"}}>😴 <span style={{color:"#8E44AD",fontWeight:700}}>{(latestHealthDay.sleep/3600).toFixed(1)}</span><span style={{fontSize:10,color:"#666"}}> h</span></span>}
+        {latestHealthDay.spo2&&<span style={{fontSize:12,color:"#CCC"}}>🫁 <span style={{color:"#1ABC9C",fontWeight:700}}>{latestHealthDay.spo2>1?Math.round(latestHealthDay.spo2):Math.round(latestHealthDay.spo2*100)}</span><span style={{fontSize:10,color:"#666"}}>%</span></span>}
+      </div>}
+    </button>
 
     {/* Medications summary if any */}
     {activeMedCount>0&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",background:"rgba(255,107,53,0.04)",marginBottom:14,cursor:"pointer"}} onClick={()=>setView("meds")}>
@@ -2601,11 +2895,90 @@ Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. D
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];if(!d.medications)d.medications=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  const[syncToast,setSyncToast]=useState(null); // {msg, ok}
+
+  useEffect(()=>{
+    // Load saved data
+    const d=ld();
+    if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];if(!d.medications)d.medications=[];if(!d.healthSync)d.healthSync=[];setData(d)}
+    setAK(gk());
+
+    // ── Auto-import from iOS Shortcut via URL param ──
+    // Shortcut opens: forja://import?healthdata=BASE64_JSON
+    // or as PWA:      https://yoursite/?healthdata=BASE64_JSON
+    try{
+      const params=new URLSearchParams(window.location.search);
+      const raw=params.get("healthdata");
+      if(raw){
+        const jsonStr=decodeURIComponent(atob(raw));
+        const parsed=JSON.parse(jsonStr);
+        const entries=parsed.healthData||parsed.data||parsed;
+        const payload=Array.isArray(entries)?entries:[entries];
+        const now=new Date().toISOString();
+        const batch={id:gi(),importedAt:now,source:"iOS Shortcut (auto)",count:0,days:{}};
+        const metricMap={
+          steps:"steps",HKQuantityTypeIdentifierStepCount:"steps",
+          heartRate:"heartRate",HKQuantityTypeIdentifierHeartRate:"heartRate",
+          hrv:"hrv",HKQuantityTypeIdentifierHeartRateVariabilitySDNN:"hrv",
+          sleep:"sleep",HKCategoryTypeIdentifierSleepAnalysis:"sleep",
+          sleepDuration:"sleep",
+          calories:"calories",activeCalories:"calories",HKQuantityTypeIdentifierActiveEnergyBurned:"calories",
+          basalCalories:"basalCalories",HKQuantityTypeIdentifierBasalEnergyBurned:"basalCalories",
+          spo2:"spo2",oxygenSaturation:"spo2",HKQuantityTypeIdentifierOxygenSaturation:"spo2",
+          weight:"weight",bodyMass:"weight",HKQuantityTypeIdentifierBodyMass:"weight",
+          bodyFatPercentage:"bodyFat",HKQuantityTypeIdentifierBodyFatPercentage:"bodyFat",
+          distanceWalkingRunning:"distance",HKQuantityTypeIdentifierDistanceWalkingRunning:"distance",
+          flightsClimbed:"flights",HKQuantityTypeIdentifierFlightsClimbed:"flights",
+          respiratoryRate:"respiratoryRate",HKQuantityTypeIdentifierRespiratoryRate:"respiratoryRate",
+          standHour:"standHours",HKCategoryTypeIdentifierAppleStandHour:"standHours",
+        };
+        const sumTypes=["steps","calories","basalCalories","distance","flights","standHours"];
+        payload.forEach(entry=>{
+          const rawType=entry.type||entry.identifier||entry.sampleType||"";
+          const metricKey=metricMap[rawType]||metricMap[rawType.replace("com.apple.health.","")]||null;
+          if(!metricKey)return;
+          const dateStr=(entry.startDate||entry.date||entry.endDate||now).slice(0,10);
+          if(!batch.days[dateStr])batch.days[dateStr]={date:dateStr};
+          const val=parseFloat(entry.value||entry.quantity||0);
+          if(isNaN(val))return;
+          if(sumTypes.includes(metricKey)){
+            batch.days[dateStr][metricKey]=(batch.days[dateStr][metricKey]||0)+val;
+          }else{
+            const prev=batch.days[dateStr][metricKey];
+            const cnt=batch.days[dateStr][metricKey+"_n"]||0;
+            batch.days[dateStr][metricKey]=prev===undefined?val:(prev*cnt+val)/(cnt+1);
+            batch.days[dateStr][metricKey+"_n"]=(cnt+1);
+          }
+          batch.count++;
+        });
+        Object.values(batch.days).forEach(day=>{Object.keys(day).forEach(k=>{if(k.endsWith("_n"))delete day[k];});});
+        if(batch.count>0){
+          const freshData=d||EMPTY;
+          const nd={...freshData,healthSync:[...(freshData.healthSync||[]),batch]};
+          setData(nd);sv(nd);
+          const dayCount=Object.keys(batch.days).length;
+          setSyncToast({ok:true,msg:`✅ Apple Health: ${batch.count} lecturas de ${dayCount} días sincronizadas`});
+          setTimeout(()=>setSyncToast(null),5000);
+          // Clean URL so next reload doesn't re-import
+          window.history.replaceState({},"",window.location.pathname);
+        }
+      }
+    }catch(e){
+      setSyncToast({ok:false,msg:"❌ Error al importar desde Shortcut: "+e.message});
+      setTimeout(()=>setSyncToast(null),6000);
+    }
+
+    setLoading(false);
+  },[]);
+
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
     <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>SALUD CON CIENCIA</span></div>
+    {/* Sync toast notification */}
+    {syncToast&&<div style={{position:"fixed",top:60,left:"50%",transform:"translateX(-50%)",zIndex:999,maxWidth:440,width:"90%",padding:"12px 16px",borderRadius:12,background:syncToast.ok?"rgba(46,204,113,0.95)":"rgba(231,76,60,0.95)",color:"#FFF",fontSize:13,fontWeight:600,boxShadow:"0 4px 24px rgba(0,0,0,0.5)",textAlign:"center"}}>
+      {syncToast.msg}
+    </div>}
     <div style={S.cnt}>
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
@@ -2613,7 +2986,7 @@ function App(){
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="health"&&<HealthTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
-      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/> }
+      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey} data={data} setData={setData}/> }
     </div>
     <TabBar active={tab} onChange={setTab}/>
   </div>;
