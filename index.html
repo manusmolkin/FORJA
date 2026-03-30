@@ -71,487 +71,6 @@ const ANTHRO=[
 {id:"body_fat",l:"% Grasa corporal",u:"%"},{id:"muscle_mass",l:"Masa muscular",u:"kg"},
 ];
 
-// ─── CLINICAL STUDIES CONSTANTS ───
-const STUDY_TYPES=[
-  {id:"blood",        l:"Analítica de sangre",              i:"🩸", color:"#E74C3C", group:"lab"},
-  {id:"urine",        l:"Analítica de orina",               i:"🧪", color:"#F39C12", group:"lab"},
-  {id:"digestive",    l:"Estudio digestivo / hepático",     i:"👅", color:"#8B4513", group:"digestive"},
-  {id:"nephrology",   l:"Estudio nefrológico",              i:"💧", color:"#1A6B8A", group:"nephrology"},
-  {id:"urology",      l:"Estudio urológico",                i:"🫘", color:"#E67E22", group:"urology"},
-  {id:"gynecology",   l:"Estudio ginecológico",             i:"🌸", color:"#FF69B4", group:"gynecology"},
-  {id:"dermatology",  l:"Estudio dermatológico",            i:"🧴", color:"#D4A017", group:"dermatology"},
-  {id:"traumatology", l:"Traumatología / Ortopedia",        i:"🦴", color:"#626567", group:"traumatology"},
-  {id:"neurology",    l:"Estudio neurológico",              i:"🧠", color:"#8E44AD", group:"neurology"},
-  {id:"ophthalmology",l:"Estudio oftalmológico",            i:"👁️", color:"#2980B9", group:"ophthalmology"},
-  {id:"ent",          l:"ORL — Otorrinolaringología",       i:"👂", color:"#27AE60", group:"ent"},
-  {id:"psychiatry",   l:"Psiquiatría / Salud mental",       i:"🧘", color:"#5D6D7E", group:"psychiatry"},
-  {id:"dentistry",    l:"Odontología",                      i:"🦷", color:"#85C1E9", group:"dentistry"},
-  {id:"nutrition",    l:"Nutrición clínica / Metabólico",   i:"⚖️", color:"#FF6B35", group:"nutrition"},
-  {id:"spirometry",   l:"Espirometría",                     i:"🫁", color:"#3498DB", group:"resp"},
-  {id:"sleep",        l:"Polisomnografía / PSG",            i:"😴", color:"#9B59B6", group:"sleep"},
-  {id:"echo",         l:"Ecocardiograma",                   i:"❤️", color:"#E91E63", group:"cardio"},
-  {id:"ecg",          l:"ECG / Holter / Ergometría",        i:"📈", color:"#1ABC9C", group:"cardio"},
-  {id:"xray",         l:"Radiografía",                      i:"🩻", color:"#95A5A6", group:"imaging"},
-  {id:"ultrasound",   l:"Ecografía",                        i:"🔵", color:"#2980B9", group:"imaging"},
-  {id:"mammo",        l:"Mamografía",                       i:"🩷", color:"#C0392B", group:"gynecology"},
-  {id:"dexa",         l:"Densitometría ósea (DEXA)",        i:"📐", color:"#BDC3C7", group:"bone"},
-  {id:"other",        l:"Otro estudio",                     i:"📄", color:"#7F8C8D", group:"other"},
-];
-// Sub-tipos de estudios digestivos (para el selector interno)
-const DIGESTIVE_SUBTYPES=[
-  {id:"soh",      l:"SOH — Sangre Oculta en Heces", i:"🔬"},
-  {id:"veda",     l:"VEDA / Endoscopía alta",        i:"🔭"},
-  {id:"vcc",      l:"Videocolonoscopía",              i:"🎥"},
-  {id:"hpylori",  l:"H. pylori",                     i:"🦠"},
-  {id:"calprotect",l:"Calprotectina fecal",           i:"💩"},
-  {id:"ecoabdom", l:"Ecografía abdominal",            i:"🔵"},
-  {id:"colonoscopy",l:"Colonoscopía",                 i:"📷"},
-  {id:"transit",  l:"Tránsito intestinal",            i:"➡️"},
-  {id:"manometry",l:"Manometría esofágica/anorrectal",i:"📊"},
-  {id:"ph_metry", l:"pH-metría / impedanciometría",   i:"⚗️"},
-  {id:"capsule",  l:"Cápsula endoscópica",            i:"💊"},
-  {id:"dig_other",l:"Otro estudio digestivo",         i:"📋"},
-];
-const BLOOD_PANELS=[
-  {id:"hemogram",l:"Hemograma",fields:[
-    {id:"hb",l:"Hemoglobina",u:"g/dL",ref:"H:13.5-17.5 / M:12-15.5"},
-    {id:"hto",l:"Hematocrito",u:"%",ref:"H:41-53 / M:36-46"},
-    {id:"vcm",l:"VCM",u:"fL",ref:"80-100"},
-    {id:"hcm",l:"HCM",u:"pg",ref:"27-33"},
-    {id:"rdw",l:"RDW",u:"%",ref:"11.5-14.5"},
-    {id:"wbc",l:"Leucocitos",u:"x10³/µL",ref:"4.5-11"},
-    {id:"neutro",l:"Neutrófilos",u:"%",ref:"50-70"},
-    {id:"lympho",l:"Linfocitos",u:"%",ref:"20-40"},
-    {id:"plaq",l:"Plaquetas",u:"x10³/µL",ref:"150-400"},
-  ]},
-  {id:"lipids",l:"Perfil Lipídico",fields:[
-    {id:"ct",l:"Colesterol total",u:"mg/dL",ref:"<200"},
-    {id:"ldl",l:"LDL",u:"mg/dL",ref:"<130 (ideal <100)"},
-    {id:"hdl",l:"HDL",u:"mg/dL",ref:"H:>40 / M:>50"},
-    {id:"tg",l:"Triglicéridos",u:"mg/dL",ref:"<150"},
-    {id:"non_hdl",l:"No-HDL",u:"mg/dL",ref:"<160"},
-    {id:"ct_hdl",l:"Índice CT/HDL",u:"",ref:"<5"},
-  ]},
-  {id:"glucose",l:"Glucemia y Diabetes",fields:[
-    {id:"glucose",l:"Glucemia en ayunas",u:"mg/dL",ref:"70-100"},
-    {id:"hba1c",l:"HbA1c",u:"%",ref:"<5.7"},
-    {id:"insulin",l:"Insulina basal",u:"µUI/mL",ref:"2-25"},
-    {id:"homa",l:"HOMA-IR",u:"",ref:"<2.5"},
-  ]},
-  {id:"liver",l:"Función Hepática",fields:[
-    {id:"got",l:"GOT (AST)",u:"U/L",ref:"H:<40 / M:<31"},
-    {id:"gpt",l:"GPT (ALT)",u:"U/L",ref:"H:<41 / M:<31"},
-    {id:"ggt",l:"GGT",u:"U/L",ref:"H:<60 / M:<40"},
-    {id:"fa",l:"Fosfatasa alcalina",u:"U/L",ref:"44-147"},
-    {id:"bil_t",l:"Bilirrubina total",u:"mg/dL",ref:"0.2-1.2"},
-    {id:"albumin",l:"Albúmina",u:"g/dL",ref:"3.5-5"},
-  ]},
-  {id:"kidney",l:"Función Renal",fields:[
-    {id:"creat",l:"Creatinina",u:"mg/dL",ref:"H:0.7-1.2 / M:0.5-1"},
-    {id:"urea",l:"Urea",u:"mg/dL",ref:"10-50"},
-    {id:"bun",l:"BUN",u:"mg/dL",ref:"7-25"},
-    {id:"uric",l:"Ácido úrico",u:"mg/dL",ref:"H:3.4-7 / M:2.4-5.7"},
-    {id:"egfr",l:"eFG (CKD-EPI)",u:"mL/min/1.73m²",ref:">60"},
-  ]},
-  {id:"thyroid",l:"Tiroides",fields:[
-    {id:"tsh",l:"TSH",u:"µUI/mL",ref:"0.5-4.5"},
-    {id:"t4l",l:"T4 libre",u:"ng/dL",ref:"0.8-1.8"},
-    {id:"t3l",l:"T3 libre",u:"pg/mL",ref:"2.3-4.2"},
-  ]},
-  {id:"iron",l:"Hierro y Ferritina",fields:[
-    {id:"iron",l:"Hierro sérico",u:"µg/dL",ref:"H:65-175 / M:50-170"},
-    {id:"ferrit",l:"Ferritina",u:"ng/mL",ref:"H:30-400 / M:13-150"},
-    {id:"transf",l:"Transferrina",u:"mg/dL",ref:"200-360"},
-    {id:"sat_transf",l:"Saturación transferrina",u:"%",ref:"20-50"},
-    {id:"tibc",l:"TIBC",u:"µg/dL",ref:"250-370"},
-  ]},
-  {id:"vitamins",l:"Vitaminas y Minerales",fields:[
-    {id:"vitd",l:"Vitamina D (25-OH)",u:"ng/mL",ref:"30-100 (óptimo >40)"},
-    {id:"vitb12",l:"Vitamina B12",u:"pg/mL",ref:"200-900"},
-    {id:"folate",l:"Folato",u:"ng/mL",ref:">4"},
-    {id:"magnes",l:"Magnesio",u:"mg/dL",ref:"1.7-2.4"},
-    {id:"calcium",l:"Calcio",u:"mg/dL",ref:"8.5-10.5"},
-    {id:"potass",l:"Potasio",u:"mEq/L",ref:"3.5-5.1"},
-    {id:"sodium",l:"Sodio",u:"mEq/L",ref:"135-145"},
-  ]},
-  {id:"inflam",l:"Inflamación",fields:[
-    {id:"crp",l:"PCR (ultrasensible)",u:"mg/L",ref:"<1 (bajo riesgo CV)"},
-    {id:"vsg",l:"VSG",u:"mm/h",ref:"H:<15 / M:<20"},
-    {id:"fibrin",l:"Fibrinógeno",u:"mg/dL",ref:"200-400"},
-  ]},
-  {id:"hormones",l:"Hormonas (masculinas)",fields:[
-    {id:"test",l:"Testosterona total",u:"ng/dL",ref:"H:300-1000 / M:15-70"},
-    {id:"test_free",l:"Testosterona libre",u:"pg/mL",ref:"H:50-210 / M:1-8.5"},
-    {id:"shbg",l:"SHBG",u:"nmol/L",ref:"H:10-57 / M:18-144"},
-    {id:"cortisol",l:"Cortisol matutino",u:"µg/dL",ref:"6-23"},
-    {id:"igf1",l:"IGF-1",u:"ng/mL",ref:"Variable por edad"},
-    {id:"dheas",l:"DHEA-S",u:"µg/dL",ref:"H:80-560 / M:35-430"},
-  ]},
-  {id:"hormones_f",l:"Hormonas (femeninas / reproductivas)",fields:[
-    {id:"fsh_b",l:"FSH",u:"mUI/mL",ref:"Folicular:3-10; Pico ovulatorio:4-22; Lútea:1-9; Postmenop:>25"},
-    {id:"lh_b",l:"LH",u:"mUI/mL",ref:"Folicular:2-15; Pico:22-105; Lútea:0.6-19"},
-    {id:"estradiol_b",l:"Estradiol (E2)",u:"pg/mL",ref:"Folicular:30-150; Pico:150-750; Lútea:30-450; Postmenop:<30"},
-    {id:"progesterona_b",l:"Progesterona",u:"ng/mL",ref:"Folicular:<1; Lútea:5-20"},
-    {id:"amh_b",l:"AMH (reserva ovárica)",u:"ng/mL",ref:"25-35 años:1.5-4; baja reserva:<1"},
-    {id:"prolactina_b",l:"Prolactina",u:"ng/mL",ref:"M:<25 no embarazada; H:<15"},
-    {id:"testost_f_b",l:"Testosterona total (mujer)",u:"ng/dL",ref:"15-70"},
-    {id:"hcg",l:"β-hCG",u:"mUI/mL",ref:"No embarazada:<5"},
-  ]},
-];
-const URINE_FIELDS=[
-  {id:"ph",l:"pH",u:"",ref:"4.5-8"},
-  {id:"density",l:"Densidad",u:"",ref:"1.005-1.030"},
-  {id:"protein_u",l:"Proteínas",u:"",ref:"Negativo"},
-  {id:"glucose_u",l:"Glucosa",u:"",ref:"Negativo"},
-  {id:"ketones",l:"Cetonas",u:"",ref:"Negativo"},
-  {id:"blood_u",l:"Sangre",u:"",ref:"Negativo"},
-  {id:"leuco_u",l:"Leucocitos",u:"/campo",ref:"<5"},
-  {id:"nitrite",l:"Nitritos",u:"",ref:"Negativo"},
-  {id:"microalb",l:"Microalbuminuria",u:"mg/g Cr",ref:"<30"},
-  {id:"creat_u",l:"Creatinina en orina",u:"mg/dL",ref:"Variable"},
-];
-const SPIROMETRY_FIELDS=[
-  {id:"fvc",l:"FVC",u:"L / %pred",ref:">80%"},
-  {id:"fev1",l:"FEV1",u:"L / %pred",ref:">80%"},
-  {id:"fev1_fvc",l:"FEV1/FVC",u:"%",ref:">70%"},
-  {id:"pef",l:"PEF",u:"L/s / %pred",ref:">80%"},
-  {id:"fef25_75",l:"FEF 25-75%",u:"L/s / %pred",ref:">70%"},
-  {id:"broncho",l:"Respuesta broncodilatadora",u:"",ref:"Negativa (<12% y <200mL)"},
-  {id:"pattern",l:"Patrón",u:"",ref:"Normal"},
-  {id:"severity",l:"Severidad (si hay patrón)",u:"",ref:""},
-];
-const SLEEP_FIELDS=[
-  {id:"iah",l:"IAH (índice apnea-hipopnea)",u:"eventos/h",ref:"<5 normal; 5-15 leve; 15-30 mod; >30 grave"},
-  {id:"desatMin",l:"SpO2 mínima",u:"%",ref:">90%"},
-  {id:"t90",l:"Tiempo con SpO2 <90%",u:"%",ref:"<1%"},
-  {id:"odi",l:"ODI (índice de desaturación)",u:"eventos/h",ref:"<5"},
-  {id:"eficiency",l:"Eficiencia de sueño",u:"%",ref:">85%"},
-  {id:"rem",l:"REM",u:"%",ref:"20-25%"},
-  {id:"deep",l:"Sueño profundo (N3)",u:"%",ref:"15-20%"},
-  {id:"arousal",l:"Índice de arousal",u:"/h",ref:"<10"},
-];
-const DIGESTIVE_FIELDS=[
-  {id:"dig_subtype",l:"Tipo de estudio digestivo",u:"",ref:""},
-  {id:"soh_result",l:"SOH resultado",u:"",ref:"Negativo"},
-  {id:"soh_method",l:"Método (inmunoquímico/guayaco)",u:"",ref:""},
-  {id:"hpylori_result",l:"H. pylori resultado",u:"",ref:"Negativo"},
-  {id:"hpylori_method",l:"Método H. pylori",u:"",ref:""},
-  {id:"calprotect_val",l:"Calprotectina fecal",u:"µg/g",ref:"<50 normal; 50-200 dudoso; >200 patológico"},
-  {id:"lactoferrin",l:"Lactoferrina fecal",u:"µg/g",ref:"<7.25"},
-];
-const UROLOGY_FIELDS=[
-  // Espermograma (OMS 2021)
-  {id:"sperm_vol",      l:"Volumen",                u:"mL",        ref:"≥1.4 (OMS 2021)"},
-  {id:"sperm_conc",     l:"Concentración",          u:"M/mL",      ref:"≥16"},
-  {id:"sperm_total",    l:"Total espermatozoides",  u:"M",         ref:"≥39"},
-  {id:"sperm_motility_a",l:"Motilidad progresiva (A+B)",u:"%",     ref:"≥42%"},
-  {id:"sperm_motility_b",l:"Motilidad no progresiva (C)",u:"%",    ref:""},
-  {id:"sperm_immotile", l:"Inmóviles (D)",          u:"%",         ref:""},
-  {id:"sperm_morph",    l:"Morfología normal (Kruger)",u:"%",      ref:"≥4% (Kruger estricto)"},
-  {id:"sperm_ph",       l:"pH seminal",             u:"",          ref:"≥7.2"},
-  {id:"sperm_wbc",      l:"Leucocitos semen",       u:"M/mL",      ref:"<1"},
-  {id:"sperm_vitalidad",l:"Vitalidad",              u:"%",         ref:"≥54%"},
-  {id:"sperm_licuefac", l:"Licuefacción",           u:"min",       ref:"<60 min"},
-  {id:"sperm_fragmentacion",l:"Fragmentación ADN",  u:"%",         ref:"<15% ideal; <25% aceptable"},
-  // PSA
-  {id:"psa_total",      l:"PSA total",              u:"ng/mL",     ref:"<4 (<3 en <60 años)"},
-  {id:"psa_libre",      l:"PSA libre",              u:"ng/mL",     ref:""},
-  {id:"psa_ratio",      l:"Índice PSA libre/total", u:"%",         ref:">25% baja sospecha; <10% alta sospecha"},
-  // Uroflujometría
-  {id:"uroflow_qmax",   l:"Qmax (flujo máximo)",    u:"mL/s",      ref:"≥15 mL/s"},
-  {id:"uroflow_qmed",   l:"Q medio",                u:"mL/s",      ref:""},
-  {id:"uroflow_vol",    l:"Volumen vaciado",         u:"mL",        ref:""},
-  {id:"uroflow_resid",  l:"Orina residual posmiccional",u:"mL",    ref:"<50 mL"},
-  // Citología urinaria
-  {id:"urine_cytology", l:"Citología urinaria",     u:"",          ref:"Negativa para células malignas"},
-];
-const GYNECOLOGY_FIELDS=[
-  // PAP / Colposcopía
-  {id:"pap_result",     l:"PAP resultado",          u:"",          ref:"NILM (negativo)"},
-  {id:"pap_bethesda",   l:"Clasificación Bethesda", u:"",          ref:"NILM"},
-  {id:"hpv_result",     l:"HPV resultado",          u:"",          ref:"Negativo"},
-  {id:"hpv_type",       l:"Genotipo HPV",           u:"",          ref:""},
-  // Ecografía ginecológica / transvaginal
-  {id:"utero_size",     l:"Tamaño uterino",         u:"cm",        ref:"7-9 x 4-5 cm (premenopausia)"},
-  {id:"endometrio",     l:"Grosor endometrial",     u:"mm",        ref:"Premenop: variable; Postmenop: ≤4mm"},
-  {id:"ovario_der",     l:"Ovario derecho",         u:"cm",        ref:"2.5-5 cm"},
-  {id:"ovario_izq",     l:"Ovario izquierdo",       u:"cm",        ref:"2.5-5 cm"},
-  {id:"foliculos",      l:"Recuento folículos antrales",u:"",      ref:"5-10 por ovario (óptimo)"},
-  // Hormonas reproductivas femeninas
-  {id:"fsh_f",          l:"FSH",                    u:"mUI/mL",    ref:"Folicular: 3-10; Ovulación: 4-22; Lútea: 1-9"},
-  {id:"lh_f",           l:"LH",                     u:"mUI/mL",    ref:"Folicular: 2-15; Ovulación: 22-105"},
-  {id:"estradiol",      l:"Estradiol (E2)",         u:"pg/mL",     ref:"Folicular: 30-150; Ovulación: 150-750"},
-  {id:"progesterona",   l:"Progesterona",           u:"ng/mL",     ref:"Folicular: <1; Lútea: 5-20"},
-  {id:"amh",            l:"AMH (reserva ovárica)",  u:"ng/mL",     ref:"Edad 25-35: 1.5-4; baja <1"},
-  {id:"prolactina",     l:"Prolactina",             u:"ng/mL",     ref:"<25 (no embarazada)"},
-  {id:"testost_f",      l:"Testosterona total (mujer)",u:"ng/dL",  ref:"15-70"},
-  {id:"dheas",          l:"DHEA-S",                 u:"µg/dL",     ref:"35-430 (varía por edad)"},
-  // Densidad mamaria / hallazgos
-  {id:"birads",         l:"Categoría BI-RADS",      u:"",          ref:"1-2 negativo; 3 probab. benigno; 4-5 sospechoso"},
-  {id:"densidad_mama",  l:"Densidad mamaria",       u:"",          ref:"A-D (ACR)"},
-];
-const NEUROLOGY_FIELDS=[
-  {id:"neuro_study",    l:"Tipo de estudio",        u:"",          ref:""},
-  // EEG
-  {id:"eeg_ritmo",      l:"Ritmo de fondo (EEG)",   u:"Hz",        ref:"Alfa 8-13 Hz"},
-  {id:"eeg_result",     l:"EEG resultado",          u:"",          ref:"Normal"},
-  {id:"eeg_descargas",  l:"Descargas epileptiformes",u:"",         ref:"Ausentes"},
-  // EMG/Velocidad de conducción
-  {id:"emg_result",     l:"EMG resultado",          u:"",          ref:"Normal"},
-  {id:"vcn_motora",     l:"VCN motora",             u:"m/s",       ref:">50"},
-  {id:"vcn_sensitiva",  l:"VCN sensitiva",          u:"m/s",       ref:">50"},
-  {id:"latencia",       l:"Latencia distal",        u:"ms",        ref:"Variable por nervio"},
-  // Punción lumbar
-  {id:"lcr_presion",    l:"Presión LCR",            u:"cmH2O",     ref:"10-20"},
-  {id:"lcr_prot",       l:"Proteínas LCR",          u:"mg/dL",     ref:"15-45"},
-  {id:"lcr_glucosa",    l:"Glucosa LCR",            u:"mg/dL",     ref:"50-80 (>60% glucemia)"},
-  {id:"lcr_cells",      l:"Células LCR",            u:"/µL",       ref:"<5 (mononucleares)"},
-  // Imágenes (libre)
-  {id:"mri_result",     l:"RMN resultado",          u:"",          ref:"Normal"},
-  {id:"ct_result",      l:"TC resultado",           u:"",          ref:"Normal"},
-];
-const OPHTHALMOLOGY_FIELDS=[
-  {id:"av_od",          l:"Agudeza visual OD",      u:"",          ref:"20/20 (1.0)"},
-  {id:"av_oi",          l:"Agudeza visual OI",      u:"",          ref:"20/20 (1.0)"},
-  {id:"refraccion_od",  l:"Refracción OD",          u:"D",         ref:""},
-  {id:"refraccion_oi",  l:"Refracción OI",          u:"D",         ref:""},
-  {id:"pio_od",         l:"PIO OD (tensión ocular)",u:"mmHg",      ref:"10-21"},
-  {id:"pio_oi",         l:"PIO OI (tensión ocular)",u:"mmHg",      ref:"10-21"},
-  {id:"cornea_od",      l:"Paquimetría corneal OD", u:"µm",        ref:"520-540"},
-  {id:"cornea_oi",      l:"Paquimetría corneal OI", u:"µm",        ref:"520-540"},
-  {id:"ccf_od",         l:"Capa fibras nerviosas OD (OCT)",u:"µm", ref:">80 µm (varía por sector)"},
-  {id:"ccf_oi",         l:"Capa fibras nerviosas OI (OCT)",u:"µm", ref:">80 µm"},
-  {id:"campimetria",    l:"Campimetría",            u:"",          ref:"Normal (sin escotomas)"},
-  {id:"fondo_ojo",      l:"Fondo de ojo",           u:"",          ref:"Normal"},
-  {id:"biomicro",       l:"Biomicroscopía",         u:"",          ref:"Normal"},
-];
-const ENT_FIELDS=[
-  // Audiometría
-  {id:"aud_od_125",     l:"Umbral OD 125 Hz",       u:"dB",        ref:"≤25 dB"},
-  {id:"aud_od_500",     l:"Umbral OD 500 Hz",       u:"dB",        ref:"≤25 dB"},
-  {id:"aud_od_1k",      l:"Umbral OD 1000 Hz",      u:"dB",        ref:"≤25 dB"},
-  {id:"aud_od_2k",      l:"Umbral OD 2000 Hz",      u:"dB",        ref:"≤25 dB"},
-  {id:"aud_od_4k",      l:"Umbral OD 4000 Hz",      u:"dB",        ref:"≤25 dB"},
-  {id:"aud_oi_1k",      l:"Umbral OI 1000 Hz",      u:"dB",        ref:"≤25 dB"},
-  {id:"aud_oi_4k",      l:"Umbral OI 4000 Hz",      u:"dB",        ref:"≤25 dB"},
-  {id:"aud_tipo",       l:"Tipo hipoacusia",         u:"",          ref:"Normal"},
-  {id:"aud_grado",      l:"Grado (leve/mod/severo)", u:"",          ref:"Normal"},
-  // Timpanometría
-  {id:"timpano_od",     l:"Timpanograma OD",        u:"",          ref:"Tipo A (normal)"},
-  {id:"timpano_oi",     l:"Timpanograma OI",        u:"",          ref:"Tipo A (normal)"},
-  {id:"reflejo_od",     l:"Reflejo estapedial OD",  u:"dB",        ref:"70-100 dB"},
-  // Nasofibroscopía / Laringoscopía
-  {id:"endo_result",    l:"Endoscopía result.",     u:"",          ref:"Normal"},
-  {id:"endo_cuerdas",   l:"Cuerdas vocales",        u:"",          ref:"Móviles, simétricas"},
-  {id:"endo_mucosa",    l:"Mucosa nasofaríngea",    u:"",          ref:"Normal"},
-];
-const DEXA_FIELDS=[
-  {id:"dexa_col_t",     l:"T-score columna lumbar", u:"",          ref:"≥-1.0 normal; -1 a -2.5 osteopenia; <-2.5 osteoporosis"},
-  {id:"dexa_col_z",     l:"Z-score columna lumbar", u:"",          ref:"≥-2.0"},
-  {id:"dexa_col_dmo",   l:"DMO columna",            u:"g/cm²",     ref:"Variable por edad/sexo"},
-  {id:"dexa_fem_t",     l:"T-score cuello femoral", u:"",          ref:"≥-1.0"},
-  {id:"dexa_fem_z",     l:"Z-score cuello femoral", u:"",          ref:"≥-2.0"},
-  {id:"dexa_fem_dmo",   l:"DMO cuello femoral",     u:"g/cm²",     ref:"Variable"},
-  {id:"dexa_total_t",   l:"T-score cadera total",   u:"",          ref:"≥-1.0"},
-  {id:"dexa_frax",      l:"FRAX a 10 años (fx mayor)",u:"%",       ref:"<10% bajo riesgo"},
-  {id:"dexa_grasa",     l:"% grasa corporal (DEXA)",u:"%",         ref:"H: 10-20% atleta; M: 15-25% atleta"},
-  {id:"dexa_musculo",   l:"Masa magra total",       u:"kg",        ref:"Variable"},
-  {id:"dexa_almi",      l:"ALMI (índice masa apendicular)",u:"kg/m²",ref:"H:≥7.0; M:≥5.5"},
-];
-const NEPHROLOGY_FIELDS=[
-  // Función renal avanzada
-  {id:"neph_egfr",      l:"eFG (CKD-EPI 2021)",       u:"mL/min/1.73m²", ref:"≥60 (G1:≥90; G2:60-89; G3a:45-59; G3b:30-44; G4:15-29; G5:<15)"},
-  {id:"neph_creat",     l:"Creatinina sérica",         u:"mg/dL",         ref:"H:0.7-1.2 / M:0.5-1.0"},
-  {id:"neph_cistat",    l:"Cistatina C",               u:"mg/L",          ref:"0.62-1.15"},
-  {id:"neph_urea",      l:"Urea",                      u:"mg/dL",         ref:"10-50"},
-  {id:"neph_bun",       l:"BUN",                       u:"mg/dL",         ref:"7-25"},
-  // Proteinuria
-  {id:"neph_microalb",  l:"Microalbuminuria (orina 24h)",u:"mg/24h",      ref:"<30 normal; 30-300 micro; >300 macroalbuminuria"},
-  {id:"neph_prot_creat",l:"Índice prot/creatinina",    u:"mg/g",          ref:"<150 normal; >300 nefrótico"},
-  {id:"neph_prot_24h",  l:"Proteinuria 24h",           u:"g/24h",         ref:"<0.15"},
-  {id:"neph_alb_creat", l:"Índice alb/creatinina (ACR)",u:"mg/g Cr",      ref:"<30 A1; 30-300 A2; >300 A3"},
-  // Electrolitos y ácido-base
-  {id:"neph_sodium",    l:"Sodio",                     u:"mEq/L",         ref:"135-145"},
-  {id:"neph_potass",    l:"Potasio",                   u:"mEq/L",         ref:"3.5-5.1"},
-  {id:"neph_bicarb",    l:"Bicarbonato",               u:"mEq/L",         ref:"22-26"},
-  {id:"neph_ph_a",      l:"pH arterial",               u:"",              ref:"7.35-7.45"},
-  {id:"neph_phos",      l:"Fósforo",                   u:"mg/dL",         ref:"2.5-4.5"},
-  {id:"neph_pth",       l:"PTH intacta",               u:"pg/mL",         ref:"15-65"},
-  {id:"neph_uricacid",  l:"Ácido úrico",               u:"mg/dL",         ref:"H:3.4-7 / M:2.4-5.7"},
-  // Biopsia renal / Sedimento
-  {id:"neph_sediment",  l:"Sedimento urinario",        u:"",              ref:"Normal (sin cilindros patológicos)"},
-  {id:"neph_hematuria", l:"Hematuria",                 u:"/campo",        ref:"<3 eritrocitos/campo"},
-  {id:"neph_cylinders", l:"Cilindros",                 u:"",              ref:"Ausentes (patológicos)"},
-];
-const DERMATOLOGY_FIELDS=[
-  // Biopsia / histología
-  {id:"derm_biopsy",    l:"Resultado biopsia cutánea", u:"",              ref:""},
-  {id:"derm_histology", l:"Histología",                u:"",              ref:""},
-  {id:"derm_breslow",   l:"Índice de Breslow (melanoma)",u:"mm",          ref:"<0.8mm T1a; 0.8-1mm T1b; 1-2mm T2; 2-4mm T3; >4mm T4"},
-  {id:"derm_clark",     l:"Nivel de Clark",            u:"",              ref:"I-V"},
-  {id:"derm_ulcer",     l:"Ulceración",                u:"",              ref:"Ausente"},
-  {id:"derm_mitosis",   l:"Índice mitótico",           u:"/mm²",         ref:"<1 bajo riesgo"},
-  // Dermatoscopía
-  {id:"derm_dermato",   l:"Dermatoscopía resultado",   u:"",              ref:""},
-  {id:"derm_pattern",   l:"Patrón dermatoscópico",     u:"",              ref:""},
-  // Laboratorio específico
-  {id:"derm_ige",       l:"IgE total",                 u:"UI/mL",         ref:"<100 (varía por edad)"},
-  {id:"derm_ige_spec",  l:"IgE específica (alérgeno)", u:"kU/L",          ref:"<0.35 clase 0 (negativo)"},
-  {id:"derm_prick",     l:"Prick test resultado",      u:"",              ref:"Negativo"},
-  {id:"derm_ana",       l:"ANA (anticuerpos antinucleares)",u:"título",   ref:"<1:80 negativo"},
-  {id:"derm_ena",       l:"ENA (anti-Ro, La, Sm, RNP)",u:"",             ref:"Negativos"},
-  {id:"derm_imunofl",   l:"Inmunofluorescencia directa",u:"",             ref:"Negativa"},
-  // Cultivos
-  {id:"derm_culture",   l:"Cultivo micológico/bacteriano",u:"",           ref:"Negativo"},
-  {id:"derm_koh",       l:"Examen directo KOH",        u:"",              ref:"Negativo"},
-];
-const FREE_TEXT_STUDIES=["spirometry","sleep","xray","echo","ecg","ultrasound","digestive","nephrology","urology","gynecology","dermatology","traumatology","neurology","ophthalmology","ent","psychiatry","dentistry","nutrition","mammo","dexa","other"];
-
-const TRAUMA_FIELDS=[
-  // Imágenes articulares
-  {id:"tr_study",     l:"Tipo de estudio",              u:"",        ref:""},
-  {id:"tr_region",    l:"Región anatómica",             u:"",        ref:""},
-  {id:"tr_mri",       l:"RMN resultado",                u:"",        ref:"Normal"},
-  {id:"tr_ct",        l:"TC resultado",                 u:"",        ref:"Normal"},
-  {id:"tr_rx",        l:"Radiografía resultado",        u:"",        ref:"Normal"},
-  {id:"tr_artro",     l:"Artroscopía resultado",        u:"",        ref:""},
-  // Columna
-  {id:"tr_disc",      l:"Discopatía / Hernia discal",   u:"",        ref:"Ausente"},
-  {id:"tr_stenosis",  l:"Estenosis de canal",           u:"",        ref:"Ausente"},
-  {id:"tr_spondy",    l:"Espondilolistesis",            u:"",        ref:"Ausente (grado I-IV si presente)"},
-  // Rodilla
-  {id:"tr_meniscus",  l:"Meniscos",                     u:"",        ref:"Íntegros"},
-  {id:"tr_lca",       l:"LCA",                          u:"",        ref:"Íntegro"},
-  {id:"tr_lcp",       l:"LCP",                          u:"",        ref:"Íntegro"},
-  {id:"tr_cartilage", l:"Cartílago articular",          u:"",        ref:"Normal (Outerbridge I-IV si lesión)"},
-  // Hombro
-  {id:"tr_rotator",   l:"Manguito rotador",             u:"",        ref:"Íntegro"},
-  {id:"tr_labrum",    l:"Labrum glenoideo",             u:"",        ref:"Íntegro"},
-  // General
-  {id:"tr_fracture",  l:"Fractura",                     u:"",        ref:"Ausente"},
-  {id:"tr_edema",     l:"Edema óseo / Contusión",       u:"",        ref:"Ausente"},
-  {id:"tr_effusion",  l:"Derrame articular",            u:"mL",      ref:"Ausente"},
-  {id:"tr_kellgren",  l:"Escala Kellgren-Lawrence (OA)",u:"grado",   ref:"0 normal; I-IV si artrosis"},
-];
-const PSYCH_FIELDS=[
-  // Escalas validadas
-  {id:"ps_phq9",      l:"PHQ-9 (depresión)",            u:"pts",     ref:"0-4 mín; 5-9 leve; 10-14 mod; 15-19 mod-grav; ≥20 grave"},
-  {id:"ps_gad7",      l:"GAD-7 (ansiedad)",             u:"pts",     ref:"0-4 mín; 5-9 leve; 10-14 mod; ≥15 grave"},
-  {id:"ps_psqi",      l:"PSQI (calidad sueño)",         u:"pts",     ref:"≤5 buena calidad; >5 mala calidad"},
-  {id:"ps_bdi",       l:"BDI-II (Beck depresión)",      u:"pts",     ref:"0-13 mín; 14-19 leve; 20-28 mod; 29-63 grave"},
-  {id:"ps_bai",       l:"BAI (Beck ansiedad)",          u:"pts",     ref:"0-7 mín; 8-15 leve; 16-25 mod; 26-63 grave"},
-  {id:"ps_ymrs",      l:"YMRS (manía)",                 u:"pts",     ref:"<12 remisión; 12-19 leve; 20-25 mod; >25 grave"},
-  {id:"ps_panss",     l:"PANSS (psicosis)",             u:"pts",     ref:"30-58 leve; 59-75 mod; 76-90 mod-grav; >90 grave"},
-  {id:"ps_audit",     l:"AUDIT (alcohol)",              u:"pts",     ref:"0-7 bajo riesgo; 8-15 riesgo; 16-19 dañino; ≥20 dependencia"},
-  {id:"ps_cage",      l:"CAGE (alcohol)",               u:"pts",     ref:"0-1 normal; ≥2 sospecha dependencia"},
-  {id:"ps_dass21",    l:"DASS-21",                      u:"pts",     ref:"Depresión/ansiedad/estrés: normal <10/<8/<15"},
-  {id:"ps_pcl5",      l:"PCL-5 (PTSD)",                u:"pts",     ref:"≥33 sospecha PTSD"},
-  {id:"ps_oci",       l:"OCI-R (TOC)",                  u:"pts",     ref:"≥21 sospecha TOC"},
-  {id:"ps_adhd",      l:"ASRS-v1.1 (ADHD adultos)",    u:"pts",     ref:"≥4 en parte A sospecha ADHD"},
-  {id:"ps_mmse",      l:"MMSE (deterioro cognitivo)",   u:"pts",     ref:"≥27 normal; 21-26 leve; 11-20 mod; ≤10 grave"},
-  {id:"ps_moca",      l:"MoCA (deterioro cognitivo)",   u:"pts",     ref:"≥26 normal; <26 sospecha deterioro"},
-  // EEG / neuroimagen funcional
-  {id:"ps_eeg",       l:"EEG psiquiátrico",             u:"",        ref:"Normal"},
-  {id:"ps_dx",        l:"Diagnóstico DSM-5 / CIE-11",  u:"",        ref:""},
-];
-const DENT_FIELDS=[
-  {id:"dt_study",     l:"Tipo de estudio",              u:"",        ref:""},
-  // Radiografías
-  {id:"dt_panoramic", l:"Radiografía panorámica",       u:"",        ref:"Normal"},
-  {id:"dt_periapical",l:"Radiografía periapical",       u:"",        ref:"Normal"},
-  {id:"dt_bite",      l:"Radiografía bite-wing",        u:"",        ref:"Sin caries interproximales"},
-  {id:"dt_cbct",      l:"CBCT / TC dental",             u:"",        ref:"Normal"},
-  // Estado dental
-  {id:"dt_caries",    l:"Índice CPOD",                  u:"",        ref:"0 muy bajo; 1-3 bajo; 4-6 mod; ≥7 alto (OMS)"},
-  {id:"dt_perio",     l:"Profundidad bolsas (perio)",   u:"mm",      ref:"≤3mm normal; 4-5 leve; 6-7 mod; ≥8 grave"},
-  {id:"dt_cal",       l:"Pérdida adherencia clínica",   u:"mm",      ref:"0 sin pérdida"},
-  {id:"dt_bop",       l:"Sangrado al sondaje (BOP)",    u:"%",       ref:"<10%"},
-  {id:"dt_plaque",    l:"Índice de placa",              u:"%",       ref:"<20% aceptable"},
-  {id:"dt_wisdom",    l:"Estado de terceros molares",   u:"",        ref:""},
-  {id:"dt_implant",   l:"Estado implantes",             u:"",        ref:"Osteointegrados sin pérdida ósea"},
-  {id:"dt_occlusion", l:"Oclusión",                     u:"",        ref:"Clase I molar/canina ideal"},
-  {id:"dt_bruxism",   l:"Bruxismo / ATM",               u:"",        ref:"Sin hallazgos"},
-  {id:"dt_saliva",    l:"pH salival / flujo",           u:"",        ref:"pH 6.5-7.5; flujo ≥0.3 mL/min estimulado"},
-];
-const ECG_ADV_FIELDS=[
-  // ECG básico
-  {id:"ecg_hr",       l:"Frecuencia cardíaca",          u:"lpm",     ref:"60-100"},
-  {id:"ecg_pr",       l:"Intervalo PR",                 u:"ms",      ref:"120-200"},
-  {id:"ecg_qrs",      l:"QRS",                          u:"ms",      ref:"<120"},
-  {id:"ecg_qt",       l:"QT / QTc",                     u:"ms",      ref:"QTc H:<450; M:<460"},
-  {id:"ecg_axis",     l:"Eje eléctrico",                u:"°",       ref:"-30° a +90°"},
-  {id:"ecg_rhythm",   l:"Ritmo",                        u:"",        ref:"Sinusal"},
-  {id:"ecg_result",   l:"Conclusión ECG",               u:"",        ref:"Normal"},
-  // Holter
-  {id:"holt_hr_min",  l:"Holter — FC mínima",           u:"lpm",     ref:""},
-  {id:"holt_hr_max",  l:"Holter — FC máxima",           u:"lpm",     ref:""},
-  {id:"holt_pauses",  l:"Holter — Pausas (>2.5s)",      u:"n°",      ref:"0"},
-  {id:"holt_sve",     l:"Holter — Extrasístoles SV",    u:"n°/24h",  ref:"<1% del total"},
-  {id:"holt_ve",      l:"Holter — Extrasístoles V",     u:"n°/24h",  ref:"<1% (>10% frecuentes)"},
-  {id:"holt_tv",      l:"Holter — TV sostenida",        u:"",        ref:"Ausente"},
-  {id:"holt_fa",      l:"Holter — FA paroxística",      u:"",        ref:"Ausente"},
-  {id:"holt_result",  l:"Holter — Conclusión",          u:"",        ref:"Normal"},
-  // Ergometría / Test de esfuerzo
-  {id:"ergo_protocol",l:"Ergometría — protocolo",       u:"",        ref:"Bruce / modificado"},
-  {id:"ergo_mets",    l:"METs alcanzados",              u:"METs",    ref:"≥10 buena capacidad"},
-  {id:"ergo_fc_max",  l:"% FC máxima alcanzada",        u:"%",       ref:"≥85% submáxima"},
-  {id:"ergo_st",      l:"Cambios ST",                   u:"mm",      ref:"Sin descenso >1mm"},
-  {id:"ergo_symptoms",l:"Síntomas durante esfuerzo",    u:"",        ref:"Asintomático"},
-  {id:"ergo_result",  l:"Ergometría — conclusión",      u:"",        ref:"Negativa para isquemia"},
-  // Ecocardiograma
-  {id:"echo_fevi",    l:"FEVI (fracción eyección VI)",  u:"%",       ref:"≥55%"},
-  {id:"echo_dtdvi",   l:"Diámetro VI diastólico",       u:"mm",      ref:"H:42-59; M:39-53"},
-  {id:"echo_septum",  l:"Grosor septo IV",              u:"mm",      ref:"6-11"},
-  {id:"echo_pp",      l:"Grosor pared posterior",       u:"mm",      ref:"6-11"},
-  {id:"echo_ai",      l:"Diámetro aurícula izquierda",  u:"mm",      ref:"<40"},
-  {id:"echo_ao",      l:"Diámetro aorta",               u:"mm",      ref:"H:<40; M:<38"},
-  {id:"echo_valves",  l:"Válvulas",                     u:"",        ref:"Sin estenosis ni insuficiencia relevante"},
-  {id:"echo_paps",    l:"PAPS estimada (TT)",           u:"mmHg",    ref:"<35"},
-  {id:"echo_peri",    l:"Pericardio",                   u:"",        ref:"Sin derrame"},
-];
-const NUTRITION_FIELDS=[
-  // Antropometría completa (migrado desde BodyTab)
-  {id:"weight",       l:"Peso",                         u:"kg",      ref:""},
-  {id:"height",       l:"Talla",                        u:"cm",      ref:""},
-  {id:"bmi",          l:"IMC",                          u:"kg/m²",   ref:"18.5-24.9 normal; 25-29.9 sobrepeso; ≥30 obesidad"},
-  {id:"chest_p",      l:"Perímetro pecho",              u:"cm",      ref:""},
-  {id:"waist_p",      l:"Perímetro cintura",            u:"cm",      ref:"H:<94 normal; M:<80 normal (IDF)"},
-  {id:"hip_p",        l:"Perímetro cadera",             u:"cm",      ref:""},
-  {id:"icc",          l:"Índice cintura/cadera",        u:"",        ref:"H:<0.90; M:<0.85"},
-  {id:"arm_p",        l:"Perímetro brazo",              u:"cm",      ref:""},
-  {id:"thigh_p",      l:"Perímetro muslo",              u:"cm",      ref:""},
-  {id:"calf_p",       l:"Perímetro pantorrilla",        u:"cm",      ref:""},
-  // Pliegues
-  {id:"triceps_f",    l:"Pliegue tríceps",              u:"mm",      ref:""},
-  {id:"subscap_f",    l:"Pliegue subescapular",         u:"mm",      ref:""},
-  {id:"supra_f",      l:"Pliegue suprailíaco",          u:"mm",      ref:""},
-  {id:"abd_f",        l:"Pliegue abdominal",            u:"mm",      ref:""},
-  // Composición corporal
-  {id:"body_fat",     l:"% Grasa corporal",             u:"%",       ref:"H: atleta 6-13%; fitness 14-17%; saludable 18-24% / M: atleta 14-20%; fitness 21-24%; saludable 25-31%"},
-  {id:"muscle_mass",  l:"Masa muscular",                u:"kg",      ref:""},
-  {id:"fat_mass",     l:"Masa grasa",                   u:"kg",      ref:""},
-  {id:"lean_mass",    l:"Masa magra total",             u:"kg",      ref:""},
-  {id:"visceral_fat", l:"Grasa visceral",               u:"nivel",   ref:"≤9 normal (Tanita); VAT <100cm² normal"},
-  // Bioimpedancia
-  {id:"bia_hydration",l:"Hidratación corporal total",   u:"%",       ref:"H:55-65%; M:50-60%"},
-  {id:"bia_phase",    l:"Ángulo de fase (BIA)",         u:"°",       ref:"H:5-7°; M:4-6° (marcador nutricional)"},
-  // Metabólico
-  {id:"bmr",          l:"Tasa metabólica basal (calorimetría)",u:"kcal/día",ref:"Variable por peso/sexo/edad"},
-  {id:"ree",          l:"Gasto energético en reposo",   u:"kcal/día",ref:"Variable"},
-];
-
-
-// ─── MEDICATIONS / SUPPLEMENTS ───
-const MED_CATEGORIES=[
-  {id:"prescription", l:"Medicamento recetado",  i:"💊", color:"#E74C3C"},
-  {id:"otc",          l:"Medicamento sin receta", i:"🔴", color:"#E67E22"},
-  {id:"supplement",   l:"Suplemento",             i:"🟡", color:"#F39C12"},
-  {id:"vitamin",      l:"Vitamina / mineral",     i:"🟢", color:"#2ECC71"},
-  {id:"herbal",       l:"Fitoterapia / herbal",   i:"🌿", color:"#27AE60"},
-  {id:"probiotic",    l:"Probiótico / prebiótico",i:"🦠", color:"#3498DB"},
-  {id:"hormone",      l:"Hormona / anticonceptivo",i:"⚗️",color:"#9B59B6"},
-];
-
 // Phases for someone returning after months off
 const PHASES=[
 {name:"Readaptacion",wk:"1-3",days:3,c:"#2ECC71",ic:"\u{1F331}",
@@ -705,7 +224,7 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,clinicalStudies:[],medications:[],healthSync:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null};
 
 // ─── NUTRITION CONSTANTS ───
 const MEAL_TYPES=[
@@ -777,7 +296,7 @@ stl:{fontSize:11,color:"#888",display:"block",marginTop:4,textTransform:"upperca
 function Logo({size=40}){return <svg width={size} height={size} viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="url(#fg2)"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#D62828"/></linearGradient></defs><path d="M25 65 L75 65 L70 55 L65 45 L35 45 L30 55 Z" fill="#FFF" opacity="0.95"/><rect x="40" y="30" width="20" height="18" rx="3" fill="#FFF" opacity="0.95"/><rect x="20" y="65" width="60" height="6" rx="3" fill="#FFF" opacity="0.7"/><circle cx="72" cy="32" r="3" fill="#FFD166"/><circle cx="78" cy="26" r="2" fill="#FFD166" opacity="0.7"/><circle cx="65" cy="28" r="1.5" fill="#FFD166" opacity="0.5"/></svg>}
 
 function TabBar({active,onChange}){
-  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"health",l:"Salud",i:"\u{1FA7A}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
+  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
   return <div style={S.tbar}>{tabs.map(t=><button key={t.id} onClick={()=>onChange(t.id)} style={{...S.tab,...(active===t.id?S.tabA:{})}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontWeight:active===t.id?700:400}}>{t.l}</span></button>)}</div>;
 }
 
@@ -830,6 +349,36 @@ function PlanTab({data,setData}){
   </div>;
 }
 
+// ─── BODY TAB ───
+function BodyTab({data,setData}){
+  const[adding,setAdding]=useState(false);
+  const[vals,setVals]=useState({});
+  const[date,setDate]=useState(td());
+  const[selM,setSelM]=useState(null);
+  const doSave=()=>{const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date,...vals}]};setData(nd);sv(nd);setAdding(false);setVals({})};
+  if(selM){const f=ANTHRO.find(x=>x.id===selM);const pts=(data.anthropometry||[]).filter(a=>a[selM]).sort((a,b)=>a.date.localeCompare(b.date));const vs=pts.map(p=>Number(p[selM]));const mx=vs.length?Math.max(...vs):0;const mn=vs.length?Math.min(...vs):0;const rng=mx-mn||1;
+    return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setSelM(null)} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>{f.l}</h2></div>
+    {pts.length>1&&<div style={S.cd}><h4 style={{fontSize:13,color:"#888",margin:"0 0 12px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCION</h4><div style={{display:"flex",alignItems:"flex-end",gap:4,height:120}}>{pts.map((p,i)=>{const v=Number(p[selM]);const h=((v-mn)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#AAA"}}>{v}</span><div style={{width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#FF6B35,#D62828)",borderRadius:4}}/><span style={{fontSize:8,color:"#666"}}>{p.date.slice(5)}</span></div>})}</div></div>}
+    {pts.map((p,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#888"}}>{fd(p.date)}</span><span style={{fontSize:14,color:"#FF6B35",fontWeight:700}}>{p[selM]} {f.u}</span></div>)}
+    {pts.length===0&&<p style={{color:"#888",textAlign:"center",fontSize:14}}>Sin mediciones.</p>}
+    </div>}
+  if(adding)return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setAdding(false)} style={S.sm}>&#8592;</button><h2 style={S.t1}>Nueva medicion</h2></div>
+    <label style={S.lbl}>Fecha</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
+    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completa solo lo que tengas. No hace falta todo.</p>
+    {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+      <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
+      <input type="number" value={vals[f.id]||""} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
+      <span style={{fontSize:11,color:"#888",width:24}}>{f.u}</span>
+    </div>)}
+    <button onClick={doSave} disabled={!Object.keys(vals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(vals).length?1:0.5}}>Guardar</button>
+  </div>;
+  const latest=(data.anthropometry||[]).length?(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+  return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4D0}"} Cuerpo</h2><button onClick={()=>setAdding(true)} style={{...S.btn,width:"100%",marginBottom:20}}>+ Nueva medicion</button>
+    {latest&&<div style={{marginBottom:16}}><h3 style={{...S.t1,fontSize:14}}>Ultima medicion - {fd(latest.date)}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}</div></div>}
+    {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Hacete una antropometria con un nutricionista deportivo (certificacion ISAK) y carga los datos aca.</p></div>}
+  </div>;
+}
+
 // ─── WORKOUT TAB ───
 function WorkoutTab({data,setData,apiKey}){
   const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
@@ -879,182 +428,10 @@ function ProgressTab({data}){
 }
 
 // ─── SETTINGS ───
-function SettingsTab({apiKey,onApiKeyChange,data,setData}){
-  const[k,setK]=useState(apiKey);
-  const[saved,setSaved]=useState(false);
-  const[importing,setImporting]=useState(false);
-  const[importMsg,setImportMsg]=useState("");
-  const[pasteMode,setPasteMode]=useState(false);
-  const[pastedJson,setPastedJson]=useState("");
-
+function SettingsTab({apiKey,onApiKeyChange}){
+  const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
-
-  // Parse and import Apple Health JSON from Shortcut
-  const doImport=(jsonStr)=>{
-    setImporting(true);setImportMsg("");
-    try{
-      const raw=JSON.parse(jsonStr);
-      const entries=raw.healthData||raw.data||raw;
-      if(!Array.isArray(entries)&&typeof entries!=="object")throw new Error("Formato no reconocido");
-      const payload=Array.isArray(entries)?entries:[entries];
-      const now=new Date().toISOString();
-      const batch={id:Math.random().toString(36).substr(2,9),importedAt:now,source:"Apple Health / iOS Shortcut",count:0,days:{}};
-      const metricMap={
-        // Steps
-        steps:"steps",HKQuantityTypeIdentifierStepCount:"steps",
-        // HR
-        heartRate:"heartRate",HKQuantityTypeIdentifierHeartRate:"heartRate",
-        // HRV
-        hrv:"hrv",HKQuantityTypeIdentifierHeartRateVariabilitySDNN:"hrv",
-        // Sleep
-        sleep:"sleep",HKCategoryTypeIdentifierSleepAnalysis:"sleep",
-        // Calories
-        calories:"calories",activeCalories:"calories",HKQuantityTypeIdentifierActiveEnergyBurned:"calories",
-        basalCalories:"basalCalories",HKQuantityTypeIdentifierBasalEnergyBurned:"basalCalories",
-        // SpO2
-        spo2:"spo2",oxygenSaturation:"spo2",HKQuantityTypeIdentifierOxygenSaturation:"spo2",
-        // Weight
-        weight:"weight",bodyMass:"weight",HKQuantityTypeIdentifierBodyMass:"weight",
-        // Body fat
-        bodyFatPercentage:"bodyFat",HKQuantityTypeIdentifierBodyFatPercentage:"bodyFat",
-      };
-      payload.forEach(entry=>{
-        const rawType=entry.type||entry.identifier||entry.sampleType||"";
-        const metricKey=metricMap[rawType]||metricMap[rawType.replace("com.apple.health.","")]||null;
-        if(!metricKey)return;
-        const dateStr=(entry.startDate||entry.date||entry.endDate||now).slice(0,10);
-        if(!batch.days[dateStr])batch.days[dateStr]={date:dateStr};
-        const val=parseFloat(entry.value||entry.quantity||0);
-        if(isNaN(val))return;
-        // Aggregate: sum for steps/calories, avg for HR/HRV/SpO2/weight
-        const sumTypes=["steps","calories","basalCalories"];
-        if(sumTypes.includes(metricKey)){
-          batch.days[dateStr][metricKey]=(batch.days[dateStr][metricKey]||0)+val;
-        }else{
-          // Running avg
-          const prev=batch.days[dateStr][metricKey];
-          const cnt=batch.days[dateStr][metricKey+"_n"]||0;
-          batch.days[dateStr][metricKey]=prev===undefined?val:(prev*cnt+val)/(cnt+1);
-          batch.days[dateStr][metricKey+"_n"]=(cnt+1);
-        }
-        batch.count++;
-      });
-      // Clean up _n counters
-      Object.values(batch.days).forEach(day=>{
-        Object.keys(day).forEach(k=>{if(k.endsWith("_n"))delete day[k];});
-      });
-      const dayCount=Object.keys(batch.days).length;
-      if(batch.count===0)throw new Error("No se encontraron métricas reconocidas en el JSON");
-      const nd={...data,healthSync:[...(data.healthSync||[]),batch]};
-      setData(nd);
-      try{localStorage.setItem("forja-data",JSON.stringify(nd));}catch{}
-      setImportMsg(`✅ ${batch.count} lecturas importadas de ${dayCount} días`);
-      setPastedJson("");setPasteMode(false);
-    }catch(e){
-      setImportMsg("❌ Error: "+e.message);
-    }
-    setImporting(false);
-  };
-
-  const lastSync=(data.healthSync||[]).at(-1);
-  const totalDays=Object.keys(lastSync?.days||{}).length;
-
-  return <div style={S.pg}>
-    <h2 style={S.t1}>⚙️ Config</h2>
-
-    {/* API Key */}
-    <div style={S.cd}>
-      <h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3>
-      <p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p>
-      <input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/>
-      <button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"✓ Guardada":"Guardar"}</button>
-    </div>
-
-    {/* Apple Health Sync */}
-    <div style={{...S.cd,marginTop:16,borderLeft:"3px solid #FF2D55"}}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <span style={{fontSize:20}}>❤️</span>
-        <h3 style={{fontSize:14,color:"#FF2D55",margin:0,fontFamily:"'Oswald',sans-serif"}}>APPLE HEALTH SYNC</h3>
-      </div>
-      {lastSync&&<div style={{marginBottom:12,padding:"8px 10px",background:"rgba(255,45,85,0.08)",borderRadius:8}}>
-        <div style={{fontSize:12,color:"#CCC"}}>Última sync: <span style={{color:"#FF2D55",fontWeight:700}}>{new Date(lastSync.importedAt).toLocaleDateString("es-AR")}</span></div>
-        <div style={{fontSize:11,color:"#888",marginTop:2}}>{lastSync.count} lecturas · {totalDays} días · {lastSync.source||"Manual"}</div>
-      </div>}
-
-      {/* Automatic shortcut setup */}
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:11,color:"#FF2D55",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>⚡ SYNC AUTOMÁTICO — ATAJO iOS</div>
-        <div style={{...S.cd,padding:"12px 14px",background:"rgba(255,255,255,0.02)",marginBottom:0}}>
-          <p style={{fontSize:12,color:"#CCC",lineHeight:1.65,margin:"0 0 10px"}}>
-            Creá este Atajo en iPhone. Cada noche lo ejecuta automáticamente, lee Apple Health y abre FORJA con los datos — que se importan solos sin que hagas nada.
-          </p>
-          <div style={{fontSize:11,color:"#AAA",lineHeight:2,fontFamily:"monospace",background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
-            <div style={{color:"#FF2D55",fontWeight:700,marginBottom:4,fontFamily:"'Oswald',sans-serif",fontSize:10,letterSpacing:1}}>ACCIONES DEL ATAJO (en orden)</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Pasos</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Frec. cardíaca</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>VFC (HRV)</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Sueño</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Cal. activas</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Saturación O₂</b> → últimos 30 días</div>
-            <div>📊 Obtener muestras de salud → <b style={{color:"#FFF"}}>Peso corporal</b> → últimos 30 días</div>
-            <div>🔗 Combinar todas las variables → como <b style={{color:"#1ABC9C"}}>JSON</b></div>
-            <div>🔤 Codificar en Base64 → el JSON combinado</div>
-            <div>🌐 Abrir URL: <b style={{color:"#FF6B35"}}>FORJA_URL/?healthdata=[Base64]</b></div>
-          </div>
-          <div style={{padding:"8px 10px",background:"rgba(255,107,53,0.08)",borderRadius:8,marginBottom:8}}>
-            <div style={{fontSize:11,color:"#FF6B35",fontWeight:700,marginBottom:4}}>📌 URL de tu FORJA</div>
-            <div style={{fontSize:11,color:"#CCC",lineHeight:1.5}}>
-              En la acción "Abrir URL", reemplazá <span style={{color:"#FF6B35",fontFamily:"monospace"}}>FORJA_URL</span> por la URL donde tenés guardada tu PWA. Si la abrís desde archivo local, usá: <span style={{color:"#1ABC9C",fontFamily:"monospace",wordBreak:"break-all"}}>file:///path/to/index.html</span>
-            </div>
-          </div>
-          <div style={{padding:"8px 10px",background:"rgba(26,188,156,0.08)",borderRadius:8}}>
-            <div style={{fontSize:11,color:"#1ABC9C",fontWeight:700,marginBottom:4}}>🌙 Automatización nocturna</div>
-            <div style={{fontSize:11,color:"#CCC",lineHeight:1.5}}>En la app <b style={{color:"#FFF"}}>Atajos</b> → pestaña <b style={{color:"#FFF"}}>Automatización</b> → Nueva automatización → <b style={{color:"#FFF"}}>Hora del día</b> → elegí tu hora de dormir → ejecutar "FORJA Health"</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Manual paste fallback */}
-      <div>
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>📋 IMPORT MANUAL (alternativa)</div>
-        <p style={{fontSize:12,color:"#888",lineHeight:1.5,marginBottom:10}}>
-          Si preferís hacerlo manual: ejecutá el Atajo → copiá el JSON → pegalo acá.
-        </p>
-        {!pasteMode
-          ?<button onClick={()=>setPasteMode(true)} style={{...S.eo,justifyContent:"center",color:"#AAA",fontSize:13}}>📋 Pegar JSON de Apple Health</button>
-          :<div>
-            <textarea value={pastedJson} onChange={e=>setPastedJson(e.target.value)}
-              placeholder='Pegá aquí el JSON copiado por el Atajo iOS...'
-              style={{...S.ta,minHeight:100,fontFamily:"monospace",fontSize:11}}/>
-            <div style={{display:"flex",gap:8,marginTop:8}}>
-              <button onClick={()=>doImport(pastedJson)} disabled={!pastedJson.trim()||importing}
-                style={{...S.btn,flex:1,opacity:pastedJson.trim()&&!importing?1:0.4}}>
-                {importing?"⏳ Importando...":"⬇️ Importar"}
-              </button>
-              <button onClick={()=>{setPasteMode(false);setPastedJson("");}} style={{...S.sm,padding:"12px 14px"}}>✕</button>
-            </div>
-          </div>}
-        {importMsg&&<div style={{marginTop:10,padding:"8px 12px",background:importMsg.startsWith("✅")?"rgba(46,204,113,0.1)":"rgba(231,76,60,0.1)",borderRadius:8,fontSize:13,color:importMsg.startsWith("✅")?"#2ECC71":"#E74C3C"}}>{importMsg}</div>}
-      </div>
-    </div>
-
-    {/* Health Sync History */}
-    {(data.healthSync||[]).length>0&&<div style={{...S.cd,marginTop:16}}>
-      <h3 style={{fontSize:13,fontFamily:"'Oswald',sans-serif",color:"#888",margin:"0 0 10px"}}>HISTORIAL DE IMPORTACIONES</h3>
-      {[...(data.healthSync||[])].reverse().slice(0,5).map((s,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-        <span style={{fontSize:12,color:"#CCC"}}>{new Date(s.importedAt).toLocaleDateString("es-AR")}</span>
-        <span style={{fontSize:12,color:"#888"}}>{s.count} lecturas · {Object.keys(s.days).length} días</span>
-      </div>)}
-    </div>}
-
-    {/* Delete all */}
-    <div style={{...S.cd,marginTop:16}}>
-      <h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3>
-      <button onClick={()=>{if(window.confirm("¿Seguro? Se borran TODOS los datos."))
-        {localStorage.removeItem("forja-data");window.location.reload()}}}
-        style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button>
-    </div>
-  </div>;
+  return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
 }
 
 // ─── FOOD DATABASE (proteinas por 100g) ───
@@ -1256,25 +633,25 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       "trainingName": "nombre del entrenamiento",
       "meals": {
         "desayuno": {
-          "option1": "descripción limpia (~Xg P)",
+          "option1": "descripción limpia (~Xg P / Xg C / Xg G)",
           "option1q": ["3 huevos", "50g ricota", "2 tostadas integrales"],
-          "option2": "alternativa (~Xg P)",
+          "option2": "alternativa (~Xg P / Xg C / Xg G)",
           "option2q": ["200g yogur griego", "30g granola", "20g frutos secos", "1 banana"]
         },
         "almuerzo": {
-          "option1": "combinación con componentes del domingo (~Xg P)",
-          "option1q": ["150g pollo (del domingo)", "80g quinoa cocida (del domingo)", "½ palta", "puñado de rúcula", "6 tomates cherry", "aceite de oliva + limón"]
+          "option1": "combinación del domingo (~Xg P / Xg C / Xg G)",
+          "option1q": ["150g pollo (del domingo)", "80g quinoa cocida (del domingo)", "½ palta", "puñado de rúcula", "6 tomates cherry"]
         },
         "merienda": {
-          "option1": "descripción (~Xg P)",
+          "option1": "descripción (~Xg P / Xg C / Xg G)",
           "option1q": ["cantidad ingrediente 1", "cantidad ingrediente 2"],
-          "option2": "alternativa (~Xg P)",
+          "option2": "alternativa (~Xg P / Xg C / Xg G)",
           "option2q": ["cantidad ingrediente 1", "cantidad ingrediente 2"]
         },
         "cena": {
-          "option1": "plato fresco + guarnición (~Xg P)",
+          "option1": "plato + guarnición (~Xg P / Xg C / Xg G)",
           "option1q": ["200g filet de salmón", "150g batata", "150g brócoli", "aceite de oliva c/n"],
-          "option2": "alternativa (~Xg P)",
+          "option2": "alternativa (~Xg P / Xg C / Xg G)",
           "option2q": ["200g tofu firme", "80g arroz integral crudo", "verduras salteadas c/n"]
         }
       },
@@ -1300,15 +677,23 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       let plan;
       try{plan=JSON.parse(clean);}
       catch(e){
-        // Intenta cerrar JSON truncado
-        const stack=[];let fixed=clean;
-        for(const ch of clean){if(ch==='{')stack.push('}');else if(ch==='[')stack.push(']');else if(ch==='}'||ch===']')stack.pop();}
-        // Cierra strings abiertas primero
-        const qCount=(clean.match(/"/g)||[]).length;
-        if(qCount%2!==0)fixed+='"';
-        fixed+=stack.reverse().join('');
+        // Intenta cerrar JSON truncado contando estructuras abiertas
+        const stack=[];
+        let inS=false,esc=false;
+        for(let ci=0;ci<clean.length;ci++){
+          const ch=clean[ci];
+          if(esc){esc=false;continue;}
+          if(ch==='\\'){esc=true;continue;}
+          if(!inS&&ch==='"'){inS=true;continue;}
+          if(inS&&ch==='"'){inS=false;continue;}
+          if(inS)continue;
+          if(ch==='{')stack.push('}');
+          else if(ch==='[')stack.push(']');
+          else if(ch==='}'||ch===']')stack.pop();
+        }
+        const fixed=(inS?clean+'"':clean)+stack.reverse().join('');
         try{plan=JSON.parse(fixed);}
-        catch(e2){throw new Error("El plan fue demasiado largo y se cortó. Intentá regenerar — suele funcionar al segundo intento.");}
+        catch(e2){throw new Error('El plan fue muy largo y se cortó. Intentá regenerar.');}
       }
       const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
       setData(nd);sv(nd);setAiPlan(plan);setView("plan");
@@ -1318,11 +703,13 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 
   const MealList=({meals,showDel=true})=>{
     if(!meals.length)return <p style={{color:"#888",textAlign:"center",fontSize:14,padding:"20px 0"}}>Sin registros.</p>;
-    const tp=sumP(meals),tk=sumK(meals);
+    const tp=sumP(meals),tk=sumK(meals),tc=Math.round(meals.filter(m=>m.carbs).reduce((s,m)=>s+m.carbs,0)),tf=Math.round(meals.filter(m=>m.fat).reduce((s,m)=>s+m.fat,0));
     return <>
-      {(tk>0||tp>0)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
-        {tp>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22,color:"#2ECC71"}}>{tp}<span style={{...S.stu,fontSize:11}}>g</span></span><span style={S.stl}>Proteinas</span></div>}
-        {tk>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22}}>{tk}</span><span style={S.stl}>kcal</span></div>}
+      {(tk>0||tp>0)&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        {tp>0&&<div style={{...S.stc,flex:1,minWidth:60}}><span style={{...S.stv,fontSize:18,color:"#2ECC71"}}>{tp}<span style={{...S.stu,fontSize:10}}>g</span></span><span style={S.stl}>Prot</span></div>}
+        {tc>0&&<div style={{...S.stc,flex:1,minWidth:60}}><span style={{...S.stv,fontSize:18,color:"#3498DB"}}>{tc}<span style={{...S.stu,fontSize:10}}>g</span></span><span style={S.stl}>Carbs</span></div>}
+        {tf>0&&<div style={{...S.stc,flex:1,minWidth:60}}><span style={{...S.stv,fontSize:18,color:"#E67E22"}}>{tf}<span style={{...S.stu,fontSize:10}}>g</span></span><span style={S.stl}>Grasa</span></div>}
+        {tk>0&&<div style={{...S.stc,flex:1,minWidth:60}}><span style={{...S.stv,fontSize:18}}>{tk}</span><span style={S.stl}>kcal</span></div>}
       </div>}
       {MEAL_TYPES.map(mt=>{
         const grp=meals.filter(m=>m.type===mt.id);
@@ -1335,10 +722,10 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
                 <span style={{fontSize:14,color:"#FFF",fontWeight:600}}>{m.food}</span>
                 {m.qty&&<span style={{fontSize:11,color:"#666",marginLeft:6}}>{m.qty}g</span>}
                 <div style={{display:"flex",gap:10,marginTop:5,flexWrap:"wrap"}}>
-                  {m.protein>0&&<span style={{fontSize:12,color:"#2ECC71",fontWeight:700}}>{m.protein}g prot</span>}
-                  {m.kcal>0&&<span style={{fontSize:12,color:"#FF6B35"}}>{m.kcal} kcal</span>}
+                  {m.protein>0&&<span style={{fontSize:12,color:"#2ECC71",fontWeight:700}}>{m.protein}g P</span>}
                   {m.carbs>0&&<span style={{fontSize:12,color:"#3498DB"}}>{m.carbs}g C</span>}
                   {m.fat>0&&<span style={{fontSize:12,color:"#E67E22"}}>{m.fat}g G</span>}
+                  {m.kcal>0&&<span style={{fontSize:12,color:"#FF6B35"}}>{m.kcal} kcal</span>}
                 </div>
                 {m.notes&&<p style={{fontSize:11,color:"#999",margin:"4px 0 0",fontStyle:"italic"}}>{m.notes}</p>}
               </div>
@@ -1348,6 +735,26 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
         </div>;
       })}
     </>;
+  };
+
+  // ── MACRO PROGRESS BAR ──
+  const MacroBar=({label,current,target,color,unit="g"})=>{
+    if(!target)return null;
+    const pct=Math.min(100,Math.round((current/target)*100));
+    const over=current>target;
+    return <div style={{marginBottom:10}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
+        <span style={{fontSize:12,color:"#AAA",fontFamily:"'Oswald',sans-serif",letterSpacing:0.5}}>{label}</span>
+        <span style={{fontSize:12}}>
+          <span style={{color,fontWeight:700}}>{current}{unit}</span>
+          <span style={{color:"#555"}}> / {target}{unit}</span>
+          <span style={{fontSize:10,color:over?"#E74C3C":pct>=80?"#2ECC71":"#888",marginLeft:6}}>{pct}%</span>
+        </span>
+      </div>
+      <div style={{height:6,background:"rgba(255,255,255,0.06)",borderRadius:4,overflow:"hidden"}}>
+        <div style={{height:"100%",width:pct+"%",background:over?"#E74C3C":color,borderRadius:4,transition:"width 0.3s ease"}}/>
+      </div>
+    </div>;
   };
 
   // ── FOOD DB VIEW ──
@@ -1546,9 +953,20 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
   }
 
   // ── HOME VIEW ──
+  const todayMealsAll=todayMeals;
   const todayP=sumP(todayMeals),todayK=sumK(todayMeals);
+  const todayC=Math.round(todayMeals.filter(m=>m.carbs).reduce((s,m)=>s+m.carbs,0));
+  const todayF=Math.round(todayMeals.filter(m=>m.fat).reduce((s,m)=>s+m.fat,0));
   const todaySession=data.sessions?.find(s=>s.date===td());
   const plan=data.weeklyNutrPlan;
+  // Calcular objetivos con la fórmula: P=1.9g/kg, G=0.8g/kg, C=resto de kcal/4
+  const weightKgHome=data.anthropometry?.length?(data.anthropometry.sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77):77;
+  const isTrainingDay=!!todaySession;
+  const targP=Math.round(weightKgHome*(isTrainingDay?2.0:1.8));
+  const targF=Math.round(weightKgHome*(isTrainingDay?0.8:0.7));
+  const totalKcal=Math.round(weightKgHome*(isTrainingDay?36:32));
+  const targC=Math.round((totalKcal - targP*4 - targF*9)/4);
+  const hasMacros=todayP>0||todayC>0||todayF>0;
   return <div style={S.pg}>
     <h2 style={S.t1}>🥗 Alimentación</h2>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
@@ -1569,1424 +987,51 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
     </div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
       <h3 style={{...S.t1,fontSize:14,margin:0}}>Hoy — {fd(td())}</h3>
-      {todaySession&&<span style={{fontSize:11,color:"#FF6B35"}}>🏋️ Dia de entreno</span>}
+      <span style={{fontSize:11,color:isTrainingDay?"#FF6B35":"#666"}}>{isTrainingDay?"🏋️ Entreno":"💤 Descanso"}</span>
     </div>
-    {(todayP>0||todayK>0)&&<div style={{display:"flex",gap:8,marginBottom:10}}>
-      {todayP>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22,color:"#2ECC71"}}>{todayP}<span style={{...S.stu,fontSize:11}}>g</span></span><span style={S.stl}>Proteinas</span></div>}
-      {todayK>0&&<div style={{...S.stc,flex:1}}><span style={{...S.stv,fontSize:22}}>{todayK}</span><span style={S.stl}>kcal</span></div>}
-    </div>}
+    {hasMacros
+      ? <div style={{...S.cd,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <span style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1}}>MACROS DEL DÍA</span>
+            <span style={{fontSize:10,color:"#555"}}>{weightKgHome}kg · {isTrainingDay?"día de entreno":"día de descanso"}</span>
+          </div>
+          <MacroBar label="PROTEÍNA" current={todayP} target={targP} color="#2ECC71"/>
+          <MacroBar label="CARBOS" current={todayC} target={targC} color="#3498DB"/>
+          <MacroBar label="GRASA" current={todayF} target={targF} color="#E67E22"/>
+          {todayK>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:6,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+            <span style={{fontSize:11,color:"#666"}}>Calorías registradas</span>
+            <span style={{fontSize:12,color:"#FF6B35",fontWeight:700}}>{todayK} <span style={{color:"#555"}}>/ ~{totalKcal} kcal</span></span>
+          </div>}
+        </div>
+      : <div style={{...S.cd,marginBottom:12,borderLeft:"3px solid rgba(46,204,113,0.3)",background:"rgba(46,204,113,0.03)"}}>
+          <p style={{fontSize:11,color:"#888",margin:0,lineHeight:1.5}}>
+            💡 Obj. de hoy ({isTrainingDay?"entreno":"descanso"}): <span style={{color:"#2ECC71",fontWeight:700}}>{targP}g P</span> · <span style={{color:"#3498DB",fontWeight:700}}>{targC}g C</span> · <span style={{color:"#E67E22",fontWeight:700}}>{targF}g G</span> · <span style={{color:"#FF6B35",fontWeight:700}}>~{totalKcal} kcal</span>
+          </p>
+        </div>
+    }
     <MealList meals={todayMeals}/>
     {todayMeals.length===0&&<div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.06)"}}>
-      <p style={{fontSize:12,color:"#CCC",lineHeight:1.5,margin:0}}>💡 Registrá tus comidas para que el Coach IA las use al analizar tu entreno. Los macros son opcionales — alcanza con escribir qué comiste.</p>
+      <p style={{fontSize:12,color:"#CCC",lineHeight:1.5,margin:0}}>Registrá tus comidas con macros para ver el progreso hacia el objetivo del día.</p>
     </div>}
-  </div>;
-}
-
-// ─── HEALTH TAB (fusionado: Estudios + Antropometría + Timeline) ───
-function HealthTab({data,setData,apiKey}){
-  const[view,setView]=useState("home"); // home | add | study | timeline | meds
-  const[step,setStep]=useState(1);
-  const[studyType,setStudyType]=useState(null);
-  const[studyDate,setStudyDate]=useState(td());
-  const[studyTitle,setStudyTitle]=useState("");
-  const[studyVals,setStudyVals]=useState({});
-  const[studyText,setStudyText]=useState("");
-  const[selPanel,setSelPanel]=useState(null);
-  const[selStudy,setSelStudy]=useState(null);
-  const[aiRes,setAiRes]=useState("");
-  const[aiLoad,setAiLoad]=useState(false);
-  const[timelineMarker,setTimelineMarker]=useState(null);
-  // Upload + extraction state
-  const[uploadFile,setUploadFile]=useState(null);
-  const[uploadB64,setUploadB64]=useState(null);
-  const[uploadMime,setUploadMime]=useState(null);
-  const[extracting,setExtracting]=useState(false);
-  const[extracted,setExtracted]=useState(null);
-  const[uploadStep,setUploadStep]=useState("idle");
-  // Medications state — must be at top level (React hooks rule)
-  const[medAdd,setMedAdd]=useState(false);
-  const[medName,setMedName]=useState("");
-  const[medDose,setMedDose]=useState("");
-  const[medFreq,setMedFreq]=useState("");
-  const[medCat,setMedCat]=useState("prescription");
-  const[medNotes,setMedNotes]=useState("");
-  const[medActive,setMedActive]=useState(true);
-
-  const studies=data.clinicalStudies||[];
-  const stInfo=st=>STUDY_TYPES.find(x=>x.id===st)||STUDY_TYPES[8];
-
-  const resetAdd=()=>{setStep(1);setStudyType(null);setStudyDate(td());setStudyTitle("");setStudyVals({});setStudyText("");setSelPanel(null);setUploadFile(null);setUploadB64(null);setUploadMime(null);setExtracted(null);setUploadStep("idle");};
-
-  // Convert file to base64
-  const fileToB64=(file)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-
-  // Detect mime from file
-  const getMime=(file)=>{
-    if(file.type)return file.type;
-    if(file.name.endsWith(".pdf"))return "application/pdf";
-    if(file.name.match(/\.(jpg|jpeg)$/i))return "image/jpeg";
-    if(file.name.match(/\.png$/i))return "image/png";
-    return "image/jpeg";
-  };
-
-  // Extract structured data from uploaded file via Claude vision/docs
-  const doExtract=async(b64,mime,studyTypeId)=>{
-    if(!apiKey){alert("Necesitás API key en Config.");return;}
-    setExtracting(true);setUploadStep("extracting");
-    const st=stInfo(studyTypeId);
-    const extractPrompt=`Sos un médico especialista en interpretación de estudios clínicos. Se te proporciona la imagen o PDF de un estudio médico del tipo: ${st.l}.
-
-Tu tarea es extraer TODOS los datos del documento. Respondé EXCLUSIVAMENTE con JSON válido, sin markdown:
-{
-  "studyType": "${studyTypeId}",
-  "detectedTitle": "título del estudio",
-  "detectedDate": "YYYY-MM-DD o null",
-  "institution": "laboratorio/institución si aparece o null",
-  "requestedBy": "médico solicitante si aparece o null",
-  "values": [{"label":"nombre parámetro","value":"valor","unit":"unidad","reference":"rango referencia si aparece","status":"normal|alto|bajo|positivo|negativo|alterado|pendiente"}],
-  "findings": "hallazgos narrativos si es un informe (endoscopía, eco, rx, PSG, etc.) o null",
-  "conclusions": "conclusión o diagnóstico del informe o null",
-  "recommendations": "recomendaciones del médico si las hay o null",
-  "rawText": "texto más relevante del documento transcripto fielmente"
-}
-Si un valor es ilegible ponelo como "ilegible". Solo JSON, sin texto adicional.`;
-    try{
-      const isPdf=mime==="application/pdf";
-      const contentBlock=isPdf
-        ?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}
-        :{type:"image",source:{type:"base64",media_type:mime,data:b64}};
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3000,messages:[{role:"user",content:[contentBlock,{type:"text",text:extractPrompt}]}]})});
-      const d=await r.json();
-      if(d.error)throw new Error(d.error.message);
-      const txt=d.content?.map(c=>c.text||"").join("")||"{}";
-      const clean=txt.replace(/```json[\s\S]*?```|```/g,"").trim();
-      const parsed=JSON.parse(clean);
-      setExtracted(parsed);
-      if(parsed.detectedDate&&parsed.detectedDate!=="null")setStudyDate(parsed.detectedDate);
-      if(parsed.detectedTitle&&parsed.detectedTitle!=="null")setStudyTitle(parsed.detectedTitle);
-      let autoText="";
-      if(parsed.findings&&parsed.findings!=="null")autoText+=parsed.findings+"\n\n";
-      if(parsed.conclusions&&parsed.conclusions!=="null")autoText+="Conclusión: "+parsed.conclusions+"\n";
-      if(parsed.recommendations&&parsed.recommendations!=="null")autoText+="\nRecomendaciones: "+parsed.recommendations;
-      if(autoText)setStudyText(autoText.trim());
-      if(parsed.values?.length){
-        const nv={};
-        const allFields=[...URINE_FIELDS,...SPIROMETRY_FIELDS,...SLEEP_FIELDS,...DIGESTIVE_FIELDS,...NEPHROLOGY_FIELDS,...UROLOGY_FIELDS,...GYNECOLOGY_FIELDS,...DERMATOLOGY_FIELDS,...TRAUMA_FIELDS,...NEUROLOGY_FIELDS,...OPHTHALMOLOGY_FIELDS,...ENT_FIELDS,...PSYCH_FIELDS,...DENT_FIELDS,...ECG_ADV_FIELDS,...NUTRITION_FIELDS,...DEXA_FIELDS];
-        BLOOD_PANELS.forEach(p=>p.fields.forEach(f=>allFields.push(f)));
-        parsed.values.forEach(v=>{
-          const lbl=(v.label||"").toLowerCase();
-          const match=allFields.find(f=>lbl.includes(f.l.toLowerCase().slice(0,5))||f.l.toLowerCase().includes(lbl.slice(0,5)));
-          if(match&&v.value&&v.value!=="ilegible"&&v.value!=="null")nv[match.id]=v.value;
-        });
-        if(Object.keys(nv).length)setStudyVals(nv);
-      }
-      setUploadStep("review");
-    }catch(e){setExtracted({error:e.message});setUploadStep("review");}
-    setExtracting(false);
-  };
-
-  const doSave=()=>{
-    const st=stInfo(studyType);
-    const study={
-      id:gi(),date:studyDate,type:studyType,
-      title:studyTitle||st.l,
-      vals:studyVals,
-      text:studyText||null,
-    };
-    const nd={...data,clinicalStudies:[...studies,study]};
-    setData(nd);sv(nd);
-    resetAdd();setView("home");
-  };
-
-  const doDelete=id=>{
-    if(!window.confirm("¿Eliminar este estudio?"))return;
-    const nd={...data,clinicalStudies:studies.filter(s=>s.id!==id)};
-    setData(nd);sv(nd);
-    setSelStudy(null);setView("home");
-  };
-
-  const buildClinicalPrompt=(study)=>{
-    const st=stInfo(study.type);
-    // Collect all values into readable text
-    let valTxt="";
-    if(study.type==="blood"){
-      BLOOD_PANELS.forEach(panel=>{
-        const entries=panel.fields.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="");
-        if(entries.length){
-          valTxt+=`\n${panel.l}:\n`;
-          entries.forEach(f=>{valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;});
-        }
-      });
-    }else if(study.type==="urine"){
-      URINE_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
-        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
-      });
-    }else if(study.type==="spirometry"){
-      SPIROMETRY_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
-        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
-      });
-    }else if(study.type==="sleep"){
-      SLEEP_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
-        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref})\n`;
-      });
-    }else if(study.type==="digestive"){
-      DIGESTIVE_FIELDS.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
-        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
-      });
-    }else{
-      // Generic handler for urology, gynecology, neurology, ophthalmology, ent, dexa, mammo
-      const fieldMap={nephrology:NEPHROLOGY_FIELDS,urology:UROLOGY_FIELDS,gynecology:GYNECOLOGY_FIELDS,dermatology:DERMATOLOGY_FIELDS,traumatology:TRAUMA_FIELDS,neurology:NEUROLOGY_FIELDS,ophthalmology:OPHTHALMOLOGY_FIELDS,ent:ENT_FIELDS,psychiatry:PSYCH_FIELDS,dentistry:DENT_FIELDS,ecg:ECG_ADV_FIELDS,echo:ECG_ADV_FIELDS,nutrition:NUTRITION_FIELDS,dexa:DEXA_FIELDS};
-      const fArr=fieldMap[study.type]||[];
-      fArr.filter(f=>study.vals[f.id]!==undefined&&study.vals[f.id]!=="").forEach(f=>{
-        valTxt+=`  ${f.l}: ${study.vals[f.id]}${f.u?" "+f.u:""} (ref: ${f.ref||"—"})\n`;
-      });
-    }
-    if(study.text)valTxt+=`\nInforme/texto libre:\n${study.text}\n`;
-    // Also include rich extracted data if available
-    if(study.extractedData?.values?.length){
-      valTxt+=`\nVALORES EXTRAÍDOS DEL ARCHIVO (fuente primaria):\n`;
-      study.extractedData.values.forEach(v=>{
-        valTxt+=`  ${v.label}: ${v.value}${v.unit?" "+v.unit:""} [${v.status||"?"}]${v.reference?" (ref: "+v.reference+")":""}\n`;
-      });
-    }
-    if(study.extractedData?.findings)valTxt+=`\nHallazgos del informe: ${study.extractedData.findings}\n`;
-    if(study.extractedData?.conclusions)valTxt+=`Conclusión del médico: ${study.extractedData.conclusions}\n`;
-
-    // Previous studies of same type
-    const prev=studies.filter(s=>s.id!==study.id&&s.type===study.type).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
-    let prevTxt="";
-    if(prev.length){
-      prevTxt="\n\nESTUDIOS ANTERIORES DEL MISMO TIPO:\n";
-      prev.forEach(p=>{
-        prevTxt+=`\nEstudio del ${fd(p.date)}:\n`;
-        if(p.type==="blood"){
-          BLOOD_PANELS.forEach(panel=>{
-            const entries=panel.fields.filter(f=>p.vals[f.id]!==undefined&&p.vals[f.id]!=="");
-            if(entries.length){
-              prevTxt+=`  ${panel.l}: `;
-              prevTxt+=entries.map(f=>`${f.l}=${p.vals[f.id]}${f.u?" "+f.u:""}`).join(", ")+"\n";
-            }
-          });
-        }
-        if(p.text)prevTxt+=`  Informe: ${p.text.slice(0,200)}...\n`;
-      });
-    }
-
-    // Training context last 30 days
-    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
-    const cutStr=cutoff.toISOString().slice(0,10);
-    const recentSessions=(data.sessions||[]).filter(s=>s.date>=cutStr);
-    const recentCardio=(data.cardioSessions||[]).filter(s=>s.date>=cutStr);
-    const recentMeals=(data.meals||[]).filter(m=>m.date>=cutStr);
-    const totalProt=Math.round(recentMeals.filter(m=>m.protein).reduce((s,m)=>s+m.protein,0)/Math.max(recentMeals.length/6,1));
-
-    let ctxTxt=`\nCONTEXTO DEL PACIENTE (últimos 30 días):\n`;
-    ctxTxt+=`- Sesiones de fuerza: ${recentSessions.length}\n`;
-    ctxTxt+=`- Sesiones de cardio: ${recentCardio.length}\n`;
-    ctxTxt+=`- Fase de entrenamiento: ${PHASES[data.phase||0]?.name||"No registrado"}\n`;
-    if(totalProt>0)ctxTxt+=`- Ingesta proteica promedio estimada: ~${totalProt}g/día\n`;
-    ctxTxt+=`- Dieta: pescatariano/plant-based (pescado frecuente, huevos, legumbres, tofu, tempeh; sin cortes de carne vacuno ni cerdo)\n`;
-    // Apple Health sync data
-    const healthSyncs=data.healthSync||[];
-    if(healthSyncs.length>0){
-      const allDays={};
-      healthSyncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{allDays[d.date]=d;}));
-      const recentDays=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
-      if(recentDays.length>0){
-        ctxTxt+=`\nDATOS APPLE HEALTH (últimos ${recentDays.length} días disponibles):\n`;
-        const avg=(key,fmt)=>{const vals=recentDays.filter(d=>d[key]!==undefined).map(d=>d[key]);return vals.length?fmt(vals.reduce((s,v)=>s+v,0)/vals.length):null;};
-        const steps=avg("steps",v=>Math.round(v).toLocaleString());
-        const hr=avg("heartRate",v=>Math.round(v));
-        const hrv=avg("hrv",v=>Math.round(v));
-        const spo2=avg("spo2",v=>v>1?Math.round(v):Math.round(v*100));
-        const sleep=avg("sleep",v=>(v/3600).toFixed(1));
-        const cals=avg("calories",v=>Math.round(v));
-        if(steps)ctxTxt+=`- Pasos promedio: ${steps}/día\n`;
-        if(hr)ctxTxt+=`- Frecuencia cardíaca media: ${hr} lpm\n`;
-        if(hrv)ctxTxt+=`- HRV promedio: ${hrv} ms (mayor HRV = mejor recuperación)\n`;
-        if(spo2)ctxTxt+=`- SpO2 promedio: ${spo2}%\n`;
-        if(sleep)ctxTxt+=`- Sueño promedio: ${sleep} h/noche\n`;
-        if(cals)ctxTxt+=`- Calorías activas promedio: ${cals} kcal/día\n`;
-        const latest=recentDays[0];
-        if(latest.weight)ctxTxt+=`- Peso más reciente (Apple Health): ${latest.weight.toFixed(1)} kg\n`;
-      }
-    }
-    const latestAnthro=(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0];
-    if(latestAnthro){
-      ctxTxt+=`\nANTROPOMETRÍA (última medición ${fd(latestAnthro.date)}):\n`;
-      if(latestAnthro.weight)ctxTxt+=`- Peso: ${latestAnthro.weight} kg\n`;
-      if(latestAnthro.height)ctxTxt+=`- Talla: ${latestAnthro.height} cm\n`;
-      if(latestAnthro.weight&&latestAnthro.height){const bmi=(latestAnthro.weight/((latestAnthro.height/100)**2)).toFixed(1);ctxTxt+=`- IMC calculado: ${bmi} kg/m²\n`;}
-      if(latestAnthro.body_fat)ctxTxt+=`- % grasa corporal: ${latestAnthro.body_fat}%\n`;
-      if(latestAnthro.muscle_mass)ctxTxt+=`- Masa muscular: ${latestAnthro.muscle_mass} kg\n`;
-      if(latestAnthro.waist_p)ctxTxt+=`- Perímetro cintura: ${latestAnthro.waist_p} cm\n`;
-      if(latestAnthro.hip_p)ctxTxt+=`- Perímetro cadera: ${latestAnthro.hip_p} cm\n`;
-    }
-
-    return `Sos un médico clínico con formación en medicina interna, medicina del deporte y preventiva. Trabajás con las guías actualizadas de las siguientes sociedades científicas internacionales y nacionales:
-
-CARDIOLOGÍA Y METABOLISMO CARDIOVASCULAR:
-- ACC/AHA 2023 (Guías de colesterol, hipertensión, prevención cardiovascular)
-- ESC 2021-2023 (Guías de dislipemia, prevención CV, diabetes cardiovascular)
-- SAC - Sociedad Argentina de Cardiología (Consensos nacionales vigentes)
-- NHLBI / ATP-IV guidelines
-
-DIABETES Y METABOLISMO:
-- ADA Standards of Care 2024 (American Diabetes Association)
-- EASD 2023 (European Association for the Study of Diabetes)
-- SAD - Sociedad Argentina de Diabetes
-- AACE/ACE Comprehensive Diabetes Guidelines 2022
-- Criterios diagnósticos OMS actualizados
-
-TIROIDES Y ENDOCRINOLOGÍA:
-- ATA 2023 (American Thyroid Association)
-- ETA (European Thyroid Association)
-- FASEN / SAEM (Sociedades argentinas de endocrinología)
-- AACE/ACE Endocrine guidelines
-
-FUNCIÓN RENAL:
-- KDIGO 2022 (Kidney Disease: Improving Global Outcomes)
-- ERA (European Renal Association)
-- NKF/KDOQI guidelines
-- SLAN (Sociedad Latinoamericana de Nefrología)
-
-HEMATOLOGÍA:
-- ASH 2023 (American Society of Hematology)
-- BSH (British Society for Haematology)
-- AAHI (Asociación Argentina de Hemato-Inmunología)
-- WHO Blood Disorders guidelines
-
-FUNCIÓN HEPÁTICA:
-- AASLD 2023 (American Association for the Study of Liver Diseases)
-- EASL 2023 (European Association for the Study of the Liver)
-- AANEH (Asociación Argentina de Hepatología)
-
-FUNCIÓN RESPIRATORIA Y ESPIROMETRÍA:
-- ATS/ERS 2022 (Interpretación espirométrica, EPOC, asma)
-- GINA 2023 (Global Initiative for Asthma)
-- GOLD 2024 (Global Initiative for COPD)
-- AAMR / SAER (Sociedades argentinas de neumología)
-- ATS Statement on spirometry interpretation 2022
-
-SUEÑO Y MEDICINA DEL SUEÑO:
-- AASM 2023 (American Academy of Sleep Medicine) — Criterios ICSD-3 para SAOS, insomnio, narcolepsia
-- ESRS (European Sleep Research Society)
-- SAOS severity: leve IAH 5-15, moderado 15-30, grave >30 eventos/h
-- Recomendaciones CPAP: AHA/ACC + AASM en SAOS y riesgo cardiovascular
-- ASAARO (Asociación Argentina de Medicina del Sueño)
-- Higiene del sueño y cronotipo: guías AASM 2023
-
-GASTROENTEROLOGÍA Y APARATO DIGESTIVO:
-- ACG 2023 — H. pylori (tratamiento cuádruple), ERGE, SII, EII, screening colorrectal
-- AGA 2023 — MAFLD/NASH, microbioma, dispepsia funcional, constipación crónica
-- ASGE 2023 — indicaciones VEDA y VCC, calidad endoscópica, pólipos y su manejo
-- ESGE 2022 — European Society of Gastrointestinal Endoscopy (guías técnicas)
-- ECCO 2023 — Crohn y colitis ulcerosa: diagnóstico, scores de actividad, tratamiento
-- BSG 2023 — guías inglesas de EII, screening, pólipos serrados
-- UEG 2022 — United European Gastroenterology: enfermedad celíaca, páncreas, VIH digestivo
-- EPAGE II — Appropriateness criteria for endoscopy
-- SAGE — Sociedad Argentina de Gastroenterología: consensos locales vigentes
-- ACTA — Asociación Argentina de Coloproctología
-- USPSTF 2021 — Screening colorrectal: inicio a los 45 años, métodos aprobados
-- Maastricht VI / Florencia 2022 — Consenso europeo H. pylori (test and treat, confirmación post-erradicación)
-- SOH/FIT: umbral ESGE >10 µg Hb/g heces; VCC si positivo; repetición anual si negativo
-- Calprotectina fecal: ECCO/ESGE — <50 normal; 50-200 zona gris (repetir); >200 sugestivo EII activa; >250 alta probabilidad
-- ERGE: Montreal Consensus + ACG 2022; pH-metría 24h como gold standard
-- Enfermedad celíaca: ESPGHAN 2020 + AGA 2023 (anticuerpos anti-tTG IgA + biopsia)
-- Microbioma: AGA Clinical Practice Update 2023 (probióticos, FMT)
-- Pancreatitis: ACG 2013 + IAP/APA 2013; lipasa >3x límite superior para diagnóstico
-
-MEDICINA DEL DEPORTE Y EJERCICIO:
-- ACSM 2023 (American College of Sports Medicine - Exercise is Medicine)
-- NSCA guidelines para poblaciones entrenadas
-- ESC Sports Cardiology Guidelines 2020
-- FEMEDE (Federación Española de Medicina del Deporte)
-- SAMA (Sociedad Argentina de Medicina del Deporte)
-- Guías de anemia del deportista (ferropenia sin anemia: ferritina <30 en atletas)
-
-VITAMINAS, MICRONUTRIENTES Y NUTRICIÓN CLÍNICA:
-- EFSA 2023 (European Food Safety Authority)
-- Dietary Reference Intakes - NIH/USDA 2020
-- Consenso SLANP/FELANPE para deficiencias nutricionales
-- Vitamina D: Endocrine Society 2024 guidelines (deficiencia <20 ng/mL, insuficiencia 20-30, óptimo >40)
-- Hierro: WHO/INACG guidelines para deficiencia funcional en deportistas
-
-HORMONAS Y EJES ENDÓCRINOS:
-- Endocrine Society Clinical Guidelines 2023
-- ASRM (función reproductiva)
-- ISEAM (medicina deportiva hormonal)
-- Testosterona: rangos de laboratorio + contexto clínico + variación circadiana
-
-INFLAMACIÓN Y RIESGO CARDIOVASCULAR:
-- PCR-us: ACC/AHA Pooled Cohort Equations + Reynolds Risk Score
-- Clasificación de riesgo SCORE2 (ESC 2021)
-- Metainflamación en atletas de alto volumen
-
-LABORATORIO CLÍNICO:
-- CLACB (Confederación Latinoamericana de Bioquímica Clínica)
-- COLABIOCLI (Confederación Latinoamericana de Bioquímica)
-- ISO 15189 para calidad analítica
-- CLIA (Clinical Laboratory Improvement Amendments)
-
-UROLOGÍA Y ANDROLOGÍA:
-- AUA 2023 (American Urological Association) — BPH, cáncer de próstata, disfunción eréctil, ITU, urolitiasis
-- EAU 2024 (European Association of Urology) — guías completas de urología oncológica y funcional
-- SAU (Sociedad Argentina de Urología) — consensos locales
-- OMS 2021 — Manual de laboratorio para espermograma (5ª ed.) — valores de referencia actualizados: volumen ≥1.4 mL, concentración ≥16M/mL, motilidad progresiva ≥42%, morfología Kruger ≥4%
-- ESHRE/ASRM 2023 — infertilidad masculina; fragmentación ADN espermático
-- NCCN Guidelines 2024 — cáncer de próstata, vejiga, riñón
-- Criterios PSA: ACS/USPSTF 2018 — screening entre 55-70 años con consentimiento informado; PSA libre/total <10% sospechoso
-- AUA/SUFU 2023 — incontinencia urinaria, vejiga hiperactiva, uroflujometría
-- ISSM 2022 (International Society for Sexual Medicine) — disfunción eréctil, eyaculación precoz, hipogonadismo
-- SAF (Sociedad Argentina de Fertilidad) — protocolo espermograma y factor masculino
-
-GINECOLOGÍA, SALUD DE LA MUJER Y MEDICINA REPRODUCTIVA:
-- ACOG 2023 (American College of Obstetricians and Gynecologists) — salud reproductiva, menopausia, screening ginecológico
-- ESHRE 2023 (European Society of Human Reproduction and Embryology) — SOP, endometriosis, reserva ovárica, FIV
-- SEOM / AEGO (España) — oncología ginecológica
-- SOGC 2023 (Society of Obstetricians and Gynaecologists of Canada)
-- SAMER (Sociedad Argentina de Medicina Reproductiva)
-- SAG (Sociedad Argentina de Ginecología y Obstetricia)
-- Bethesda 2014 / ASCCP 2019 — clasificación PAP y manejo de lesiones cervicales
-- IARC / WHO HPV — vacunación y screening HPV; genotipificación 16/18 alto riesgo
-- ISUOG 2023 — ecografía ginecológica y obstétrica
-- ACR / SBI 2022 — BI-RADS y screening mamario; inicio a los 40 años (ACR) o 50 años (USPSTF)
-- NCCN Breast 2024 — riesgo hereditario BRCA1/2, screening de alto riesgo
-- Criterios AMH / RFA (recuento folículos antrales): baja reserva AMH <1.2 ng/mL, alta >3.5 ng/mL (ESHRE)
-- Diagnóstico SOP: Criterios de Rotterdam 2003 (2 de 3: oligo-anovulación, hiperandrogenismo, ovarios poliquísticos)
-- NOF / ISCD 2023 — densitometría ósea en mujeres postmenopáusicas
-- The Menopause Society (NAMS) 2023 — terapia hormonal, salud cardiovascular en menopausia
-
-NEUROLOGÍA:
-- AAN 2023 (American Academy of Neurology) — epilepsia, EM, cefalea, Parkinson, demencias, neuropatías
-- EAN 2023 (European Academy of Neurology) — guías europeas de neurología clínica
-- ILAE 2022 (International League Against Epilepsy) — clasificación epilepsia, criterios diagnósticos
-- ESO 2021 (European Stroke Organisation) — ACV isquémico y hemorrágico
-- MDS 2023 (Movement Disorder Society) — criterios diagnósticos Parkinson, atrofias multisistema
-- IHS/ICHD-3 — Clasificación Internacional de Cefaleas (migraña, CTT, cefalea en racimos)
-- EFNS/EAN — esclerosis múltiple, criterios McDonald 2017
-- AANEM 2023 (American Association of Neuromuscular & Electrodiagnostic Medicine) — EMG, velocidades de conducción
-- Sociedad Argentina de Neurología (SAN)
-- Interpretación EEG: ACNS 2021 (American Clinical Neurophysiology Society)
-- LCR: rangos normales y criterios dx para meningitis, esclerosis múltiple (bandas oligoclonales), encefalitis
-
-OFTALMOLOGÍA:
-- AAO 2023 (American Academy of Ophthalmology) — glaucoma, DMAE, retinopatía diabética, cataratas, refracción
-- EGS 2021 (European Glaucoma Society) — diagnóstico y manejo del glaucoma
-- ICO (International Council of Ophthalmology) — guías globales
-- SOA (Sociedad Oftalmológica Argentina)
-- IAPB — agudeza visual y discapacidad visual (OMS)
-- ADA 2024 — retinopatía diabética: screening anual desde dx; clasificación ETDRS
-- ICO Keratoconus Guidelines 2023 — paquimetría, topografía
-- DRCR Network — edema macular diabético; anti-VEGF
-- RNFL/OCT: Heidelberg/Zeiss normative databases — capas fibras nerviosas retinianas
-- Clasificación IOP: normal 10-21 mmHg; hipertensión ocular >21; glaucoma normo-tensivo <21 con daño
-
-OTORRINOLARINGOLOGÍA (ORL):
-- AAO-HNSF 2023 (American Academy of Otolaryngology) — hipoacusia, vértigo, otitis, sinusitis, roncopatía
-- EAONO (European Academy of Otology and Neuro-Otology)
-- IFOS (International Federation of ORL Societies)
-- AAA 2023 (American Academy of Audiology) — audiometría, clasificación hipoacusia OMS
-- ASHA (American Speech-Language-Hearing Association) — audiometría conductual y logoaudiometría
-- ASAO (Asociación Argentina de ORL)
-- Clasificación hipoacusia OMS: leve 26-40 dB; moderada 41-60 dB; severa 61-80 dB; profunda >80 dB
-- Timpanometría: Tipo A (normal), Tipo B (derrame/perforación), Tipo C (disfunción tuba)
-- BPPV: criterios diagnósticos y maniobra de reposicionamiento (Epley) — AAO-HNSF 2017
-- EAONO/JOS — colesteaatoma, otitis crónica
-
-OSTEOLOGÍA Y REUMATOLOGÍA:
-- IOF 2023 (International Osteoporosis Foundation) — FRAX, umbrales de intervención
-- ISCD 2023 (International Society for Clinical Densitometry) — indicaciones DEXA, interpretación T-score y Z-score
-- ACR 2023 (American College of Rheumatology) — artritis reumatoide, lupus, gota, osteoartritis
-- SER (Sociedad Española de Reumatología)
-- SAR (Sociedad Argentina de Reumatología)
-- WHO 1994 — definición OMS de osteoporosis: T-score ≤-2.5; osteopenia -1 a -2.5
-- NOF 2023 — tratamiento farmacológico: umbral FRAX ≥20% fractura mayor o ≥3% cadera
-- ISCD — ALMI (índice masa apendicular magra) para diagnóstico de sarcopenia
-
-NEFROLOGÍA:
-- KDIGO 2024 — CKD, ERC, glomérulonefritis, proteinuria, potasio; clasificación G1-G5 × A1-A3
-- KDIGO 2022 — diabetes y riñón; hipertensión y riñón; anemia en ERC
-- ERA 2023 (European Renal Association) — diálisis, trasplante, ERC avanzada
-- SLAN / SANefro — consensos latinoamericanos/argentinos
-- Cistatina C como marcador complementario de eFG en estadios tempranos
-- RAAS: intervención con IECA/ARA-II si ACR ≥30 mg/g (diabéticos); ≥300 (no diabéticos)
-- Síndrome nefrótico (proteinuria >3.5g/24h + hipoalbuminemia) vs nefrítico (hematuria + HTA + edema)
-- Biopsia renal: clasificación Oxford para nefropatía IgA; criterios de indicación KDIGO
-
-DERMATOLOGÍA:
-- AAD 2023 (American Academy of Dermatology) — melanoma, psoriasis, dermatitis atópica, acné, urticaria
-- EDF / EADV 2023 — guías europeas de dermatología clínica
-- SAD (Sociedad Argentina de Dermatología)
-- NCCN Melanoma 2024 — estadificación AJCC 8ª ed.; Breslow, Clark, ulceración, mitosis
-- Dermoscopía: algoritmo ABCDE + 7 puntos Glasgow + algoritmo Menzies
-- PASI: leve <10, moderada 10-20, grave >20
-- Dermatitis atópica: SCORAD, IGA; criterios Hanifin-Rajka
-- EAACI/GA²LEN 2022 — urticaria: clasificación, antihistamínicos, anti-IgE (omalizumab)
-- Inmunofluorescencia directa: pénfigo (IgG intercelular), penfigoide (IgG lineal BMZ)
-- KOH y cultivo: tiña, candidiasis, onicomicosis
-
-TRAUMATOLOGÍA Y ORTOPEDIA:
-- AAOS 2023 (American Academy of Orthopaedic Surgeons) — guías de práctica clínica para OA, lesiones de rodilla, columna, hombro
-- AOTrauma / AO Foundation — clasificación de fracturas (AO/OTA), principios de osteosíntesis
-- ESSKA 2023 (European Society for Sports Traumatology, Knee Surgery & Arthroscopy) — ligamentos, meniscos, cartílago
-- ISAKOS — lesiones del hombro, inestabilidad, manguito rotador
-- NASS 2022 (North American Spine Society) — hernia discal, estenosis, dolor lumbar
-- EUROSPINE — columna vertebral: clasificación, indicaciones quirúrgicas
-- OARSI 2023 (Osteoarthritis Research Society International) — guías de OA de cadera y rodilla
-- SAOT (Sociedad Argentina de Ortopedia y Traumatología)
-- Clasificación Kellgren-Lawrence: OA grado 0-IV en radiografía simple
-- Clasificación Outerbridge: lesiones cartilaginosas grado I-IV en artroscopía
-- Clasificación AO/OTA de fracturas: estándar internacional
-- Criterios RMN: protocolo MOAKS para OA; WORMS para cartílago
-- Lumbalgia: guías NICE 2016 + ACP 2017 — primero tratamiento conservador (fisioterapia, AINES)
-
-CARDIOLOGÍA AVANZADA (ECG, HOLTER, ERGOMETRÍA, ECOCARDIOGRAMA):
-- ACC/AHA 2022 — guías de ECG: intervalos normales, bloqueos, WPW, síndromes de repolarización
-- ESC 2022 — clasificación arritmias, FA, extrasistolia, síncope
-- AHA/ACC Holter guidelines — indicaciones y clasificación de hallazgos Holter
-- AECG (Association for the Advancement of Medical Instrumentation) — estándares Holter
-- ACC/AHA/ACSM 2022 — ergometría: protocolos (Bruce, modificado), criterios de positividad, capacidad funcional en METs
-- ASE 2015/2019 (American Society of Echocardiography) — valores normales ecocardiográficos, función sistólica/diastólica, valvulopatías
-- EAE/EACVI — ecocardiograma europeo
-- ACC/AHA Valvular Disease 2021 — clasificación valvulopatías, umbrales de intervención
-- FEVI: sistólica reducida <40%, intermedia 40-49%, conservada ≥50% (ESC 2021 HF guidelines)
-- QTc: riesgo torsades si >500ms; umbral de preocupación >460ms mujeres / >450ms hombres
-- SAC — Sociedad Argentina de Cardiología — consensos locales
-
-PSIQUIATRÍA Y SALUD MENTAL:
-- APA 2022 (American Psychiatric Association) — DSM-5-TR: diagnósticos, criterios, specifiers
-- WHO — CIE-11 (ICD-11 2022): clasificación internacional de enfermedades mentales
-- NICE 2022 (National Institute for Health and Care Excellence) — guías de depresión, ansiedad, PTSD, ADHD, psicosis
-- WFSBP (World Federation of Societies of Biological Psychiatry) — farmacoterapia en trastornos del humor
-- CANMAT 2023 (Canadian Network for Mood and Anxiety Treatments) — depresión y bipolaridad
-- BAP 2023 (British Association for Psychopharmacology) — ansiedad, PTSD, TOC
-- ISBD (International Society for Bipolar Disorders)
-- AASM 2023 — insomnio: criterios diagnósticos y tratamiento cognitivo-conductual
-- CHADD / CADDAC — ADHD en adultos
-- APSA (Asociación de Psiquiatras Argentinos)
-- Escalas validadas: PHQ-9 (sensibilidad 88% depresión ≥10), GAD-7 (corte ≥10 moderado), PSQI (>5 mala calidad sueño)
-- MoCA: sensibilidad 90% para deterioro cognitivo leve con corte <26/30
-- AUDIT: instrumento OMS de detección alcohol; CAGE: 4 preguntas rápidas
-- PCL-5: PTSD probable con ≥33 puntos
-- ASRS-v1.1: 6 ítems parte A; ≥4 positivos = alta probabilidad ADHD adulto
-
-ODONTOLOGÍA Y SALUD ORAL:
-- ADA 2023 (American Dental Association) — periodoncia, caries, endodoncia, implantes
-- AAP 2018 (American Academy of Periodontology) + EFP (European Federation of Periodontology) — nueva clasificación de periodontitis: estadios I-IV × grados A-B-C
-- IADR (International Association for Dental Research)
-- AAE (American Association of Endodontists) — endodoncia, diagnóstico pulpar
-- WHO Oral Health 2022 — salud oral universal, índice CPOD
-- Índice CPOD/CAOD: OMS — 0=muy bajo, 1-3=bajo, 4-6=moderado, ≥7=alto
-- Profundidad de bolsa: sano ≤3mm; periodontitis leve 4-5mm; moderada 6-7mm; grave ≥8mm (AAP 2018)
-- BOP (sangrado al sondaje): >10% indica inflamación activa
-- SAOD (Sociedad Argentina de Odontología) — consensos locales
-- Relación sistémica: periodontitis severa ↑ riesgo CV (OR 2.0), DM y periodontitis bidireccionales, salud oral y endocarditis bacteriana (profilaxis antibiótica AHA 2021)
-
-NUTRICIÓN CLÍNICA, METABOLISMO Y COMPOSICIÓN CORPORAL:
-- ASPEN 2022 (American Society for Parenteral and Enteral Nutrition) — evaluación nutricional, malnutrición
-- ESPEN 2023 (European Society for Clinical Nutrition and Metabolism) — guías nutrición clínica, sarcopenia
-- EWGSOP2 2019 (European Working Group on Sarcopenia in Older People) — diagnóstico sarcopenia: masa + fuerza + rendimiento físico; ALMI <7.0 kg/m² H / <5.5 M
-- ISAK (International Society for the Advancement of Kinanthropometry) — protocolo antropometría; restringe + perfil limitado
-- ACSM/AND/DC 2016 — nutrición para el deporte: recomendaciones por tipo de entrenamiento
-- Clasificación IMC OMS: <18.5 bajo peso; 18.5-24.9 normal; 25-29.9 sobrepeso; 30-34.9 ob I; 35-39.9 ob II; ≥40 ob III
-- Perímetro cintura: IDF — riesgo H ≥94cm; M ≥80cm; riesgo muy alto H ≥102cm; M ≥88cm
-- % Grasa DEXA vs bioimpedancia vs pliegues: DEXA es gold standard; bioimpedancia afectada por hidratación
-- Ángulo de fase BIA: marcador de integridad celular y estado nutricional; <5° H / <4° M = riesgo nutricional
-- Grasa visceral: TAC gold standard; VAT >100 cm² riesgo metabólico; bioimpedancia nivel >9 Tanita como proxy
-- Relación composición corporal y salud: masa muscular protectora CV; grasa visceral ↑ riesgo DM, dislipemia, HTA
-
-MEDICAMENTOS Y SUPLEMENTOS EN CONTEXTO CLÍNICO:
-${(data.medications||[]).length>0?`El paciente está tomando los siguientes medicamentos y suplementos — considerá posibles efectos sobre los valores del estudio, interacciones, y si algún valor puede explicarse por estos:
-${(data.medications||[]).map(m=>`- ${m.name}${m.dose?" "+m.dose:""}${m.frequency?" ("+m.frequency+")":""}${m.category?" ["+m.category+"]":""}${m.notes?" — "+m.notes:""}`).join("\n")}`:
-"Sin medicamentos ni suplementos registrados en el perfil."}
-
-
-
-ESTUDIO A ANALIZAR:
-Tipo: ${st.l}
-Fecha: ${fd(study.date)}
-${study.title!==st.l?`Título/descripción: ${study.title}\n`:""}
-${valTxt}${prevTxt}${ctxTxt}
-
----
-
-INSTRUCCIONES DE ANÁLISIS:
-
-1. EVALUACIÓN DE VALORES: Para cada valor registrado, evaluá si está dentro del rango óptimo según las guías más recientes de la sociedad médica más relevante para ese marcador. Indicá claramente cuáles están FUERA de rango con ↑ o ↓, cuáles están en zona de alerta (aunque dentro de rango "normal"), y cuáles son óptimos. Para marcadores con rangos sexo-dependientes o edad-dependientes, aplicá los correctos.
-
-2. INTERACCIONES ENTRE MARCADORES: Si hay múltiples marcadores, analizá las relaciones entre ellos (ej: LDL + HDL + TG + PCR-us juntos dicen más que cada uno por separado; ferritina baja con RDW alto sugiere inicio de ferropenia funcional).
-
-3. TENDENCIAS Y EVOLUCIÓN: Si hay estudios anteriores, analizá la trayectoria temporal. ¿Los valores van mejorando, empeorando o estables? ¿Hay cambios que coincidan con el inicio del entrenamiento o cambios de dieta?
-
-4. CONTEXTO DEPORTE + NUTRICIÓN: Considerá que el paciente entrena fuerza con progresión, es pescatariano/plant-based. ¿El ejercicio puede estar influyendo en estos valores? ¿La dieta puede causar o prevenir algo de lo que se ve? (ej: si hay ferritina baja y es plant-based → riesgo real; si hay creatinina levemente elevada y tiene mucha masa muscular → puede ser fisiológico).
-
-5. RECOMENDACIONES CLÍNICAS CONCRETAS: Sé específico: "Repetir perfil lipídico en 3 meses", "Consultar endocrinólogo por TSH > 4 con síntomas", "Agregar vitamina D 2000 UI/día y controlar en 3 meses", "No requiere acción, seguir con control anual". Priorizá por urgencia.
-
-6. SEMÁFORO GLOBAL AL INICIO DE LA RESPUESTA:
-   🟢 Todo en orden — seguir con controles de rutina
-   🟡 Valores a monitorear — acciones preventivas sugeridas
-   🔴 Requiere atención médica — derivación o intervención recomendada
-
-Respondé en español. Comenzá con el semáforo. Sé técnico pero accesible. Directo y clínico. Máximo 450 palabras. No alarmes innecesariamente, pero no minimices hallazgos relevantes. Citá la guía cuando sea pertinente (ej: "según ACC/AHA 2023...").`;
-  };
-
-  const doAnalyze=async(study)=>{
-    if(!apiKey){alert("Necesitás API key en Config.");return;}
-    setAiLoad(true);setAiRes("");
-    try{
-      const prompt=buildClinicalPrompt(study);
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:prompt}]})});
-      const d=await r.json();if(d.error)throw new Error(d.error.message);
-      const txt=d.content?.map(c=>c.text||"").join("")||"Sin respuesta.";
-      // Save analysis to study
-      const nd={...data,clinicalStudies:studies.map(s=>s.id===study.id?{...s,lastAnalysis:{text:txt,date:td()}}:s)};
-      setData(nd);sv(nd);
-      setAiRes(txt);
-    }catch(e){setAiRes("Error: "+e.message);}
-    setAiLoad(false);
-  };
-
-  // ── Timeline view: track a specific blood marker over time ──
-  const getBloodHistory=(markerId)=>{
-    return studies
-      .filter(s=>s.type==="blood"&&s.vals[markerId]!==undefined&&s.vals[markerId]!=="")
-      .sort((a,b)=>a.date.localeCompare(b.date))
-      .map(s=>({date:s.date,val:parseFloat(s.vals[markerId])}))
-      .filter(x=>!isNaN(x.val));
-  };
-
-  const allBloodMarkers=()=>{
-    const markers=new Set();
-    studies.filter(s=>s.type==="blood").forEach(s=>{
-      Object.keys(s.vals).forEach(k=>{if(s.vals[k]!=="")markers.add(k);});
-    });
-    return [...markers];
-  };
-
-  // ── VIEW: ADD STUDY ──
-  if(view==="add"){
-    // Step 1: choose type
-    if(step===1){
-      const groups=[
-        {label:"Laboratorio",             color:"#E74C3C", ids:["blood","urine"]},
-        {label:"Digestivo / Hepático",    color:"#8B4513", ids:["digestive"]},
-        {label:"Nefrológico",             color:"#1A6B8A", ids:["nephrology"]},
-        {label:"Urología / Andrología",   color:"#E67E22", ids:["urology"]},
-        {label:"Ginecología / Mujer",     color:"#FF69B4", ids:["gynecology","mammo"]},
-        {label:"Dermatología",            color:"#D4A017", ids:["dermatology"]},
-        {label:"Traumatología / Ortopedia",color:"#626567",ids:["traumatology"]},
-        {label:"Cardiología",             color:"#E91E63", ids:["echo","ecg"]},
-        {label:"Respiratorio / Sueño",    color:"#3498DB", ids:["spirometry","sleep"]},
-        {label:"Neurología",              color:"#8E44AD", ids:["neurology"]},
-        {label:"Oftalmología",            color:"#2980B9", ids:["ophthalmology"]},
-        {label:"ORL",                     color:"#27AE60", ids:["ent"]},
-        {label:"Psiquiatría / Salud mental",color:"#5D6D7E",ids:["psychiatry"]},
-        {label:"Odontología",             color:"#85C1E9", ids:["dentistry"]},
-        {label:"Nutrición / Composición corporal",color:"#FF6B35",ids:["nutrition"]},
-        {label:"Imágenes / Óseo",         color:"#95A5A6", ids:["xray","ultrasound","dexa"]},
-        {label:"Otro",                    color:"#7F8C8D", ids:["other"]},
-      ];
-      return <div style={S.pg}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-          <button onClick={()=>{resetAdd();setView("home");}} style={S.sm}>&#8592;</button>
-          <h2 style={S.t1}>Nuevo estudio</h2>
-        </div>
-        <p style={{fontSize:13,color:"#888",marginBottom:14}}>¿Qué tipo de estudio querés cargar?</p>
-        {groups.map(g=>{
-          const types=STUDY_TYPES.filter(st=>g.ids.includes(st.id));
-          if(!types.length)return null;
-          return <div key={g.label} style={{marginBottom:14}}>
-            <div style={{fontSize:11,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",color:g.color,marginBottom:6}}>{g.label}</div>
-            {types.map(st=><button key={st.id} onClick={()=>{setStudyType(st.id);setStep(2);setUploadStep("idle");}}
-              style={{...S.eo,borderLeft:"3px solid "+st.color,marginBottom:5}}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:20}}>{st.i}</span>
-                <span style={{fontSize:14,color:"#FFF",fontWeight:600}}>{st.l}</span>
-              </div>
-              <span style={{color:st.color,fontSize:18}}>&#8594;</span>
-            </button>)}
-          </div>;
-        })}
-      </div>;
-    }
-
-    // Step 2: upload or manual entry
-    const st=stInfo(studyType);
-    const isFreeText=FREE_TEXT_STUDIES.includes(studyType);
-    const getFields=()=>{
-      if(studyType==="blood")return null;
-      if(studyType==="urine")return URINE_FIELDS;
-      if(studyType==="spirometry")return SPIROMETRY_FIELDS;
-      if(studyType==="sleep")return SLEEP_FIELDS;
-      if(studyType==="digestive")return DIGESTIVE_FIELDS;
-      if(studyType==="nephrology")return NEPHROLOGY_FIELDS;
-      if(studyType==="urology")return UROLOGY_FIELDS;
-      if(studyType==="gynecology")return GYNECOLOGY_FIELDS;
-      if(studyType==="dermatology")return DERMATOLOGY_FIELDS;
-      if(studyType==="traumatology")return TRAUMA_FIELDS;
-      if(studyType==="neurology")return NEUROLOGY_FIELDS;
-      if(studyType==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
-      if(studyType==="ent")return ENT_FIELDS;
-      if(studyType==="psychiatry")return PSYCH_FIELDS;
-      if(studyType==="dentistry")return DENT_FIELDS;
-      if(studyType==="ecg")return ECG_ADV_FIELDS;
-      if(studyType==="echo")return ECG_ADV_FIELDS;
-      if(studyType==="nutrition")return NUTRITION_FIELDS;
-      if(studyType==="dexa")return DEXA_FIELDS;
-      return null;
-    };
-    const fields=getFields();
-    const hasData=Object.keys(studyVals).length>0||studyText.trim().length>0;
-
-    // ── UPLOAD STEP: idle — show upload zone + manual option ──
-    if(uploadStep==="idle")return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setStep(1)} style={S.sm}>&#8592;</button>
-        <span style={{fontSize:20}}>{st.i}</span>
-        <h2 style={{...S.t1,margin:0}}>{st.l}</h2>
-      </div>
-      {/* Upload zone */}
-      <div style={{border:"2px dashed rgba(255,107,53,0.4)",borderRadius:16,padding:"28px 20px",textAlign:"center",marginBottom:16,background:"rgba(255,107,53,0.04)",cursor:"pointer",position:"relative"}}
-        onClick={()=>document.getElementById("file-upload-input").click()}
-        onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor="rgba(255,107,53,0.9)";}}
-        onDragLeave={e=>{e.currentTarget.style.borderColor="rgba(255,107,53,0.4)";}}
-        onDrop={async e=>{
-          e.preventDefault();e.currentTarget.style.borderColor="rgba(255,107,53,0.4)";
-          const f=e.dataTransfer.files[0];if(!f)return;
-          const mime=getMime(f);setUploadFile(f);setUploadMime(mime);
-          const b64=await fileToB64(f);setUploadB64(b64);setUploadStep("preview");
-        }}>
-        <input id="file-upload-input" type="file" accept=".pdf,image/*" style={{display:"none"}} onChange={async e=>{
-          const f=e.target.files[0];if(!f)return;
-          const mime=getMime(f);setUploadFile(f);setUploadMime(mime);
-          const b64=await fileToB64(f);setUploadB64(b64);setUploadStep("preview");
-        }}/>
-        <div style={{fontSize:40,marginBottom:8}}>📎</div>
-        <div style={{fontSize:15,color:"#FFF",fontWeight:600,marginBottom:4}}>Adjuntar estudio</div>
-        <div style={{fontSize:12,color:"#888"}}>PDF o imagen · arrastrá o tocá para elegir</div>
-        <div style={{fontSize:11,color:"#FF6B35",marginTop:8}}>El LLM extrae los datos, los muestra y analiza automáticamente</div>
-      </div>
-      <div style={{display:"flex",alignItems:"center",gap:10,margin:"0 0 16px"}}>
-        <div style={{flex:1,height:1,background:"rgba(255,255,255,0.08)"}}/>
-        <span style={{fontSize:11,color:"#666"}}>o cargá manualmente</span>
-        <div style={{flex:1,height:1,background:"rgba(255,255,255,0.08)"}}/>
-      </div>
-      <button onClick={()=>setUploadStep("review")} style={{...S.eo,justifyContent:"center",color:"#AAA",fontSize:13}}>✏️ Ingresar datos manualmente</button>
-    </div>;
-
-    // ── UPLOAD STEP: preview — show file info, confirm extraction ──
-    if(uploadStep==="preview")return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setUploadStep("idle")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>Archivo adjunto</h2>
-      </div>
-      <div style={{...S.cd,borderLeft:"3px solid #FF6B35",marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:28}}>{uploadMime==="application/pdf"?"📄":"🖼️"}</span>
-          <div>
-            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{uploadFile?.name}</div>
-            <div style={{fontSize:11,color:"#888"}}>{uploadMime} · {uploadFile?(uploadFile.size/1024).toFixed(0)+" KB":""}</div>
-          </div>
-        </div>
-      </div>
-      {uploadMime&&uploadMime.startsWith("image/")&&uploadB64&&
-        <img src={`data:${uploadMime};base64,${uploadB64}`} style={{width:"100%",borderRadius:12,marginBottom:16,maxHeight:260,objectFit:"contain",background:"rgba(255,255,255,0.03)"}} alt="preview"/>}
-      <button onClick={()=>doExtract(uploadB64,uploadMime,studyType)}
-        style={{...S.btn,width:"100%",marginBottom:10}}>
-        🧠 Extraer y analizar con IA
-      </button>
-      <button onClick={()=>setUploadStep("review")} style={{...S.eo,justifyContent:"center",color:"#888",fontSize:13}}>Completar manualmente sin leer el archivo</button>
-    </div>;
-
-    // ── UPLOAD STEP: extracting ──
-    if(uploadStep==="extracting")return <div style={S.pg}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:300,gap:16}}>
-        <div style={{fontSize:48}}>🔬</div>
-        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:18,color:"#FF6B35",fontWeight:700}}>Leyendo el estudio…</div>
-        <div style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>El médico IA está extrayendo todos los valores,<br/>hallazgos y datos del documento.</div>
-        <div style={{display:"flex",gap:6,marginTop:8}}>
-          {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#FF6B35",animation:`pulse ${0.8+i*0.2}s ease-in-out infinite alternate`,opacity:0.4+i*0.3}}/>)}
-        </div>
-      </div>
-      <style>{`@keyframes pulse{from{transform:scale(1);opacity:0.4}to{transform:scale(1.4);opacity:1}}`}</style>
-    </div>;
-
-    // ── UPLOAD STEP: review — show extracted data + allow editing + save ──
-    // This is the main data entry form, pre-filled if extraction happened
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <button onClick={()=>uploadFile?setUploadStep("preview"):setStep(1)} style={S.sm}>&#8592;</button>
-        <span style={{fontSize:20}}>{st.i}</span>
-        <h2 style={{...S.t1,margin:0,flex:1}}>{st.l}</h2>
-      </div>
-
-      {/* Extraction summary banner */}
-      {extracted&&!extracted.error&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.06)",marginBottom:14}}>
-        <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>✅ EXTRACCIÓN COMPLETADA</div>
-        {extracted.institution&&<div style={{fontSize:12,color:"#CCC",marginBottom:2}}>🏥 {extracted.institution}</div>}
-        {extracted.requestedBy&&<div style={{fontSize:12,color:"#CCC",marginBottom:2}}>👨‍⚕️ Solicitado por: {extracted.requestedBy}</div>}
-        <div style={{fontSize:11,color:"#888",marginTop:4}}>{extracted.values?.length||0} valores detectados · Revisá y guardá</div>
-      </div>}
-      {extracted?.error&&<div style={{...S.cd,borderLeft:"3px solid #E74C3C",marginBottom:14}}>
-        <div style={{fontSize:12,color:"#E74C3C"}}>⚠️ Error en extracción: {extracted.error}</div>
-        <div style={{fontSize:11,color:"#888",marginTop:4}}>Completá los datos manualmente.</div>
-      </div>}
-
-      {/* Extracted values display — beautiful card view */}
-      {extracted?.values?.length>0&&<div style={{...S.cd,marginBottom:14}}>
-        <div style={{fontSize:11,color:"#FF6B35",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>VALORES DETECTADOS</div>
-        {extracted.values.map((v,i)=>{
-          const statusColor=v.status==="normal"?"#2ECC71":v.status==="alto"||v.status==="positivo"||v.status==="alterado"?"#E74C3C":v.status==="bajo"?"#F39C12":"#888";
-          const statusIcon=v.status==="normal"?"✓":v.status==="alto"?"↑":v.status==="bajo"?"↓":v.status==="positivo"?"⚠":v.status==="negativo"?"✓":"·";
-          return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-            <div style={{flex:1}}>
-              <span style={{fontSize:12,color:"#CCC"}}>{v.label}</span>
-              {v.reference&&<span style={{fontSize:10,color:"#555",marginLeft:6}}>({v.reference})</span>}
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:14,color:statusColor,fontWeight:700}}>{v.value}</span>
-              {v.unit&&<span style={{fontSize:11,color:"#666"}}>{v.unit}</span>}
-              <span style={{fontSize:12,color:statusColor,fontWeight:700,width:14,textAlign:"center"}}>{statusIcon}</span>
-            </div>
-          </div>;
-        })}
-      </div>}
-
-      <label style={S.lbl}>Fecha del estudio</label>
-      <input type="date" value={studyDate} onChange={e=>setStudyDate(e.target.value)} style={{...S.inp,marginBottom:12}}/>
-      <label style={S.lbl}>Título <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(opcional)</span></label>
-      <input value={studyTitle} onChange={e=>setStudyTitle(e.target.value)} placeholder={st.l} style={{...S.inp,marginBottom:16}}/>
-
-      {/* BLOOD panels */}
-      {studyType==="blood"&&<div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10}}>
-          {extracted?"Valores auto-completados desde el archivo. Revisá y ajustá si hace falta.":"Completá los paneles disponibles en tu analítica."}
-        </p>
-        {BLOOD_PANELS.map(panel=>{
-          const open=selPanel===panel.id;
-          const filled=panel.fields.filter(f=>studyVals[f.id]!==undefined&&studyVals[f.id]!=="").length;
-          return <div key={panel.id} style={{marginBottom:8}}>
-            <button onClick={()=>setSelPanel(open?null:panel.id)} style={{...S.eo,borderLeft:"3px solid "+(filled>0?"#2ECC71":"rgba(255,255,255,0.1)"),marginBottom:0}}>
-              <div><span style={{fontWeight:700,color:"#FFF"}}>{panel.l}</span>
-                {filled>0&&<span style={{fontSize:11,color:"#2ECC71",marginLeft:8}}>{filled} valor{filled>1?"es":""}</span>}
-              </div>
-              <span style={{fontSize:12,color:"#888"}}>{open?"▲":"▼"}</span>
-            </button>
-            {open&&<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderTop:"none",borderRadius:"0 0 10px 10px",padding:"12px 14px"}}>
-              {panel.fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12,color:studyVals[f.id]?"#FFF":"#CCC"}}>{f.l}</div>
-                  <div style={{fontSize:10,color:"#555"}}>{f.ref}</div>
-                </div>
-                <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right",borderColor:studyVals[f.id]?"rgba(46,204,113,0.3)":"rgba(255,255,255,0.1)"}} placeholder="-"/>
-                {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
-              </div>)}
-            </div>}
-          </div>;
-        })}
-      </div>}
-
-      {/* Structured fields (urine/spirometry/sleep/digestive) */}
-      {fields&&<div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10}}>{extracted?"Auto-completado desde archivo. Revisá.":"Completá los valores disponibles."}</p>
-        {fields.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-          <div style={{flex:1}}>
-            <div style={{fontSize:12,color:studyVals[f.id]?"#FFF":"#CCC"}}>{f.l}</div>
-            {f.ref&&<div style={{fontSize:10,color:"#555"}}>ref: {f.ref}</div>}
-          </div>
-          <input type="text" value={studyVals[f.id]||""} onChange={e=>{const nv={...studyVals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setStudyVals(nv);}} style={{...S.inp,width:90,textAlign:"right",borderColor:studyVals[f.id]?"rgba(46,204,113,0.3)":"rgba(255,255,255,0.1)"}} placeholder="-"/>
-          {f.u&&<span style={{fontSize:11,color:"#666",width:50,flexShrink:0}}>{f.u}</span>}
-        </div>)}
-      </div>}
-
-      {/* Findings/conclusions/free text */}
-      <div style={{marginTop:16}}>
-        <label style={S.lbl}>
-          {isFreeText?"Hallazgos / informe":"Observaciones adicionales"}
-          {!isFreeText&&<span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}> (opcional)</span>}
-        </label>
-        <textarea value={studyText} onChange={e=>setStudyText(e.target.value)}
-          placeholder={extracted?"Extraído del documento. Podés editar.":(isFreeText?"Hallazgos principales, conclusiones del médico...":"Notas adicionales...")}
-          style={{...S.ta,minHeight:isFreeText?140:80}}/>
-      </div>
-
-      <button onClick={doSave} disabled={!hasData}
-        style={{...S.btn,width:"100%",marginTop:16,opacity:hasData?1:0.4}}>
-        💾 Guardar estudio
-      </button>
-      {extracted&&<button onClick={()=>{
-        // Save and immediately analyze
-        const study2={id:gi(),date:studyDate,type:studyType,title:studyTitle||st.l,vals:studyVals,text:studyText||null,extractedData:extracted};
-        const nd={...data,clinicalStudies:[...studies,study2]};
-        setData(nd);sv(nd);resetAdd();setView("home");
-        setTimeout(()=>{setSelStudy({...study2});setView("study");},50);
-      }} style={{...S.btn,width:"100%",marginTop:8,background:"linear-gradient(135deg,#1ABC9C,#16A085)"}}>
-        🧠 Guardar y analizar con IA ahora
-      </button>}
-    </div>;
-  }
-
-  // ── VIEW: STUDY DETAIL + ANALYSIS ──
-  if(view==="study"&&selStudy){
-    const st=stInfo(selStudy.type);
-    const analysis=selStudy.lastAnalysis;
-    const ext=selStudy.extractedData;
-
-    const renderVals=()=>{
-      if(!selStudy.vals||Object.keys(selStudy.vals).length===0)return null;
-      const stColor=st.color||"#FF6B35";
-      if(selStudy.type==="blood")return BLOOD_PANELS.map(panel=>{
-        const entries=panel.fields.filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
-        if(!entries.length)return null;
-        return <div key={panel.id} style={{marginBottom:14}}>
-          <div style={{fontSize:11,color:stColor,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
-          {entries.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-            <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
-            <div style={{textAlign:"right"}}>
-              <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
-              {f.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{f.u}</span>}
-            </div>
-          </div>)}
-        </div>;
-      });
-      const getViewFields=()=>{
-        if(selStudy.type==="urine")return URINE_FIELDS;
-        if(selStudy.type==="spirometry")return SPIROMETRY_FIELDS;
-        if(selStudy.type==="sleep")return SLEEP_FIELDS;
-        if(selStudy.type==="digestive")return DIGESTIVE_FIELDS;
-        if(selStudy.type==="nephrology")return NEPHROLOGY_FIELDS;
-        if(selStudy.type==="urology")return UROLOGY_FIELDS;
-        if(selStudy.type==="gynecology")return GYNECOLOGY_FIELDS;
-        if(selStudy.type==="dermatology")return DERMATOLOGY_FIELDS;
-        if(selStudy.type==="traumatology")return TRAUMA_FIELDS;
-        if(selStudy.type==="neurology")return NEUROLOGY_FIELDS;
-        if(selStudy.type==="ophthalmology")return OPHTHALMOLOGY_FIELDS;
-        if(selStudy.type==="ent")return ENT_FIELDS;
-        if(selStudy.type==="psychiatry")return PSYCH_FIELDS;
-        if(selStudy.type==="dentistry")return DENT_FIELDS;
-        if(selStudy.type==="ecg")return ECG_ADV_FIELDS;
-        if(selStudy.type==="echo")return ECG_ADV_FIELDS;
-        if(selStudy.type==="nutrition")return NUTRITION_FIELDS;
-        if(selStudy.type==="dexa")return DEXA_FIELDS;
-        return [];
-      };
-      const vf=getViewFields().filter(f=>selStudy.vals[f.id]!==undefined&&selStudy.vals[f.id]!=="");
-      if(!vf.length)return null;
-      return vf.map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-        <span style={{fontSize:12,color:"#AAA"}}>{f.l}</span>
-        <div style={{textAlign:"right"}}>
-          <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{selStudy.vals[f.id]}</span>
-          {f.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{f.u}</span>}
-        </div>
-      </div>);
-    };
-
-    // Render full extracted values (rich view from file upload)
-    const renderExtracted=()=>{
-      if(!ext||!ext.values?.length)return null;
-      return <div style={{...S.cd,marginBottom:10,borderLeft:"3px solid "+st.color}}>
-        <div style={{fontSize:11,color:st.color,fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>VALORES DETECTADOS DEL ARCHIVO</div>
-        {ext.institution&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>🏥 {ext.institution}</div>}
-        {ext.requestedBy&&<div style={{fontSize:11,color:"#888",marginBottom:8}}>👨‍⚕️ {ext.requestedBy}</div>}
-        {ext.values.map((v,i)=>{
-          const sc=v.status==="normal"?"#2ECC71":v.status==="alto"||v.status==="positivo"||v.status==="alterado"?"#E74C3C":v.status==="bajo"?"#F39C12":"#CCC";
-          const si=v.status==="normal"?"✓":v.status==="alto"?"↑":v.status==="bajo"?"↓":v.status==="positivo"?"⚠":v.status==="negativo"?"✓":"·";
-          return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-            <div style={{flex:1}}><span style={{fontSize:12,color:"#CCC"}}>{v.label}</span>
-              {v.reference&&<span style={{fontSize:10,color:"#555",marginLeft:6}}>({v.reference})</span>}
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <span style={{fontSize:13,color:sc,fontWeight:700}}>{v.value}</span>
-              {v.unit&&<span style={{fontSize:11,color:"#666"}}>{v.unit}</span>}
-              <span style={{fontSize:12,color:sc,fontWeight:900,width:14}}>{si}</span>
-            </div>
-          </div>;
-        })}
-      </div>;
-    };
-
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-        <button onClick={()=>{setView("home");setSelStudy(null);setAiRes("");}} style={S.sm}>&#8592;</button>
-        <span style={{fontSize:22}}>{st.i}</span>
-        <h2 style={{...S.t1,margin:0,flex:1}}>{selStudy.title}</h2>
-        <button onClick={()=>doDelete(selStudy.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
-      </div>
-      <p style={{fontSize:12,color:"#888",marginBottom:16}}>{fd(selStudy.date)}{ext?.institution?" · "+ext.institution:""}</p>
-
-      {/* Rich extracted values from file */}
-      {renderExtracted()}
-
-      {/* Structured manual values (if no extracted or in addition) */}
-      {!ext&&Object.keys(selStudy.vals||{}).length>0&&<div style={{...S.cd,marginBottom:10}}>{renderVals()}</div>}
-
-      {/* Free text informe */}
-      {selStudy.text&&<div style={{...S.cd,marginTop:8}}>
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>INFORME / HALLAZGOS</div>
-        <p style={{fontSize:13,color:"#CCC",lineHeight:1.65,whiteSpace:"pre-wrap",margin:0}}>{selStudy.text}</p>
-      </div>}
-
-      {/* Previous analysis */}
-      {analysis&&!aiRes&&<div style={{...S.aicd,marginTop:12}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:20}}>🧠</span>
-            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,fontWeight:700,color:"#FF6B35"}}>ANÁLISIS CLÍNICO IA</span>
-          </div>
-          <span style={{fontSize:11,color:"#888"}}>{fd(analysis.date)}</span>
-        </div>
-        <p style={{fontSize:13,lineHeight:1.65,whiteSpace:"pre-wrap",color:"#E0E0E0",margin:0}}>{analysis.text}</p>
-      </div>}
-
-      {/* Fresh analysis result */}
-      {aiRes&&<div style={{...S.aicd,marginTop:12}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-          <span style={{fontSize:20}}>🧠</span>
-          <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,fontWeight:700,color:"#FF6B35"}}>ANÁLISIS CLÍNICO IA</span>
-        </div>
-        <p style={{fontSize:13,lineHeight:1.65,whiteSpace:"pre-wrap",color:"#E0E0E0",margin:0}}>{aiRes}</p>
-      </div>}
-
-      {/* Analyze button */}
-      <button onClick={()=>doAnalyze(selStudy)} disabled={aiLoad}
-        style={{...S.btn,width:"100%",marginTop:14,opacity:aiLoad?0.6:1,
-          background:aiRes?"rgba(255,107,53,0.15)":"linear-gradient(135deg,#FF6B35,#D62828)",
-          border:aiRes?"1px solid rgba(255,107,53,0.4)":"none",
-          color:aiRes?"#FF6B35":"#FFF"}}>
-        {aiLoad?"⏳ Analizando con guías clínicas...":(aiRes||analysis)?"🔄 Re-analizar":"🧠 Analizar con IA clínica"}
-      </button>
-      {!apiKey&&<p style={{fontSize:11,color:"#666",textAlign:"center",marginTop:6}}>Necesitás API key en Config.</p>}
-    </div>;
-  }
-
-  // ── VIEW: TIMELINE ──
-  if(view==="timeline"){
-    const markers=allBloodMarkers();
-    if(timelineMarker){
-      const hist=getBloodHistory(timelineMarker);
-      const field=BLOOD_PANELS.flatMap(p=>p.fields).find(f=>f.id===timelineMarker)||{l:timelineMarker,u:"",ref:""};
-      const vals=hist.map(h=>h.val);
-      const mx=vals.length?Math.max(...vals):1,mn=vals.length?Math.min(...vals):0;
-      const rng=mx-mn||1;
-      return <div style={S.pg}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-          <button onClick={()=>setTimelineMarker(null)} style={S.sm}>&#8592;</button>
-          <h2 style={{...S.t1,margin:0}}>{field.l}</h2>
-        </div>
-        {field.ref&&<div style={{...S.cd,borderLeft:"3px solid rgba(255,255,255,0.2)",marginBottom:16}}>
-          <span style={{fontSize:11,color:"#888"}}>Referencia: </span>
-          <span style={{fontSize:12,color:"#CCC"}}>{field.ref}</span>
-          {field.u&&<span style={{fontSize:11,color:"#666"}}> ({field.u})</span>}
-        </div>}
-        {hist.length>1&&<div style={{...S.cd,marginBottom:12}}>
-          <h4 style={{fontSize:12,color:"#888",margin:"0 0 14px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCIÓN</h4>
-          <div style={{display:"flex",alignItems:"flex-end",gap:4,height:130}}>
-            {hist.map((h,i)=>{const hPct=((h.val-mn)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              <span style={{fontSize:10,color:"#FFF",fontWeight:700}}>{h.val}</span>
-              <div style={{width:"100%",height:hPct+"%",minHeight:4,background:"linear-gradient(180deg,#1ABC9C,#16A085)",borderRadius:4}}/>
-              <span style={{fontSize:8,color:"#666"}}>{h.date.slice(5)}</span>
-            </div>;})}
-          </div>
-        </div>}
-        {hist.length<=1&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Necesitás al menos 2 estudios con este marcador para ver la evolución.</p></div>}
-        {hist.map((h,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}>
-          <span style={{fontSize:13,color:"#888"}}>{fd(h.date)}</span>
-          <div>
-            <span style={{fontSize:16,color:"#1ABC9C",fontWeight:700}}>{h.val}</span>
-            {field.u&&<span style={{fontSize:11,color:"#666",marginLeft:4}}>{field.u}</span>}
-          </div>
-        </div>)}
-      </div>;
-    }
-    // Marker selector
-    if(!markers.length)return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>Timeline de marcadores</h2>
-      </div>
-      <div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Todavía no hay analíticas de sangre cargadas para trackear evolución.</p></div>
-    </div>;
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>📈 Timeline de marcadores</h2>
-      </div>
-      <p style={{fontSize:12,color:"#888",marginBottom:14}}>Seleccioná un marcador para ver su evolución en el tiempo.</p>
-      {BLOOD_PANELS.map(panel=>{
-        const available=panel.fields.filter(f=>markers.includes(f.id));
-        if(!available.length)return null;
-        return <div key={panel.id} style={{marginBottom:14}}>
-          <div style={{fontSize:11,color:"#E74C3C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{panel.l}</div>
-          {available.map(f=>{
-            const hist=getBloodHistory(f.id);
-            return <button key={f.id} onClick={()=>setTimelineMarker(f.id)} style={{...S.eo,marginBottom:4}}>
-              <span style={{fontSize:13}}>{f.l}</span>
-              <div style={{textAlign:"right"}}>
-                {hist.length>0&&<span style={{fontSize:13,color:"#1ABC9C",fontWeight:700}}>{hist.at(-1).val} {f.u}</span>}
-                <span style={{fontSize:11,color:"#888",marginLeft:6}}>{hist.length} dato{hist.length!==1?"s":""}</span>
-              </div>
-            </button>;
-          })}
-        </div>;
-      })}
-    </div>;
-  }
-
-  // ── VIEW: MEDICATIONS ──
-  if(view==="meds"){
-    const meds=data.medications||[];
-    const saveMed=()=>{
-      if(!medName.trim())return;
-      const m={id:gi(),name:medName.trim(),dose:medDose.trim(),frequency:medFreq.trim(),category:medCat,notes:medNotes.trim(),active:medActive,since:td()};
-      const nd={...data,medications:[...meds,m]};setData(nd);sv(nd);
-      setMedName("");setMedDose("");setMedFreq("");setMedNotes("");setMedActive(true);setMedAdd(false);
-    };
-    const delMed=id=>{const nd={...data,medications:meds.filter(m=>m.id!==id)};setData(nd);sv(nd);};
-    const toggleActive=id=>{const nd={...data,medications:meds.map(m=>m.id===id?{...m,active:!m.active}:m)};setData(nd);sv(nd);};
-    const activeMeds=meds.filter(m=>m.active!==false);
-    const inactiveMeds=meds.filter(m=>m.active===false);
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
-        <h2 style={S.t1}>💊 Medicamentos y suplementos</h2>
-      </div>
-      {!medAdd&&<button onClick={()=>setMedAdd(true)} style={{...S.btn,width:"100%",marginBottom:16}}>+ Agregar</button>}
-      {medAdd&&<div style={{...S.cd,marginBottom:16,borderLeft:"3px solid #FF6B35"}}>
-        <h3 style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:"#FF6B35",margin:"0 0 12px"}}>NUEVO</h3>
-        <label style={S.lbl}>Nombre *</label>
-        <input value={medName} onChange={e=>setMedName(e.target.value)} placeholder="Ej: Levotiroxina, Omega-3, Vitamina D..." style={{...S.inp,marginBottom:10}}/>
-        <label style={S.lbl}>Categoría</label>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
-          {MED_CATEGORIES.map(c=><button key={c.id} onClick={()=>setMedCat(c.id)}
-            style={{...S.mb2,padding:"8px 6px",border:medCat===c.id?"2px solid "+c.color:"1px solid rgba(255,255,255,0.08)",background:medCat===c.id?"rgba(255,107,53,0.12)":"rgba(255,255,255,0.03)",flexDirection:"row",gap:6,justifyContent:"flex-start"}}>
-            <span style={{fontSize:14}}>{c.i}</span><span style={{fontSize:11,color:medCat===c.id?"#FFF":"#AAA"}}>{c.l}</span>
-          </button>)}
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <div><label style={S.lbl}>Dosis</label><input value={medDose} onChange={e=>setMedDose(e.target.value)} placeholder="Ej: 50mcg, 1g" style={S.inp}/></div>
-          <div><label style={S.lbl}>Frecuencia</label><input value={medFreq} onChange={e=>setMedFreq(e.target.value)} placeholder="Ej: 1x día, 2x sem" style={S.inp}/></div>
-        </div>
-        <label style={S.lbl}>Notas <span style={{fontWeight:400,color:"#666",textTransform:"none",letterSpacing:0}}>(indicación, marca, etc.)</span></label>
-        <textarea value={medNotes} onChange={e=>setMedNotes(e.target.value)} style={{...S.ta,minHeight:60}} placeholder="Indicado por..., para..."/>
-        <div style={{display:"flex",gap:8,marginTop:12}}>
-          <button onClick={saveMed} disabled={!medName.trim()} style={{...S.btn,flex:1,opacity:medName.trim()?1:0.4}}>Guardar</button>
-          <button onClick={()=>setMedAdd(false)} style={{...S.sm,padding:"12px 16px"}}>Cancelar</button>
-        </div>
-      </div>}
-      {meds.length===0&&!medAdd&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Registrá tus medicamentos y suplementos. El médico IA los tendrá en cuenta al analizar tus estudios.</p></div>}
-      {activeMeds.length>0&&<div>
-        <div style={{fontSize:11,color:"#2ECC71",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>EN USO ACTUALMENTE ({activeMeds.length})</div>
-        {activeMeds.map(m=>{
-          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
-          return <div key={m.id} style={{...S.cd,marginBottom:8,borderLeft:"3px solid "+cat.color}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <span style={{fontSize:14}}>{cat.i}</span>
-                  <span style={{fontSize:14,color:"#FFF",fontWeight:700}}>{m.name}</span>
-                </div>
-                {(m.dose||m.frequency)&&<div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:4}}>
-                  {m.dose&&<span style={{fontSize:12,color:"#FF6B35",fontWeight:600}}>{m.dose}</span>}
-                  {m.frequency&&<span style={{fontSize:12,color:"#AAA"}}>{m.frequency}</span>}
-                </div>}
-                <span style={{fontSize:11,color:cat.color,background:cat.color+"18",padding:"1px 6px",borderRadius:4}}>{cat.l}</span>
-                {m.notes&&<p style={{fontSize:11,color:"#888",margin:"6px 0 0",fontStyle:"italic"}}>{m.notes}</p>}
-              </div>
-              <div style={{display:"flex",gap:4,marginLeft:8}}>
-                <button onClick={()=>toggleActive(m.id)} style={{...S.sm,fontSize:11,color:"#F39C12",borderColor:"rgba(243,156,18,0.3)"}} title="Pausar">⏸</button>
-                <button onClick={()=>delMed(m.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
-              </div>
-            </div>
-          </div>;
-        })}
-      </div>}
-      {inactiveMeds.length>0&&<div style={{marginTop:12}}>
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>PAUSADOS / HISTÓRICO ({inactiveMeds.length})</div>
-        {inactiveMeds.map(m=>{
-          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
-          return <div key={m.id} style={{...S.cd,marginBottom:6,opacity:0.5,borderLeft:"3px solid #444"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontSize:13,color:"#AAA"}}>{cat.i} {m.name} {m.dose&&<span style={{color:"#888"}}>· {m.dose}</span>}</span>
-              <div style={{display:"flex",gap:4}}>
-                <button onClick={()=>toggleActive(m.id)} style={{...S.sm,fontSize:11,color:"#2ECC71",borderColor:"rgba(46,204,113,0.3)"}} title="Reactivar">▶</button>
-                <button onClick={()=>delMed(m.id)} style={{...S.sm,color:"#E74C3C",borderColor:"rgba(231,76,60,0.3)"}}>🗑</button>
-              </div>
-            </div>
-          </div>;
-        })}
-      </div>}
-    </div>;
-  }
-
-  // ── VIEW: APPLE HEALTH SYNC ──
-  if(view==="health-sync"){
-    const syncs=data.healthSync||[];
-    // Merge all days across all syncs, latest wins per day
-    const allDays={};
-    syncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{
-      if(!allDays[d.date]||d.date>=(allDays[d.date]?.date||""))allDays[d.date]=d;
-    }));
-    const days=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date));
-    const metrics=[
-      {key:"steps",l:"Pasos",i:"👟",unit:"",color:"#3498DB",fmt:v=>Math.round(v).toLocaleString()},
-      {key:"heartRate",l:"FC media",i:"❤️",unit:"lpm",color:"#E74C3C",fmt:v=>Math.round(v)},
-      {key:"hrv",l:"HRV",i:"💓",unit:"ms",color:"#9B59B6",fmt:v=>Math.round(v)},
-      {key:"spo2",l:"SpO2",i:"🫁",unit:"%",color:"#1ABC9C",fmt:v=>(v>1?Math.round(v):Math.round(v*100))},
-      {key:"calories",l:"Calorías activas",i:"🔥",unit:"kcal",color:"#E67E22",fmt:v=>Math.round(v)},
-      {key:"sleep",l:"Sueño",i:"😴",unit:"h",color:"#8E44AD",fmt:v=>(v/3600).toFixed(1)},
-      {key:"weight",l:"Peso",i:"⚖️",unit:"kg",color:"#FF6B35",fmt:v=>v.toFixed(1)},
-      {key:"bodyFat",l:"% Grasa",i:"📊",unit:"%",color:"#F39C12",fmt:v=>(v>1?v.toFixed(1):(v*100).toFixed(1))},
-    ];
-    // Latest values for summary
-    const latest=days[0]||{};
-    return <div style={S.pg}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("home")} style={S.sm}>&#8592;</button>
-        <span style={{fontSize:20}}>❤️</span>
-        <h2 style={{...S.t1,margin:0}}>Apple Health</h2>
-      </div>
-      {days.length===0&&<div style={S.cd}>
-        <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Sin datos importados. Configurá el Atajo iOS en ⚙️ Config y luego pegá los datos.</p>
-        <button onClick={()=>setView("home")} style={{...S.btn,width:"100%",marginTop:10,fontSize:13}}>Ir a Config →</button>
-      </div>}
-      {days.length>0&&<>
-        {/* Latest day summary */}
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>ÚLTIMO DÍA — {latest.date}</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-          {metrics.filter(m=>latest[m.key]!==undefined).map(m=><div key={m.key} style={{...S.stc,borderLeft:"3px solid "+m.color}}>
-            <div style={{fontSize:16,marginBottom:2}}>{m.i}</div>
-            <span style={{...S.stv,fontSize:20,color:m.color}}>{m.fmt(latest[m.key])}<span style={{...S.stu,fontSize:10}}> {m.unit}</span></span>
-            <span style={S.stl}>{m.l}</span>
-          </div>)}
-        </div>
-        {/* Trend chart for steps (most universal) */}
-        {days.filter(d=>d.steps).length>2&&<div style={{...S.cd,marginBottom:14}}>
-          <div style={{fontSize:11,color:"#3498DB",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:10}}>👟 PASOS — ÚLTIMOS {Math.min(days.filter(d=>d.steps).length,14)} DÍAS</div>
-          {(()=>{
-            const pts=days.filter(d=>d.steps).slice(0,14).reverse();
-            const mx=Math.max(...pts.map(d=>d.steps));
-            return <div style={{display:"flex",alignItems:"flex-end",gap:3,height:80}}>
-              {pts.map((d,i)=>{const h=(d.steps/mx)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                <div style={{width:"100%",height:h+"%",minHeight:3,background:"linear-gradient(180deg,#3498DB,#2980B9)",borderRadius:3}}/>
-                <span style={{fontSize:7,color:"#666"}}>{d.date.slice(8)}</span>
-              </div>;})}
-            </div>;
-          })()}
-        </div>}
-        {/* Full history table */}
-        <div style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:8}}>HISTORIAL COMPLETO ({days.length} días)</div>
-        {days.slice(0,30).map((d,i)=><div key={i} style={{...S.cd,padding:"10px 12px",marginBottom:5}}>
-          <div style={{fontSize:12,color:"#888",marginBottom:5,fontWeight:700}}>{d.date}</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-            {metrics.filter(m=>d[m.key]!==undefined).map(m=><span key={m.key} style={{fontSize:12,color:"#CCC"}}>
-              {m.i} <span style={{color:m.color,fontWeight:700}}>{m.fmt(d[m.key])}</span><span style={{color:"#666",fontSize:10}}> {m.unit}</span>
-            </span>)}
-          </div>
-        </div>)}
-      </>}
-    </div>;
-  }
-
-  // ── VIEW: HOME ──
-  const byType={};
-  studies.forEach(s=>{if(!byType[s.type])byType[s.type]=[];byType[s.type].push(s);});
-  const lastStudy=studies.length?[...studies].sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
-  const activeMedCount=(data.medications||[]).filter(m=>m.active!==false).length;
-  // Apple Health latest data
-  const healthSyncs=data.healthSync||[];
-  const latestHealthDay=(()=>{
-    const allDays={};
-    healthSyncs.forEach(s=>Object.values(s.days||{}).forEach(d=>{allDays[d.date]=d;}));
-    const sorted=Object.values(allDays).sort((a,b)=>b.date.localeCompare(a.date));
-    return sorted[0]||null;
-  })();
-
-  return <div style={S.pg}>
-    <h2 style={S.t1}>🩺 Salud</h2>
-
-    {/* Quick actions */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
-      <button onClick={()=>setView("add")} style={{...S.btn,padding:"12px 8px",fontSize:13}}>+ Estudio</button>
-      <button onClick={()=>setView("meds")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"12px 8px",border:"1px solid rgba(255,107,53,0.3)"}}>
-        <div style={{fontSize:18,marginBottom:2}}>💊</div>
-        <div style={{fontSize:11,color:"#FF6B35",fontWeight:600}}>Medicamentos{activeMedCount>0?` (${activeMedCount})`:""}</div>
-      </button>
-      <button onClick={()=>setView("timeline")} style={{...S.cd,cursor:"pointer",marginBottom:0,textAlign:"center",padding:"12px 8px",border:"1px solid rgba(26,188,156,0.3)"}}>
-        <div style={{fontSize:18,marginBottom:2}}>📈</div>
-        <div style={{fontSize:11,color:"#1ABC9C",fontWeight:600}}>Timeline</div>
-      </button>
-    </div>
-
-    {/* Apple Health card */}
-    <button onClick={()=>setView("health-sync")} style={{...S.cd,cursor:"pointer",width:"100%",textAlign:"left",marginBottom:14,borderLeft:"3px solid #FF2D55",display:"block"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:latestHealthDay?8:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:20}}>❤️</span>
-          <span style={{fontFamily:"'Oswald',sans-serif",fontSize:14,color:"#FFF",fontWeight:700}}>Apple Health</span>
-        </div>
-        {latestHealthDay
-          ?<span style={{fontSize:11,color:"#FF2D55"}}>{latestHealthDay.date} &#8594;</span>
-          :<span style={{fontSize:11,color:"#666"}}>Sin datos · Configurar en Config ⚙️</span>}
-      </div>
-      {latestHealthDay&&<div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-        {latestHealthDay.steps&&<span style={{fontSize:12,color:"#CCC"}}>👟 <span style={{color:"#3498DB",fontWeight:700}}>{Math.round(latestHealthDay.steps).toLocaleString()}</span></span>}
-        {latestHealthDay.heartRate&&<span style={{fontSize:12,color:"#CCC"}}>❤️ <span style={{color:"#E74C3C",fontWeight:700}}>{Math.round(latestHealthDay.heartRate)}</span><span style={{fontSize:10,color:"#666"}}> lpm</span></span>}
-        {latestHealthDay.hrv&&<span style={{fontSize:12,color:"#CCC"}}>💓 <span style={{color:"#9B59B6",fontWeight:700}}>{Math.round(latestHealthDay.hrv)}</span><span style={{fontSize:10,color:"#666"}}> ms HRV</span></span>}
-        {latestHealthDay.sleep&&<span style={{fontSize:12,color:"#CCC"}}>😴 <span style={{color:"#8E44AD",fontWeight:700}}>{(latestHealthDay.sleep/3600).toFixed(1)}</span><span style={{fontSize:10,color:"#666"}}> h</span></span>}
-        {latestHealthDay.spo2&&<span style={{fontSize:12,color:"#CCC"}}>🫁 <span style={{color:"#1ABC9C",fontWeight:700}}>{latestHealthDay.spo2>1?Math.round(latestHealthDay.spo2):Math.round(latestHealthDay.spo2*100)}</span><span style={{fontSize:10,color:"#666"}}>%</span></span>}
-      </div>}
-    </button>
-
-    {/* Medications summary if any */}
-    {activeMedCount>0&&<div style={{...S.cd,borderLeft:"3px solid #FF6B35",background:"rgba(255,107,53,0.04)",marginBottom:14,cursor:"pointer"}} onClick={()=>setView("meds")}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-        <span style={{fontFamily:"'Oswald',sans-serif",fontSize:13,color:"#FF6B35",letterSpacing:1}}>💊 MEDICAMENTOS ACTIVOS</span>
-        <span style={{fontSize:18,color:"#FF6B35"}}>&#8594;</span>
-      </div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-        {(data.medications||[]).filter(m=>m.active!==false).slice(0,4).map(m=>{
-          const cat=MED_CATEGORIES.find(c=>c.id===m.category)||MED_CATEGORIES[0];
-          return <span key={m.id} style={{fontSize:11,color:"#CCC",background:"rgba(255,255,255,0.06)",padding:"2px 8px",borderRadius:10,display:"flex",alignItems:"center",gap:4}}>
-            <span>{cat.i}</span><span>{m.name}{m.dose?" · "+m.dose:""}</span>
-          </span>;
-        })}
-        {activeMedCount>4&&<span style={{fontSize:11,color:"#888",padding:"2px 6px"}}>+{activeMedCount-4} más</span>}
-      </div>
-    </div>}
-
-    {/* Cross-context summary */}
-    {studies.length>0&&<div style={{...S.cd,borderLeft:"3px solid rgba(26,188,156,0.4)",background:"rgba(26,188,156,0.04)",marginBottom:14}}>
-      <div style={{fontSize:11,color:"#1ABC9C",fontFamily:"'Oswald',sans-serif",letterSpacing:1,marginBottom:6}}>CONTEXTO INTEGRADO</div>
-      <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{studies.length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Estudios</span></div>
-        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{activeMedCount}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Medicamentos</span></div>
-        <div><span style={{fontSize:20,fontFamily:"'Oswald',sans-serif",color:"#FFF",fontWeight:700}}>{(data.sessions||[]).length}</span><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Sesiones</span></div>
-        {lastStudy&&<div><span style={{fontSize:11,color:"#888",display:"block",marginTop:2}}>Último:</span><span style={{fontSize:12,color:"#CCC"}}>{fd(lastStudy.date)}</span></div>}
-      </div>
-    </div>}
-
-    {/* Studies by type */}
-    {studies.length===0&&(data.anthropometry||[]).length===0&&activeMedCount===0&&<div style={S.cd}>
-      <p style={{fontSize:13,color:"#888",textAlign:"center",lineHeight:1.6}}>Tu hub de salud completo. Cargá estudios clínicos, registrá medicamentos y mediciones antropométricas. El médico IA analiza todo integrado con guías de más de 60 sociedades científicas.</p>
-    </div>}
-
-    {Object.entries(byType).map(([type,sts])=>{
-      const st=stInfo(type);
-      const sorted=[...sts].sort((a,b)=>b.date.localeCompare(a.date));
-      return <div key={type} style={{marginBottom:16}}>
-        <div style={{fontSize:11,fontFamily:"'Oswald',sans-serif",letterSpacing:1,textTransform:"uppercase",color:st.color,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
-          <span style={{fontSize:14}}>{st.i}</span>{st.l}
-          <span style={{fontSize:10,color:"#666",marginLeft:4}}>({sorted.length})</span>
-        </div>
-        {sorted.map(s=><button key={s.id} onClick={()=>{setSelStudy({...s,lastAnalysis:s.lastAnalysis});setView("study");setAiRes("");}} style={{...S.eo,marginBottom:5,borderLeft:"3px solid "+st.color}}>
-          <div>
-            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{s.title}</div>
-            <div style={{fontSize:12,color:"#888",marginTop:2}}>{fd(s.date)}</div>
-            {s.lastAnalysis&&<div style={{fontSize:11,color:"#FF6B35",marginTop:2}}>🧠 Analizado {fd(s.lastAnalysis.date)}</div>}
-          </div>
-          <span style={{color:st.color,fontSize:18}}>&#8594;</span>
-        </button>)}
-      </div>;
-    })}
   </div>;
 }
 
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  const[syncToast,setSyncToast]=useState(null); // {msg, ok}
-
-  useEffect(()=>{
-    // Load saved data
-    const d=ld();
-    if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.clinicalStudies)d.clinicalStudies=[];if(!d.medications)d.medications=[];if(!d.healthSync)d.healthSync=[];setData(d)}
-    setAK(gk());
-
-    // ── Auto-import from iOS Shortcut via URL param ──
-    // Shortcut opens: forja://import?healthdata=BASE64_JSON
-    // or as PWA:      https://yoursite/?healthdata=BASE64_JSON
-    try{
-      const params=new URLSearchParams(window.location.search);
-      const raw=params.get("healthdata");
-      if(raw){
-        const jsonStr=decodeURIComponent(atob(raw));
-        const parsed=JSON.parse(jsonStr);
-        const entries=parsed.healthData||parsed.data||parsed;
-        const payload=Array.isArray(entries)?entries:[entries];
-        const now=new Date().toISOString();
-        const batch={id:gi(),importedAt:now,source:"iOS Shortcut (auto)",count:0,days:{}};
-        const metricMap={
-          steps:"steps",HKQuantityTypeIdentifierStepCount:"steps",
-          heartRate:"heartRate",HKQuantityTypeIdentifierHeartRate:"heartRate",
-          hrv:"hrv",HKQuantityTypeIdentifierHeartRateVariabilitySDNN:"hrv",
-          sleep:"sleep",HKCategoryTypeIdentifierSleepAnalysis:"sleep",
-          sleepDuration:"sleep",
-          calories:"calories",activeCalories:"calories",HKQuantityTypeIdentifierActiveEnergyBurned:"calories",
-          basalCalories:"basalCalories",HKQuantityTypeIdentifierBasalEnergyBurned:"basalCalories",
-          spo2:"spo2",oxygenSaturation:"spo2",HKQuantityTypeIdentifierOxygenSaturation:"spo2",
-          weight:"weight",bodyMass:"weight",HKQuantityTypeIdentifierBodyMass:"weight",
-          bodyFatPercentage:"bodyFat",HKQuantityTypeIdentifierBodyFatPercentage:"bodyFat",
-          distanceWalkingRunning:"distance",HKQuantityTypeIdentifierDistanceWalkingRunning:"distance",
-          flightsClimbed:"flights",HKQuantityTypeIdentifierFlightsClimbed:"flights",
-          respiratoryRate:"respiratoryRate",HKQuantityTypeIdentifierRespiratoryRate:"respiratoryRate",
-          standHour:"standHours",HKCategoryTypeIdentifierAppleStandHour:"standHours",
-        };
-        const sumTypes=["steps","calories","basalCalories","distance","flights","standHours"];
-        payload.forEach(entry=>{
-          const rawType=entry.type||entry.identifier||entry.sampleType||"";
-          const metricKey=metricMap[rawType]||metricMap[rawType.replace("com.apple.health.","")]||null;
-          if(!metricKey)return;
-          const dateStr=(entry.startDate||entry.date||entry.endDate||now).slice(0,10);
-          if(!batch.days[dateStr])batch.days[dateStr]={date:dateStr};
-          const val=parseFloat(entry.value||entry.quantity||0);
-          if(isNaN(val))return;
-          if(sumTypes.includes(metricKey)){
-            batch.days[dateStr][metricKey]=(batch.days[dateStr][metricKey]||0)+val;
-          }else{
-            const prev=batch.days[dateStr][metricKey];
-            const cnt=batch.days[dateStr][metricKey+"_n"]||0;
-            batch.days[dateStr][metricKey]=prev===undefined?val:(prev*cnt+val)/(cnt+1);
-            batch.days[dateStr][metricKey+"_n"]=(cnt+1);
-          }
-          batch.count++;
-        });
-        Object.values(batch.days).forEach(day=>{Object.keys(day).forEach(k=>{if(k.endsWith("_n"))delete day[k];});});
-        if(batch.count>0){
-          const freshData=d||EMPTY;
-          const nd={...freshData,healthSync:[...(freshData.healthSync||[]),batch]};
-          setData(nd);sv(nd);
-          const dayCount=Object.keys(batch.days).length;
-          setSyncToast({ok:true,msg:`✅ Apple Health: ${batch.count} lecturas de ${dayCount} días sincronizadas`});
-          setTimeout(()=>setSyncToast(null),5000);
-          // Clean URL so next reload doesn't re-import
-          window.history.replaceState({},"",window.location.pathname);
-        }
-      }
-    }catch(e){
-      setSyncToast({ok:false,msg:"❌ Error al importar desde Shortcut: "+e.message});
-      setTimeout(()=>setSyncToast(null),6000);
-    }
-
-    setLoading(false);
-  },[]);
-
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
-    <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>SALUD CON CIENCIA</span></div>
-    {/* Sync toast notification */}
-    {syncToast&&<div style={{position:"fixed",top:60,left:"50%",transform:"translateX(-50%)",zIndex:999,maxWidth:440,width:"90%",padding:"12px 16px",borderRadius:12,background:syncToast.ok?"rgba(46,204,113,0.95)":"rgba(231,76,60,0.95)",color:"#FFF",fontSize:13,fontWeight:600,boxShadow:"0 4px 24px rgba(0,0,0,0.5)",textAlign:"center"}}>
-      {syncToast.msg}
-    </div>}
+    <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>ENTRENA CON CIENCIA</span></div>
     <div style={S.cnt}>
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
-      {tab==="health"&&<HealthTab data={data} setData={setData} apiKey={apiKey}/>}
+      {tab==="body"&&<BodyTab data={data} setData={setData}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
-      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey} data={data} setData={setData}/> }
+      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/>}
     </div>
     <TabBar active={tab} onChange={setTab}/>
   </div>;
