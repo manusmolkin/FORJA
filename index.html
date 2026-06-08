@@ -224,7 +224,15 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
+
+const STUDY_TYPES=[
+  {id:"laboratorio",l:"Laboratorio / Sangre",i:"\u{1FA78}"},
+  {id:"imagen",l:"Imagen (Rx, eco, RMN)",i:"\u{1FA7B}"},
+  {id:"composicion",l:"Composici\u00f3n corporal",i:"\u2696\uFE0F"},
+  {id:"cardiologia",l:"Cardiolog\u00eda (ECG, ergo)",i:"\u2764\uFE0F"},
+  {id:"otro",l:"Otro",i:"\u{1F4C4}"},
+];
 
 // ─── NUTRITION CONSTANTS ───
 const MEAL_TYPES=[
@@ -261,6 +269,44 @@ async function callAI(prompt,key){
   const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
   const d=await r.json();if(d.error)throw new Error(d.error.message);
   return d.content?.map(c=>c.text||"").join("")||"Sin respuesta.";
+}
+
+// ─── VISION / FILE HELPERS ───
+function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=()=>rej(new Error("No se pudo leer el archivo"));r.readAsDataURL(file)})}
+
+async function fileToBlock(file){
+  const b64=await fileToB64(file);
+  const isPdf=file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf");
+  if(isPdf)return {type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+  let mt=file.type||"image/jpeg";
+  const ok=["image/jpeg","image/png","image/gif","image/webp"];
+  if(!ok.includes(mt))throw new Error("Formato no soportado ("+(mt||"desconocido")+"). Usá JPG, PNG, WEBP o PDF. Si es una foto del iPhone en HEIC, sacá una captura de pantalla y subí el PNG/JPG.");
+  return {type:"image",source:{type:"base64",media_type:mt,data:b64}};
+}
+
+// Parse JSON tolerante: limpia markdown y cierra estructuras truncadas
+function pj(txt){
+  let clean=String(txt).replace(/```json|```/g,"").trim();
+  const s=clean.indexOf("{");if(s>0)clean=clean.slice(s);
+  try{return JSON.parse(clean);}catch(e){}
+  const stack=[];let inS=false,esc=false;
+  for(let ci=0;ci<clean.length;ci++){const ch=clean[ci];
+    if(esc){esc=false;continue;}
+    if(ch==='\\'){esc=true;continue;}
+    if(!inS&&ch==='"'){inS=true;continue;}
+    if(inS&&ch==='"'){inS=false;continue;}
+    if(inS)continue;
+    if(ch==='{')stack.push('}');
+    else if(ch==='[')stack.push(']');
+    else if(ch==='}'||ch===']')stack.pop();}
+  const fixed=(inS?clean+'"':clean)+stack.reverse().join('');
+  return JSON.parse(fixed);
+}
+
+async function callAIVision(parts,key,maxTokens){
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens||2000,messages:[{role:"user",content:parts}]})});
+  const d=await r.json();if(d.error)throw new Error(d.error.message);
+  return d.content?.map(c=>c.text||"").join("")||"";
 }
 
 const S={
@@ -350,21 +396,95 @@ function PlanTab({data,setData}){
 }
 
 // ─── BODY TAB ───
-function BodyTab({data,setData}){
+function BodyTab({data,setData,apiKey}){
+  const[sub,setSub]=useState("anthro");
+  // antropometria
   const[adding,setAdding]=useState(false);
   const[vals,setVals]=useState({});
   const[date,setDate]=useState(td());
   const[selM,setSelM]=useState(null);
-  const doSave=()=>{const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date,...vals}]};setData(nd);sv(nd);setAdding(false);setVals({})};
+  const[exLoad,setExLoad]=useState(false);
+  const[exNote,setExNote]=useState("");
+  const anthroRef=React.useRef(null);
+  // estudios
+  const[stView,setStView]=useState("list");
+  const[stSel,setStSel]=useState(null);
+  const[stFile,setStFile]=useState(null);
+  const[stType,setStType]=useState("laboratorio");
+  const[stDate,setStDate]=useState(td());
+  const[stLoad,setStLoad]=useState(false);
+  const[stResult,setStResult]=useState(null);
+  const[stErr,setStErr]=useState("");
+  const studyRef=React.useRef(null);
+
+  const doSave=()=>{const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date,...vals}]};setData(nd);sv(nd);setAdding(false);setVals({});setExNote("")};
+
+  const onAnthroFile=async(e)=>{
+    const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;
+    if(!apiKey){alert("Necesit\u00e1s cargar tu API key en Config.");return;}
+    setExLoad(true);setExNote("");
+    try{
+      const block=await fileToBlock(file);
+      const fields=ANTHRO.map(f=>'"'+f.id+'": '+f.l+" ("+f.u+")").join(", ");
+      const txt="Analiz\u00e1 este estudio antropom\u00e9trico o de composici\u00f3n corporal (antropometr\u00eda ISAK, InBody, DEXA, balanza inteligente, etc.) y extra\u00e9 los valores que encuentres. Campos disponibles (id: etiqueta): "+fields+". Devolv\u00e9 SOLO JSON v\u00e1lido, sin markdown, sin texto antes ni despu\u00e9s:\n{\"date\":\"YYYY-MM-DD o null si no figura\",\"values\":{\"weight\":77.5,\"body_fat\":15.2}}\nEn \"values\" inclu\u00ed \u00fanicamente los campos que puedas leer con certeza, usando exactamente los ids indicados. Convert\u00ed unidades si hace falta (peso en kg, pliegues en mm, per\u00edmetros en cm). Si un dato no corresponde a ning\u00fan campo, ignoralo.";
+      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,1500);
+      const parsed=pj(resp);
+      const nv={};
+      Object.entries(parsed.values||{}).forEach(([k,v])=>{if(ANTHRO.some(f=>f.id===k)&&v!=null&&v!=="")nv[k]=String(v)});
+      if(!Object.keys(nv).length){setExNote("No se reconocieron valores. Prob\u00e1 una foto m\u00e1s n\u00edtida o carg\u00e1 manual.");setExLoad(false);return;}
+      setVals(nv);
+      if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setDate(parsed.date);
+      setExNote("Se extrajeron "+Object.keys(nv).length+" valores. Revisalos y guard\u00e1.");
+      setAdding(true);
+    }catch(err){alert("Error al analizar: "+err.message);}
+    setExLoad(false);
+  };
+
+  const onStudyFile=(e)=>{const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;setStFile(file);setStResult(null);setStErr("");setStDate(td());setStView("new")};
+
+  const analyzeStudy=async()=>{
+    if(!apiKey){alert("Necesit\u00e1s cargar tu API key en Config.");return;}
+    if(!stFile)return;
+    setStLoad(true);setStErr("");
+    try{
+      const block=await fileToBlock(stFile);
+      const tl=STUDY_TYPES.find(t=>t.id===stType)?.l||"estudio";
+      const txt="Sos un asistente que ORDENA y RESUME estudios m\u00e9dicos para que la persona los registre en su app de salud. Este estudio es de tipo \""+tl+"\". Extra\u00e9 la informaci\u00f3n TAL COMO figura en el estudio. NO diagnostiques ni recomiendes tratamientos. Devolv\u00e9 SOLO JSON v\u00e1lido, sin markdown:\n{\"title\":\"t\u00edtulo corto\",\"date\":\"YYYY-MM-DD o null\",\"values\":[{\"label\":\"par\u00e1metro\",\"value\":\"valor\",\"unit\":\"unidad o vac\u00edo\",\"ref\":\"rango de referencia o vac\u00edo\",\"flag\":\"alto|bajo|normal|\"}],\"findings\":\"para im\u00e1genes/informes: hallazgos y conclusi\u00f3n tal como aparecen, resumido\",\"summary\":\"2-4 frases en lenguaje claro de QU\u00c9 dice el estudio, sin diagnosticar\"}\nPara laboratorios complet\u00e1 \"values\" con cada analito (hemograma, l\u00edpidos, glucemia, hep\u00e1tico, renal, tiroideo, vitaminas, etc.). Para im\u00e1genes dej\u00e1 \"values\" vac\u00edo y us\u00e1 \"findings\". En \"flag\" marc\u00e1 \"alto\"/\"bajo\" solo si el estudio o el rango lo indican; si est\u00e1 en rango \"normal\"; si no hay rango, vac\u00edo.";
+      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,3500);
+      const parsed=pj(resp);
+      setStResult(parsed);
+      if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setStDate(parsed.date);
+    }catch(err){setStErr("No se pudo analizar: "+err.message);}
+    setStLoad(false);
+  };
+
+  const saveStudy=()=>{
+    const study={id:gi(),type:stType,date:stDate,fileName:(stFile&&stFile.name)||"",title:(stResult&&stResult.title)||STUDY_TYPES.find(t=>t.id===stType)?.l,values:(stResult&&stResult.values)||[],findings:(stResult&&stResult.findings)||"",summary:(stResult&&stResult.summary)||""};
+    const nd={...data,healthStudies:[...(data.healthStudies||[]),study]};
+    setData(nd);sv(nd);
+    setStView("list");setStFile(null);setStResult(null);setStErr("");setStType("laboratorio");setStDate(td());
+  };
+  const delStudy=(id)=>{const nd={...data,healthStudies:(data.healthStudies||[]).filter(s=>s.id!==id)};setData(nd);sv(nd);setStSel(null);setStView("list")};
+
+  const flagC=(f)=>f==="alto"?"#E74C3C":f==="bajo"?"#F39C12":f==="normal"?"#2ECC71":"#888";
+  const flagT=(f)=>f==="alto"?"\u2191 Alto":f==="bajo"?"\u2193 Bajo":f==="normal"?"\u2713":"";
+  const disclaimer=<p style={{fontSize:11,color:"#888",lineHeight:1.5,marginTop:12,fontStyle:"italic"}}>{"\u26A0\uFE0F"} Esto es un resumen de lo que dice el estudio, no un diagn\u00f3stico. Consult\u00e1 los resultados con tu m\u00e9dico.</p>;
+
+  // ── ANTROPOMETRIA: detalle de una metrica ──
   if(selM){const f=ANTHRO.find(x=>x.id===selM);const pts=(data.anthropometry||[]).filter(a=>a[selM]).sort((a,b)=>a.date.localeCompare(b.date));const vs=pts.map(p=>Number(p[selM]));const mx=vs.length?Math.max(...vs):0;const mn=vs.length?Math.min(...vs):0;const rng=mx-mn||1;
     return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setSelM(null)} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>{f.l}</h2></div>
     {pts.length>1&&<div style={S.cd}><h4 style={{fontSize:13,color:"#888",margin:"0 0 12px",fontFamily:"'Oswald',sans-serif"}}>EVOLUCION</h4><div style={{display:"flex",alignItems:"flex-end",gap:4,height:120}}>{pts.map((p,i)=>{const v=Number(p[selM]);const h=((v-mn)/rng)*90+10;return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#AAA"}}>{v}</span><div style={{width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#FF6B35,#D62828)",borderRadius:4}}/><span style={{fontSize:8,color:"#666"}}>{p.date.slice(5)}</span></div>})}</div></div>}
     {pts.map((p,i)=><div key={i} style={{...S.cd,padding:12,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#888"}}>{fd(p.date)}</span><span style={{fontSize:14,color:"#FF6B35",fontWeight:700}}>{p[selM]} {f.u}</span></div>)}
     {pts.length===0&&<p style={{color:"#888",textAlign:"center",fontSize:14}}>Sin mediciones.</p>}
     </div>}
-  if(adding)return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setAdding(false)} style={S.sm}>&#8592;</button><h2 style={S.t1}>Nueva medicion</h2></div>
+
+  // ── ANTROPOMETRIA: nueva medicion ──
+  if(adding)return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>{setAdding(false);setExNote("")}} style={S.sm}>&#8592;</button><h2 style={S.t1}>Nueva medicion</h2></div>
+    <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
+    <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:12,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio y autocompletar"}</button>
+    {exNote&&<div style={{...S.tbdg,marginTop:0,marginBottom:12,background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.3)",color:"#5DADE2"}}>{exNote}</div>}
     <label style={S.lbl}>Fecha</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
-    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completa solo lo que tengas. No hace falta todo.</p>
+    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Complet\u00e1 solo lo que tengas. No hace falta todo.</p>
     {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
       <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
       <input type="number" value={vals[f.id]||""} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
@@ -372,10 +492,58 @@ function BodyTab({data,setData}){
     </div>)}
     <button onClick={doSave} disabled={!Object.keys(vals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(vals).length?1:0.5}}>Guardar</button>
   </div>;
+
+  // ── ESTUDIOS: nuevo (analizar/revisar) ──
+  if(stView==="new")return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>{setStView("list");setStFile(null);setStResult(null);setStErr("")}} style={S.sm}>&#8592;</button><h2 style={S.t1}>Nuevo estudio</h2></div>
+    <div style={{...S.cd,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{"\u{1F4C4}"}</span><span style={{fontSize:13,color:"#CCC",wordBreak:"break-all"}}>{(stFile&&stFile.name)||"Sin archivo"}</span></div>
+    <label style={S.lbl}>Tipo de estudio</label>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:16}}>{STUDY_TYPES.map(t=><button key={t.id} onClick={()=>setStType(t.id)} style={{...S.mb2,flexDirection:"row",padding:"10px 8px",border:stType===t.id?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:stType===t.id?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontSize:11}}>{t.l}</span></button>)}</div>
+    {!stResult&&<button onClick={analyzeStudy} disabled={stLoad} style={{...S.btn,width:"100%",background:stLoad?"#444":"linear-gradient(135deg,#FF6B35,#D62828)",opacity:stLoad?0.7:1}}>{stLoad?"Analizando con IA...":"\u{1F50D} Analizar con IA"}</button>}
+    {stErr&&<p style={{color:"#E74C3C",fontSize:13,marginTop:12,textAlign:"center"}}>{stErr}</p>}
+    {stResult&&<div style={{marginTop:8}}>
+      <label style={S.lbl}>Fecha del estudio</label><input type="date" value={stDate} onChange={e=>setStDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
+      {stResult.summary&&<div style={S.aicd}><h4 style={{fontSize:12,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>RESUMEN</h4><p style={{fontSize:13,lineHeight:1.5,color:"#DDD"}}>{stResult.summary}</p></div>}
+      {stResult.values&&stResult.values.length>0&&<div style={{marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>VALORES ({stResult.values.length})</h4>{stResult.values.map((v,i)=><div key={i} style={{...S.cd,padding:"10px 12px",marginBottom:6}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:13,color:"#CCC"}}>{v.label}</span><span style={{fontSize:14,fontWeight:700,color:flagC(v.flag)}}>{v.value} {v.unit} {flagT(v.flag)&&<span style={{fontSize:11}}>{flagT(v.flag)}</span>}</span></div>{v.ref&&<span style={{fontSize:11,color:"#666"}}>Ref: {v.ref}</span>}</div>)}</div>}
+      {stResult.findings&&<div style={{...S.cd,marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>HALLAZGOS</h4><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{stResult.findings}</p></div>}
+      {disclaimer}
+      <button onClick={saveStudy} style={{...S.btn,width:"100%",marginTop:16}}>Guardar estudio</button>
+      <button onClick={analyzeStudy} disabled={stLoad} style={{...S.aset,marginTop:8}}>Reanalizar</button>
+    </div>}
+  </div>;
+
+  // ── ESTUDIOS: detalle ──
+  if(stView==="detail"&&stSel){const s=(data.healthStudies||[]).find(x=>x.id===stSel);if(!s)return <div style={S.pg}><button onClick={()=>{setStView("list");setStSel(null)}} style={S.sm}>&#8592;</button><p style={{color:"#888",marginTop:16}}>Estudio no encontrado.</p></div>;const ti=STUDY_TYPES.find(t=>t.id===s.type);
+    return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>{setStView("list");setStSel(null)}} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0,flex:1}}>{ti?.i} {s.title}</h2><button onClick={()=>delStudy(s.id)} style={S.sm}>x</button></div>
+    <p style={{fontSize:12,color:"#888",marginBottom:16}}>{ti?.l} \u00b7 {fd(s.date)}</p>
+    {s.summary&&<div style={S.aicd}><h4 style={{fontSize:12,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>RESUMEN</h4><p style={{fontSize:13,lineHeight:1.5,color:"#DDD"}}>{s.summary}</p></div>}
+    {s.values&&s.values.length>0&&<div style={{marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>VALORES</h4>{s.values.map((v,i)=><div key={i} style={{...S.cd,padding:"10px 12px",marginBottom:6}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:13,color:"#CCC"}}>{v.label}</span><span style={{fontSize:14,fontWeight:700,color:flagC(v.flag)}}>{v.value} {v.unit} {flagT(v.flag)&&<span style={{fontSize:11}}>{flagT(v.flag)}</span>}</span></div>{v.ref&&<span style={{fontSize:11,color:"#666"}}>Ref: {v.ref}</span>}</div>)}</div>}
+    {s.findings&&<div style={{...S.cd,marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>HALLAZGOS</h4><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{s.findings}</p></div>}
+    {disclaimer}
+  </div>;}
+
+  // ── VISTA PRINCIPAL ──
   const latest=(data.anthropometry||[]).length?(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
-  return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4D0}"} Cuerpo</h2><button onClick={()=>setAdding(true)} style={{...S.btn,width:"100%",marginBottom:20}}>+ Nueva medicion</button>
-    {latest&&<div style={{marginBottom:16}}><h3 style={{...S.t1,fontSize:14}}>Ultima medicion - {fd(latest.date)}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}</div></div>}
-    {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Hacete una antropometria con un nutricionista deportivo (certificacion ISAK) y carga los datos aca.</p></div>}
+  const studies=[...(data.healthStudies||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  const subNav=<div style={{display:"flex",gap:8,marginBottom:18}}>
+    <button onClick={()=>setSub("anthro")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="anthro"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="anthro"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1F4D0}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="anthro"?"#FFF":"#AAA"}}>Antropometr\u00eda</span></button>
+    <button onClick={()=>setSub("studies")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="studies"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="studies"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1FA7A}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="studies"?"#FFF":"#AAA"}}>Estudios</span></button>
+  </div>;
+
+  return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4AA}"} Cuerpo y Salud</h2>{subNav}
+    {sub==="anthro"&&<div>
+      <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
+      <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:8,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio (autocompleta)"}</button>
+      <button onClick={()=>{setVals({});setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
+      {latest&&<div style={{marginBottom:16}}><h3 style={{...S.t1,fontSize:14}}>Ultima medicion - {fd(latest.date)}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}</div></div>}
+      {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Saca\u0301 una foto o sub\u00ed el PDF de tu antropometr\u00eda (ISAK), InBody o DEXA y la app carga los datos sola. Tambi\u00e9n pod\u00e9s cargar manual.</p></div>}
+    </div>}
+    {sub==="studies"&&<div>
+      <input ref={studyRef} type="file" accept="image/*,application/pdf" onChange={onStudyFile} style={{display:"none"}}/>
+      <button onClick={()=>studyRef.current&&studyRef.current.click()} style={{...S.btn,width:"100%",marginBottom:20}}>{"\u{1F4CE}"} Adjuntar estudio de salud</button>
+      {studies.length===0&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Adjunt\u00e1 an\u00e1lisis de sangre, radiograf\u00edas, ecograf\u00edas, ECG, etc. La app extrae los valores y arma un resumen.</p></div>}
+      {studies.map(s=>{const ti=STUDY_TYPES.find(t=>t.id===s.type);const ab=(s.values||[]).filter(v=>v.flag==="alto"||v.flag==="bajo").length;
+        return <button key={s.id} onClick={()=>{setStSel(s.id);setStView("detail")}} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{ti?.i}</span><div><div style={{fontSize:14,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>{s.title}</div><div style={{fontSize:11,color:"#888"}}>{ti?.l} \u00b7 {fd(s.date)}</div></div></div>{ab>0&&<span style={{fontSize:11,color:"#E74C3C",fontWeight:700}}>{ab} fuera de rango</span>}{ab===0&&(s.values||[]).length>0&&<span style={{fontSize:11,color:"#2ECC71"}}>{"\u2713"} {s.values.length}</span>}</div></button>})}
+    </div>}
   </div>;
 }
 
@@ -1019,7 +1187,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
@@ -1029,7 +1197,7 @@ function App(){
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
-      {tab==="body"&&<BodyTab data={data} setData={setData}/>}
+      {tab==="body"&&<BodyTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
       {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/>}
     </div>
