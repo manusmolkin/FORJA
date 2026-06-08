@@ -284,23 +284,47 @@ async function fileToBlock(file){
   return {type:"image",source:{type:"base64",media_type:mt,data:b64}};
 }
 
-// Parse JSON tolerante: limpia markdown y cierra estructuras truncadas
+// Cierra estructuras abiertas de un fragmento JSON, descartando tokens colgados al final
+function closeFrom(str){
+  const stack=[];let inStr=false,esc=false;
+  for(let i=0;i<str.length;i++){const c=str[i];
+    if(inStr){if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')inStr=false;continue;}
+    if(c==='"'){inStr=true;continue;}
+    if(c==='{')stack.push('}');
+    else if(c==='[')stack.push(']');
+    else if(c==='}'||c===']'){if(!stack.length)return null;stack.pop();}}
+  let out=str;
+  const ws=c=>c===' '||c==='\n'||c==='\t'||c==='\r';
+  if(inStr){out+='"';}
+  else{
+    while(out.length&&(ws(out[out.length-1])||out[out.length-1]===','))out=out.slice(0,-1);
+    // quitar "clave": colgada sin valor
+    if(out.length&&out[out.length-1]===':'){
+      out=out.slice(0,-1);
+      while(out.length&&ws(out[out.length-1]))out=out.slice(0,-1);
+      if(out.length&&out[out.length-1]==='"'){
+        out=out.slice(0,-1);let e2=false;
+        while(out.length){const ch=out[out.length-1];out=out.slice(0,-1);if(ch==='\\'){e2=!e2;continue;}if(ch==='"'&&!e2)break;e2=false;}
+      }
+      while(out.length&&(ws(out[out.length-1])||out[out.length-1]===','))out=out.slice(0,-1);
+    }
+  }
+  for(let k=stack.length-1;k>=0;k--)out+=stack[k];
+  return out;
+}
+
+// Parse JSON tolerante: limpia markdown y repara respuestas truncadas
 function pj(txt){
-  let clean=String(txt).replace(/```json|```/g,"").trim();
-  const s=clean.indexOf("{");if(s>0)clean=clean.slice(s);
-  try{return JSON.parse(clean);}catch(e){}
-  const stack=[];let inS=false,esc=false;
-  for(let ci=0;ci<clean.length;ci++){const ch=clean[ci];
-    if(esc){esc=false;continue;}
-    if(ch==='\\'){esc=true;continue;}
-    if(!inS&&ch==='"'){inS=true;continue;}
-    if(inS&&ch==='"'){inS=false;continue;}
-    if(inS)continue;
-    if(ch==='{')stack.push('}');
-    else if(ch==='[')stack.push(']');
-    else if(ch==='}'||ch===']')stack.pop();}
-  const fixed=(inS?clean+'"':clean)+stack.reverse().join('');
-  return JSON.parse(fixed);
+  let s=String(txt).replace(/```json|```/g,"").trim();
+  const a=s.indexOf("{");if(a>0)s=s.slice(a);
+  try{return JSON.parse(s);}catch(e){}
+  const isEnd=c=>c==='"'||c==='}'||c===']'||(c>='0'&&c<='9')||c==='e'||c==='l';
+  for(let i=s.length;i>0;i--){
+    if(i<s.length&&!isEnd(s[i-1]))continue;
+    const closed=closeFrom(s.slice(0,i));
+    if(closed){try{return JSON.parse(closed);}catch(e){}}
+  }
+  throw new Error("No se pudo interpretar la respuesta de la IA (formato inv\u00e1lido).");
 }
 
 async function callAIVision(parts,key,maxTokens){
@@ -838,31 +862,12 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 }`;
 
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:6000,messages:[{role:"user",content:prompt}]})});
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:8000,messages:[{role:"user",content:prompt}]})});
       const d=await r.json();if(d.error)throw new Error(d.error.message);
       const txt=d.content?.map(c=>c.text||"").join("")||"";
-      let clean=txt.replace(/```json|```/g,"").trim();
-      let plan;
-      try{plan=JSON.parse(clean);}
-      catch(e){
-        // Intenta cerrar JSON truncado contando estructuras abiertas
-        const stack=[];
-        let inS=false,esc=false;
-        for(let ci=0;ci<clean.length;ci++){
-          const ch=clean[ci];
-          if(esc){esc=false;continue;}
-          if(ch==='\\'){esc=true;continue;}
-          if(!inS&&ch==='"'){inS=true;continue;}
-          if(inS&&ch==='"'){inS=false;continue;}
-          if(inS)continue;
-          if(ch==='{')stack.push('}');
-          else if(ch==='[')stack.push(']');
-          else if(ch==='}'||ch===']')stack.pop();
-        }
-        const fixed=(inS?clean+'"':clean)+stack.reverse().join('');
-        try{plan=JSON.parse(fixed);}
-        catch(e2){throw new Error('El plan fue muy largo y se cortó. Intentá regenerar.');}
-      }
+      if(!txt.trim())throw new Error("La IA no devolvi\u00f3 contenido. Intent\u00e1 de nuevo.");
+      const plan=pj(txt);
+      if(!plan||!plan.days||!plan.days.length)throw new Error("El plan lleg\u00f3 incompleto. Intent\u00e1 regenerar.");
       const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
       setData(nd);sv(nd);setAiPlan(plan);setView("plan");
     }catch(e){alert("Error: "+e.message);}
