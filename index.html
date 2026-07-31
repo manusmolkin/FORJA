@@ -39,18 +39,19 @@ chest:{l:"Pecho",i:"\u{1FAC1}",c:"#E74C3C"},back:{l:"Espalda",i:"\u{1F519}",c:"#
 shoulders:{l:"Hombros",i:"\u{1F53A}",c:"#E67E22"},biceps:{l:"Biceps",i:"\u{1F4AA}",c:"#2ECC71"},
 triceps:{l:"Triceps",i:"\u{1F9BE}",c:"#1ABC9C"},legs:{l:"Piernas",i:"\u{1F9B5}",c:"#9B59B6"},
 glutes:{l:"Gluteos",i:"\u{1F351}",c:"#F39C12"},abs:{l:"Abdominales",i:"\u{1F3AF}",c:"#E91E63"},
-forearms:{l:"Antebrazos",i:"\u270A",c:"#795548"},
+calves:{l:"Gemelos",i:"\u{1F9B6}",c:"#16A085"},forearms:{l:"Antebrazos",i:"\u270A",c:"#795548"},
 };
 
 const EC={
-chest:["Press banca","Press inclinado","Aperturas","Fondos","Press mancuernas","Cruces polea"],
-back:["Dominadas","Remo barra","Remo mancuerna","Jalon al pecho","Remo polea baja","Pull-over"],
-shoulders:["Press militar","Elev. laterales","Elev. frontales","Pajaros","Face pull","Press Arnold"],
-biceps:["Curl barra","Curl mancuernas","Curl martillo","Curl concentrado","Curl polea","Curl predicador"],
-triceps:["Extension polea","Press frances","Fondos banco","Patada triceps","Extension cabeza","Press cerrado"],
-legs:["Sentadilla","Prensa","Extension cuadriceps","Curl femoral","Peso muerto rumano","Zancadas","Sentadilla bulgara"],
-glutes:["Hip thrust","Peso muerto sumo","Patada gluteo","Abduccion cadera","Puente gluteo"],
-abs:["Crunch","Plancha","Ab wheel","Elevacion piernas","Russian twist","Crunch polea"],
+chest:["Press banca","Press banca plano (mancuernas)","Press inclinado","Press inclinado (mancuernas)","Press declinado","Press mancuernas","Press maquina","Aperturas","Cruces polea","Peck deck","Fondos","Pull-over mancuerna"],
+back:["Dominadas","Dominadas asistidas","Jalon al pecho","Jalon agarre neutro","Jalon agarre supino","Remo barra","Remo mancuerna","Remo con apoyo en banco","Remo en T","Remo polea baja","Remo maquina","Pull-over","Encogimiento hombros"],
+shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press maquina hombro","Elev. laterales","Elev. laterales polea","Elev. frontales","Pajaros","Face pull","Remo al menton"],
+biceps:["Curl barra","Curl mancuernas","Curl inclinado","Curl martillo","Curl concentrado","Curl polea","Curl predicador","Curl arana"],
+triceps:["Extension polea","Extension polea soga","Extension cabeza","Press frances","Patada triceps","Press cerrado","Fondos banco","Fondos paralelas"],
+legs:["Sentadilla","Sentadilla frontal","Sentadilla goblet","Sentadilla hack","Prensa","Extension cuadriceps","Curl femoral","Curl femoral sentado","Curl femoral tumbado","Peso muerto rumano","Peso muerto convencional","Buenos dias","Zancadas","Zancadas caminando","Sentadilla bulgara","Step up","Hip thrust"],
+glutes:["Hip thrust","Hip thrust unilateral","Peso muerto sumo","Peso muerto rumano unilateral","Patada gluteo","Abduccion cadera","Puente gluteo"],
+calves:["Gemelo de pie","Gemelo sentado","Gemelo en prensa","Gemelo burro","Gemelo unilateral"],
+abs:["Crunch","Crunch polea","Plancha","Plancha lateral","Ab wheel","Elevacion piernas","Elevacion piernas colgado","Russian twist","Pallof press"],
 forearms:["Curl muneca","Curl reverso","Farmer walk","Dead hang"],
 };
 
@@ -224,7 +225,28 @@ goals:["Frecuencia 2 para todos los grupos","RPE 8-9 en compuestos principales",
 },
 ];
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
+// ─── DIAS DE ENTRENAMIENTO CONFIGURABLES ───
+const WEEKDAYS=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"];
+// Compromisos fijos: editables aca si cambian tus deportes
+const SPORT_DAYS={Jueves:"\u26BD F\u00fatbol",Domingo:"\u{1F3BE} Tenis"};
+const dayIdx=d=>{const i=WEEKDAYS.findIndex(w=>w.slice(0,3)===String(d||"").slice(0,3));return i<0?99:i};
+// Devuelve el schedule de la fase con los dias personalizados aplicados y ordenado por dia de semana
+const phSched=(data,pi)=>{
+  const ph=PHASES[pi];if(!ph)return [];
+  const ov=(data.dayOverrides||{})[pi]||{};
+  return ph.schedule.map((sess,i)=>({...sess,day:ov[i]||sess.day,_i:i})).sort((a,b)=>dayIdx(a.day)-dayIdx(b.day));
+};
+const setDayOv=(data,setData,pi,i,day)=>{
+  const ov={...(data.dayOverrides||{})};
+  ov[pi]={...(ov[pi]||{}),[i]:day};
+  const nd={...data,dayOverrides:ov};setData(nd);sv(nd);
+};
+const resetDayOv=(data,setData,pi)=>{
+  const ov={...(data.dayOverrides||{})};delete ov[pi];
+  const nd={...data,dayOverrides:ov};setData(nd);sv(nd);
+};
+
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,dayOverrides:{},anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
 
 const STUDY_TYPES=[
   {id:"laboratorio",l:"Laboratorio / Sangre",i:"\u{1FA78}"},
@@ -372,9 +394,12 @@ function TabBar({active,onChange}){
 
 // ─── PLAN TAB ───
 function PlanTab({data,setData}){
-  const ph=PHASES[data.phase||0];
+  const pi=data.phase||0;
+  const ph=PHASES[pi];
   const[selDay,setSelDay]=useState(null);
-  if(selDay!==null){const day=ph.schedule[selDay];return <div style={S.pg}>
+  const[editDays,setEditDays]=useState(false);
+  const sched=phSched(data,pi);
+  if(selDay!==null){const day=sched.find(d=>d._i===selDay)||ph.schedule[selDay];return <div style={S.pg}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setSelDay(null)} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>{day.day}: {day.name}</h2></div>
     <div style={{display:"flex",gap:4,marginBottom:16,flexWrap:"wrap"}}>{day.muscles.map(g=><span key={g} style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:MG[g]?.c+"22",color:MG[g]?.c,fontWeight:600}}>{MG[g]?.l}</span>)}</div>
     {day.exercises.map((ex,i)=><div key={i} style={S.cd}>
@@ -384,6 +409,9 @@ function PlanTab({data,setData}){
       {ex.note&&<p style={{fontSize:12,color:"#AAA",marginTop:4,fontStyle:"italic"}}>{ex.note}</p>}
     </div>)}
   </div>}
+  const usedDays=sched.map(d=>d.day);
+  const dupDays=[...new Set(usedDays.filter((d,i)=>usedDays.indexOf(d)!==i))];
+  const customized=!!(data.dayOverrides||{})[pi];
   return <div style={S.pg}>
     <h2 style={S.t1}>{"\u{1F4C5}"} Plan de entrenamiento</h2>
     <div style={{...S.cd,borderLeft:"3px solid "+ph.c,background:"linear-gradient(135deg,"+ph.c+"15,"+ph.c+"05)"}}>
@@ -392,9 +420,28 @@ function PlanTab({data,setData}){
       <p style={{fontSize:13,color:"#AAA"}}>Semanas {ph.wk} - {ph.days} dias/semana</p>
       <p style={{fontSize:12,color:"#888",marginTop:4}}>{ph.desc}</p>
     </div>
-    <h3 style={{...S.t1,fontSize:14,marginTop:16}}>Sesiones de la semana</h3>
-    {ph.schedule.map((day,i)=><button key={i} onClick={()=>setSelDay(i)} style={S.eo}>
-      <div><span style={{fontWeight:700,color:"#FFF"}}>{day.day}</span><br/><span style={{fontSize:12,color:"#AAA"}}>{day.name}</span></div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:16,marginBottom:4}}>
+      <h3 style={{...S.t1,fontSize:14,margin:0}}>Sesiones de la semana</h3>
+      <button onClick={()=>setEditDays(v=>!v)} style={{...S.sm,color:editDays?"#FF6B35":"#888"}}>{editDays?"Listo":"\u270F\uFE0F Dias"}</button>
+    </div>
+    {editDays?<div>
+      <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>Eleg\u00ed qu\u00e9 d\u00eda de la semana hac\u00e9s cada sesi\u00f3n. Se guarda por fase.</p>
+      {ph.schedule.map((sess,i)=>{
+        const cur=((data.dayOverrides||{})[pi]||{})[i]||sess.day;
+        return <div key={i} style={{...S.cd,padding:"10px 14px"}}>
+          <div style={{fontSize:13,color:"#FFF",fontWeight:600,marginBottom:6}}>{sess.name}</div>
+          <select value={cur} onChange={e=>setDayOv(data,setData,pi,i,e.target.value)} style={S.inp}>
+            {WEEKDAYS.map(d=><option key={d} value={d} style={{background:"#1a1a1a"}}>{d}{SPORT_DAYS[d]?" \u2014 "+SPORT_DAYS[d]:""}</option>)}
+          </select>
+          {SPORT_DAYS[cur]&&<p style={{fontSize:11,color:"#F39C12",marginTop:6,marginBottom:0}}>{"\u26A0\uFE0F"} Ese d\u00eda ten\u00e9s {SPORT_DAYS[cur]}. Ojo con las piernas.</p>}
+        </div>;
+      })}
+      {dupDays.length>0&&<div style={{...S.cd,borderLeft:"3px solid #E74C3C",background:"rgba(231,76,60,0.06)",padding:"10px 14px"}}>
+        <p style={{fontSize:12,color:"#E74C3C",margin:0}}>Ten\u00e9s 2 sesiones el mismo d\u00eda: {dupDays.join(", ")}</p>
+      </div>}
+      {customized&&<button onClick={()=>resetDayOv(data,setData,pi)} style={{...S.eo,justifyContent:"center",color:"#888"}}>Restaurar d\u00edas por defecto</button>}
+    </div>:sched.map(day=><button key={day._i} onClick={()=>setSelDay(day._i)} style={S.eo}>
+      <div><span style={{fontWeight:700,color:"#FFF"}}>{day.day}</span>{SPORT_DAYS[day.day]&&<span style={{fontSize:11,color:"#F39C12",marginLeft:6}}>{SPORT_DAYS[day.day]}</span>}<br/><span style={{fontSize:12,color:"#AAA"}}>{day.name}</span></div>
       <span style={{fontSize:12,color:ph.c}}>{day.exercises.length} ej. &#8594;</span>
     </button>)}
     <h3 style={{...S.t1,fontSize:14,marginTop:16}}>{"\u{1F3C3}"} Cardio</h3>
@@ -412,12 +459,13 @@ function PlanTab({data,setData}){
     {data.planNotes?.length>0&&<div style={{marginTop:16}}><h3 style={{...S.t1,fontSize:14}}>{"\u{1F9E0}"} Notas del Coach sobre el plan</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.planNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.planNotes.at(-1).date)}</p></div></div>}
     <div style={{marginTop:20}}>
       <h3 style={{...S.t1,fontSize:14}}>Todas las fases</h3>
-      {PHASES.map((p,i)=><div key={i} style={{...S.cd,padding:"10px 14px",borderLeft:"3px solid "+p.c,opacity:i===(data.phase||0)?1:0.5,cursor:"pointer"}} onClick={()=>{const nd={...data,phase:i};setData(nd);sv(nd)}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===(data.phase||0)?p.c:"#888"}}>{p.ic} {p.name}</span><span style={{fontSize:11,color:"#888"}}>Sem {p.wk} - {p.days}d/sem</span></div>
+      {PHASES.map((p,i)=><div key={i} style={{...S.cd,padding:"10px 14px",borderLeft:"3px solid "+p.c,opacity:i===pi?1:0.5,cursor:"pointer"}} onClick={()=>{const nd={...data,phase:i};setData(nd);sv(nd);setEditDays(false)}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===pi?p.c:"#888"}}>{p.ic} {p.name}</span><span style={{fontSize:11,color:"#888"}}>Sem {p.wk} - {p.days}d/sem</span></div>
       </div>)}
     </div>
   </div>;
 }
+
 
 // ─── BODY TAB ───
 function BodyTab({data,setData,apiKey}){
@@ -573,9 +621,9 @@ function BodyTab({data,setData,apiKey}){
 
 // ─── WORKOUT TAB ───
 function WorkoutTab({data,setData,apiKey}){
-  const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
-  const start=()=>{setSes({id:gi(),date:td(),exercises:[]});setSg(null)};
-  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const t2=tgt(hist);setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,sets:t2?Array.from({length:t2.targetSets},()=>({weight:t2.targetWeight,reps:t2.targetReps,done:false})):[{weight:0,reps:10,done:false}],targets:t2}]}));setSg(null)};
+  const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
+  const start=()=>{setSes({id:gi(),date:td(),exercises:[]});setSg(null);setExQ("")};
+  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const t2=tgt(hist);setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,sets:t2?Array.from({length:t2.targetSets},()=>({weight:t2.targetWeight,reps:t2.targetReps,done:false})):[{weight:0,reps:10,done:false}],targets:t2}]}));setSg(null);setExQ("")};
   const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:f==="done"?v:Number(v)}:st)}:ex)}));
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:[...ex.sets,{weight:ex.sets.at(-1)?.weight||0,reps:ex.sets.at(-1)?.reps||10,done:false}]}:ex)}));
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
@@ -593,7 +641,7 @@ function WorkoutTab({data,setData,apiKey}){
   return <div style={S.pg}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={S.t1}>Sesion en curso</h2><span style={{fontSize:12,color:"#888"}}>{fd(ses.date)}</span></div>
     {ses.exercises.map(ex=><div key={ex.id} style={S.cd}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3></div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>{ex.targets&&<div style={S.tbdg}>{"\u{1F3AF}"} {ex.targets.suggestion}</div>}<div style={{marginTop:12}}><div style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 40px 40px",gap:6,marginBottom:6}}><span style={S.colh}>#</span><span style={S.colh}>Kg</span><span style={S.colh}>Reps</span><span style={S.colh}>Ok</span><span></span></div>{ex.sets.map((set,idx)=><div key={idx} style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 40px 40px",gap:6,alignItems:"center",marginBottom:4,opacity:set.done?0.6:1}}><span style={{fontSize:13,color:"#888",textAlign:"center"}}>{idx+1}</span><input type="number" value={set.weight} onChange={e=>upSet(ex.id,idx,"weight",e.target.value)} style={S.inp} step="0.5"/><input type="number" value={set.reps} onChange={e=>upSet(ex.id,idx,"reps",e.target.value)} style={S.inp}/><button onClick={()=>upSet(ex.id,idx,"done",!set.done)} style={{...S.chk,background:set.done?"#2ECC71":"rgba(255,255,255,0.05)",color:set.done?"#FFF":"#666"}}>&#10003;</button><button onClick={()=>rmSet(ex.id,idx)} style={S.sm}>-</button></div>)}<button onClick={()=>addSet(ex.id)} style={S.aset}>+ Serie</button></div></div>)}
-    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).map(n=><button key={n} onClick={()=>addEx(n,sg)} style={S.eo}>{n}</button>)}</div></div>}
+    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>!exQ.trim()||n.toLowerCase().includes(exQ.trim().toLowerCase())).map(n=><button key={n} onClick={()=>addEx(n,sg)} style={S.eo}>{n}</button>)}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
     {ses.exercises.length>0&&<button onClick={()=>setShowFb(true)} style={{...S.btn,marginTop:24,width:"100%"}}>Finalizar {"\u{1F525}"}</button>}
   </div>;
 }
@@ -628,38 +676,198 @@ function SettingsTab({apiKey,onApiKeyChange}){
 
 // ─── FOOD DATABASE (proteinas por 100g) ───
 const FOOD_DB=[
-  {n:"Pechuga de pollo",p:31,c:0,f:3.6,k:165,cat:"Proteinas"},
-  {n:"Pechuga de pavo",p:29,c:0,f:1,k:135,cat:"Proteinas"},
-  {n:"Carne picada (90% magra)",p:26,c:0,f:10,k:196,cat:"Proteinas"},
-  {n:"Bife de lomo",p:26,c:0,f:8,k:179,cat:"Proteinas"},
-  {n:"Salmon",p:25,c:0,f:13,k:208,cat:"Proteinas"},
-  {n:"Atun en agua",p:30,c:0,f:1,k:128,cat:"Proteinas"},
-  {n:"Huevo entero",p:13,c:1,f:11,k:155,cat:"Proteinas"},
-  {n:"Clara de huevo",p:11,c:1,f:0,k:52,cat:"Proteinas"},
-  {n:"Queso cottage",p:11,c:3,f:4,k:98,cat:"Lacteos"},
+  // ── AVES ──
+  {n:"Pechuga de pollo",p:31,c:0,f:3.6,k:165,cat:"Aves"},
+  {n:"Muslo de pollo sin piel",p:24,c:0,f:9,k:177,cat:"Aves"},
+  {n:"Pata muslo con piel",p:22,c:0,f:15,k:229,cat:"Aves"},
+  {n:"Pollo entero asado (promedio)",p:25,c:0,f:12,k:205,cat:"Aves"},
+  {n:"Pechuga de pavo",p:29,c:0,f:1,k:135,cat:"Aves"},
+  {n:"Pavita fresca",p:24,c:0,f:3,k:125,cat:"Aves"},
+  {n:"Pato (pechuga sin piel)",p:24,c:0,f:11,k:201,cat:"Aves"},
+  {n:"Huevo entero",p:13,c:1,f:11,k:155,cat:"Aves"},
+  {n:"Clara de huevo",p:11,c:1,f:0,k:52,cat:"Aves"},
+  {n:"Yema de huevo",p:16,c:3.6,f:27,k:322,cat:"Aves"},
+  // ── CARNES ROJAS ──
+  {n:"Bife de lomo",p:26,c:0,f:8,k:179,cat:"Carnes rojas"},
+  {n:"Bife de chorizo",p:24,c:0,f:16,k:243,cat:"Carnes rojas"},
+  {n:"Cuadril",p:26,c:0,f:7,k:172,cat:"Carnes rojas"},
+  {n:"Nalga",p:27,c:0,f:5,k:157,cat:"Carnes rojas"},
+  {n:"Peceto",p:28,c:0,f:4,k:152,cat:"Carnes rojas"},
+  {n:"Colita de cuadril",p:25,c:0,f:9,k:186,cat:"Carnes rojas"},
+  {n:"Vacio",p:22,c:0,f:19,k:262,cat:"Carnes rojas"},
+  {n:"Asado de tira",p:21,c:0,f:24,k:305,cat:"Carnes rojas"},
+  {n:"Entrana",p:24,c:0,f:15,k:236,cat:"Carnes rojas"},
+  {n:"Matambre",p:22,c:0,f:20,k:270,cat:"Carnes rojas"},
+  {n:"Carne picada (90% magra)",p:26,c:0,f:10,k:196,cat:"Carnes rojas"},
+  {n:"Carne picada (80% magra)",p:24,c:0,f:20,k:272,cat:"Carnes rojas"},
+  {n:"Osobuco",p:27,c:0,f:8,k:187,cat:"Carnes rojas"},
+  {n:"Higado de vaca",p:20,c:4,f:4,k:135,cat:"Carnes rojas"},
+  {n:"Cerdo - solomillo",p:26,c:0,f:4,k:143,cat:"Carnes rojas"},
+  {n:"Cerdo - bondiola",p:21,c:0,f:18,k:250,cat:"Carnes rojas"},
+  {n:"Cerdo - costilla",p:20,c:0,f:22,k:277,cat:"Carnes rojas"},
+  {n:"Cordero (pierna)",p:25,c:0,f:14,k:230,cat:"Carnes rojas"},
+  {n:"Jamon crudo",p:27,c:1,f:16,k:250,cat:"Carnes rojas"},
+  {n:"Jamon cocido",p:18,c:1.5,f:5,k:125,cat:"Carnes rojas"},
+  {n:"Bondiola curada",p:29,c:0,f:20,k:300,cat:"Carnes rojas"},
+  // ── PESCADOS Y MARISCOS ──
+  {n:"Salmon",p:25,c:0,f:13,k:208,cat:"Pescados y mariscos"},
+  {n:"Salmon rosado (ahumado)",p:22,c:0,f:8,k:162,cat:"Pescados y mariscos"},
+  {n:"Merluza",p:18,c:0,f:1.3,k:87,cat:"Pescados y mariscos"},
+  {n:"Brotola",p:18,c:0,f:1,k:82,cat:"Pescados y mariscos"},
+  {n:"Lenguado",p:19,c:0,f:1.5,k:91,cat:"Pescados y mariscos"},
+  {n:"Abadejo",p:19,c:0,f:1,k:86,cat:"Pescados y mariscos"},
+  {n:"Corvina",p:19,c:0,f:2,k:96,cat:"Pescados y mariscos"},
+  {n:"Pejerrey",p:19,c:0,f:2.5,k:100,cat:"Pescados y mariscos"},
+  {n:"Trucha",p:20,c:0,f:6,k:141,cat:"Pescados y mariscos"},
+  {n:"Atun fresco",p:23,c:0,f:5,k:144,cat:"Pescados y mariscos"},
+  {n:"Atun en agua (lata)",p:30,c:0,f:1,k:128,cat:"Pescados y mariscos"},
+  {n:"Atun en aceite (escurrido)",p:26,c:0,f:8,k:186,cat:"Pescados y mariscos"},
+  {n:"Caballa en lata",p:21,c:0,f:11,k:190,cat:"Pescados y mariscos"},
+  {n:"Sardinas en lata",p:25,c:0,f:11,k:208,cat:"Pescados y mariscos"},
+  {n:"Anchoas",p:29,c:0,f:10,k:210,cat:"Pescados y mariscos"},
+  {n:"Bacalao",p:18,c:0,f:0.7,k:82,cat:"Pescados y mariscos"},
+  {n:"Camarones",p:24,c:0,f:0.3,k:99,cat:"Pescados y mariscos"},
+  {n:"Langostinos",p:20,c:0,f:1,k:99,cat:"Pescados y mariscos"},
+  {n:"Calamar",p:16,c:3,f:1.4,k:92,cat:"Pescados y mariscos"},
+  {n:"Mejillones",p:24,c:7,f:4,k:172,cat:"Pescados y mariscos"},
+  {n:"Vieiras",p:20,c:5,f:0.8,k:111,cat:"Pescados y mariscos"},
+  {n:"Pulpo",p:30,c:4,f:2,k:164,cat:"Pescados y mariscos"},
+  // ── QUESOS ──
+  {n:"Queso port salut",p:23,c:2,f:26,k:330,cat:"Quesos"},
+  {n:"Queso cremoso",p:20,c:2,f:28,k:340,cat:"Quesos"},
+  {n:"Queso mozzarella",p:22,c:2.2,f:22,k:300,cat:"Quesos"},
+  {n:"Queso muzzarella (fresca)",p:18,c:2.5,f:17,k:240,cat:"Quesos"},
+  {n:"Queso parmesano / reggianito",p:35,c:4,f:28,k:400,cat:"Quesos"},
+  {n:"Queso sardo",p:32,c:2,f:30,k:400,cat:"Quesos"},
+  {n:"Queso provolone",p:26,c:2.1,f:27,k:351,cat:"Quesos"},
+  {n:"Queso cheddar",p:25,c:1.3,f:33,k:403,cat:"Quesos"},
+  {n:"Queso gouda",p:25,c:2.2,f:27,k:356,cat:"Quesos"},
+  {n:"Queso gruyere",p:30,c:0.4,f:32,k:413,cat:"Quesos"},
+  {n:"Queso emmental",p:28,c:1.4,f:30,k:380,cat:"Quesos"},
+  {n:"Queso brie",p:21,c:0.5,f:28,k:334,cat:"Quesos"},
+  {n:"Queso camembert",p:20,c:0.5,f:24,k:300,cat:"Quesos"},
+  {n:"Queso azul / roquefort",p:21,c:2.3,f:29,k:353,cat:"Quesos"},
+  {n:"Queso feta",p:14,c:4,f:21,k:264,cat:"Quesos"},
+  {n:"Queso de cabra",p:22,c:2.5,f:26,k:333,cat:"Quesos"},
+  {n:"Queso fresco / cuartirolo",p:12,c:1,f:8,k:120,cat:"Quesos"},
+  {n:"Queso ricota entera",p:11,c:3,f:13,k:174,cat:"Quesos"},
+  {n:"Queso ricota descremada",p:11,c:4,f:4,k:97,cat:"Quesos"},
+  {n:"Queso cottage",p:11,c:3,f:4,k:98,cat:"Quesos"},
+  {n:"Queso untable descremado",p:9,c:4,f:5,k:95,cat:"Quesos"},
+  {n:"Queso untable entero",p:6,c:4,f:24,k:255,cat:"Quesos"},
+  {n:"Queso rallado",p:32,c:3,f:26,k:380,cat:"Quesos"},
+  {n:"Halloumi",p:22,c:2.2,f:25,k:321,cat:"Quesos"},
+  {n:"Mascarpone",p:4.8,c:4,f:44,k:429,cat:"Quesos"},
+  // ── LACTEOS ──
   {n:"Yogur griego natural",p:10,c:4,f:0,k:59,cat:"Lacteos"},
+  {n:"Yogur natural entero",p:3.5,c:4.7,f:3.3,k:61,cat:"Lacteos"},
+  {n:"Yogur descremado",p:4.3,c:6,f:0.2,k:43,cat:"Lacteos"},
+  {n:"Kefir",p:3.3,c:4.5,f:1,k:41,cat:"Lacteos"},
   {n:"Leche entera",p:3.2,c:5,f:3.5,k:61,cat:"Lacteos"},
-  {n:"Queso fresco",p:12,c:1,f:8,k:120,cat:"Lacteos"},
+  {n:"Leche descremada",p:3.4,c:5,f:0.1,k:35,cat:"Lacteos"},
+  {n:"Leche de almendras sin azucar",p:0.5,c:0.6,f:1.1,k:15,cat:"Lacteos"},
+  {n:"Bebida de soja sin azucar",p:3.3,c:1.8,f:1.8,k:33,cat:"Lacteos"},
+  {n:"Crema de leche",p:2.1,c:2.9,f:35,k:340,cat:"Lacteos"},
+  {n:"Manteca",p:0.9,c:0.1,f:81,k:717,cat:"Lacteos"},
+  // ── PROTEINA VEGETAL ──
+  {n:"Tofu firme",p:17,c:2.8,f:9,k:144,cat:"Proteina vegetal"},
+  {n:"Tofu blando",p:8,c:2,f:4.8,k:76,cat:"Proteina vegetal"},
+  {n:"Tempeh",p:19,c:9,f:11,k:193,cat:"Proteina vegetal"},
+  {n:"Soja texturizada (seca)",p:52,c:30,f:1.5,k:340,cat:"Proteina vegetal"},
+  {n:"Seitan",p:25,c:14,f:1.9,k:180,cat:"Proteina vegetal"},
+  {n:"Edamame",p:11,c:9,f:5,k:121,cat:"Proteina vegetal"},
+  {n:"Hamburguesa de lenteja casera",p:9,c:18,f:5,k:150,cat:"Proteina vegetal"},
+  // ── LEGUMBRES ──
+  {n:"Lentejas cocidas",p:9,c:20,f:0.4,k:116,cat:"Legumbres"},
+  {n:"Lentejas secas",p:25,c:60,f:1.1,k:352,cat:"Legumbres"},
+  {n:"Lentejon cocido",p:9,c:20,f:0.5,k:118,cat:"Legumbres"},
+  {n:"Garbanzos cocidos",p:9,c:27,f:2.6,k:164,cat:"Legumbres"},
+  {n:"Garbanzos secos",p:19,c:61,f:6,k:364,cat:"Legumbres"},
+  {n:"Porotos negros cocidos",p:8.9,c:23,f:0.5,k:132,cat:"Legumbres"},
+  {n:"Porotos blancos (alubias) cocidos",p:9.7,c:25,f:0.5,k:139,cat:"Legumbres"},
+  {n:"Porotos colorados cocidos",p:8.7,c:23,f:0.5,k:127,cat:"Legumbres"},
+  {n:"Porotos pallares cocidos",p:7.8,c:21,f:0.4,k:115,cat:"Legumbres"},
+  {n:"Arvejas cocidas",p:5.4,c:15,f:0.4,k:84,cat:"Legumbres"},
+  {n:"Arvejas partidas cocidas",p:8.3,c:21,f:0.4,k:118,cat:"Legumbres"},
+  {n:"Habas cocidas",p:7.6,c:20,f:0.4,k:110,cat:"Legumbres"},
+  {n:"Soja cocida",p:17,c:10,f:9,k:173,cat:"Legumbres"},
+  {n:"Hummus",p:8,c:14,f:17,k:237,cat:"Legumbres"},
+  // ── SEMILLAS Y FRUTOS SECOS ──
+  {n:"Semillas de chia",p:17,c:42,f:31,k:486,cat:"Semillas y frutos secos"},
+  {n:"Semillas de lino (molidas)",p:18,c:29,f:42,k:534,cat:"Semillas y frutos secos"},
+  {n:"Semillas de girasol",p:21,c:20,f:51,k:584,cat:"Semillas y frutos secos"},
+  {n:"Semillas de zapallo",p:30,c:11,f:49,k:559,cat:"Semillas y frutos secos"},
+  {n:"Semillas de sesamo",p:18,c:23,f:50,k:573,cat:"Semillas y frutos secos"},
+  {n:"Semillas de amapola",p:18,c:28,f:42,k:525,cat:"Semillas y frutos secos"},
+  {n:"Semillas de canamo",p:32,c:8.7,f:49,k:553,cat:"Semillas y frutos secos"},
+  {n:"Almendras",p:21,c:22,f:49,k:579,cat:"Semillas y frutos secos"},
+  {n:"Nueces",p:15,c:14,f:65,k:654,cat:"Semillas y frutos secos"},
+  {n:"Castanas de caju",p:18,c:30,f:44,k:553,cat:"Semillas y frutos secos"},
+  {n:"Mani",p:26,c:16,f:49,k:567,cat:"Semillas y frutos secos"},
+  {n:"Pistachos",p:20,c:28,f:45,k:560,cat:"Semillas y frutos secos"},
+  {n:"Avellanas",p:15,c:17,f:61,k:628,cat:"Semillas y frutos secos"},
+  {n:"Nuez pecan",p:9,c:14,f:72,k:691,cat:"Semillas y frutos secos"},
+  {n:"Mantequilla de mani",p:25,c:20,f:50,k:588,cat:"Semillas y frutos secos"},
+  {n:"Tahini (pasta de sesamo)",p:17,c:21,f:54,k:595,cat:"Semillas y frutos secos"},
+  // ── VERDURAS ──
+  {n:"Broccoli",p:2.8,c:7,f:0.4,k:34,cat:"Verduras"},
+  {n:"Coliflor",p:1.9,c:5,f:0.3,k:25,cat:"Verduras"},
+  {n:"Repollo blanco",p:1.3,c:6,f:0.1,k:25,cat:"Verduras"},
+  {n:"Repollo colorado",p:1.4,c:7,f:0.2,k:31,cat:"Verduras"},
+  {n:"Repollitos de bruselas",p:3.4,c:9,f:0.3,k:43,cat:"Verduras"},
+  {n:"Kale",p:4.3,c:9,f:0.9,k:49,cat:"Verduras"},
+  {n:"Espinaca",p:2.9,c:3.6,f:0.4,k:23,cat:"Verduras"},
+  {n:"Acelga",p:1.8,c:3.7,f:0.2,k:19,cat:"Verduras"},
+  {n:"Rucula",p:2.6,c:3.7,f:0.7,k:25,cat:"Verduras"},
+  {n:"Lechuga",p:1.4,c:2.9,f:0.2,k:15,cat:"Verduras"},
+  {n:"Radicheta",p:1.7,c:4.7,f:0.3,k:23,cat:"Verduras"},
+  {n:"Tomate",p:0.9,c:3.9,f:0.2,k:18,cat:"Verduras"},
+  {n:"Tomate cherry",p:0.9,c:3.9,f:0.2,k:18,cat:"Verduras"},
+  {n:"Zanahoria",p:0.9,c:10,f:0.2,k:41,cat:"Verduras"},
+  {n:"Remolacha",p:1.6,c:10,f:0.2,k:43,cat:"Verduras"},
+  {n:"Zapallo / calabaza",p:1,c:7,f:0.1,k:26,cat:"Verduras"},
+  {n:"Zucchini",p:1.2,c:3.1,f:0.3,k:17,cat:"Verduras"},
+  {n:"Berenjena",p:1,c:6,f:0.2,k:25,cat:"Verduras"},
+  {n:"Morron rojo",p:1,c:6,f:0.3,k:31,cat:"Verduras"},
+  {n:"Morron verde",p:0.9,c:4.6,f:0.2,k:20,cat:"Verduras"},
+  {n:"Cebolla",p:1.1,c:9,f:0.1,k:40,cat:"Verduras"},
+  {n:"Cebolla de verdeo",p:1.8,c:7,f:0.3,k:32,cat:"Verduras"},
+  {n:"Puerro",p:1.5,c:14,f:0.3,k:61,cat:"Verduras"},
+  {n:"Ajo",p:6.4,c:33,f:0.5,k:149,cat:"Verduras"},
+  {n:"Champinones",p:3.1,c:3.3,f:0.3,k:22,cat:"Verduras"},
+  {n:"Portobello",p:2.5,c:3.9,f:0.4,k:22,cat:"Verduras"},
+  {n:"Esparragos",p:2.2,c:3.9,f:0.1,k:20,cat:"Verduras"},
+  {n:"Chauchas",p:1.8,c:7,f:0.2,k:31,cat:"Verduras"},
+  {n:"Pepino",p:0.7,c:3.6,f:0.1,k:15,cat:"Verduras"},
+  {n:"Apio",p:0.7,c:3,f:0.2,k:16,cat:"Verduras"},
+  {n:"Hinojo",p:1.2,c:7,f:0.2,k:31,cat:"Verduras"},
+  {n:"Nabo",p:0.9,c:6,f:0.1,k:28,cat:"Verduras"},
+  {n:"Rabanito",p:0.7,c:3.4,f:0.1,k:16,cat:"Verduras"},
+  {n:"Choclo (grano)",p:3.3,c:19,f:1.4,k:86,cat:"Verduras"},
+  {n:"Alcaucil",p:3.3,c:11,f:0.2,k:47,cat:"Verduras"},
+  {n:"Palmitos",p:2.7,c:4.6,f:0.6,k:28,cat:"Verduras"},
+  // ── CARBOHIDRATOS ──
   {n:"Arroz blanco cocido",p:2.7,c:28,f:0.3,k:130,cat:"Carbohidratos"},
   {n:"Arroz integral cocido",p:2.6,c:23,f:1,k:111,cat:"Carbohidratos"},
+  {n:"Quinoa cocida",p:4.4,c:21,f:1.9,k:120,cat:"Carbohidratos"},
+  {n:"Cuscus cocido",p:3.8,c:23,f:0.2,k:112,cat:"Carbohidratos"},
   {n:"Avena",p:13,c:66,f:7,k:389,cat:"Carbohidratos"},
   {n:"Papa hervida",p:2,c:17,f:0.1,k:77,cat:"Carbohidratos"},
   {n:"Batata",p:1.6,c:20,f:0.1,k:86,cat:"Carbohidratos"},
   {n:"Pan integral",p:9,c:41,f:3.4,k:247,cat:"Carbohidratos"},
   {n:"Pasta cocida",p:5,c:25,f:1,k:131,cat:"Carbohidratos"},
-  {n:"Lentejas cocidas",p:9,c:20,f:0.4,k:116,cat:"Legumbres"},
-  {n:"Garbanzos cocidos",p:9,c:27,f:2.6,k:164,cat:"Legumbres"},
-  {n:"Porotos negros cocidos",p:8.9,c:23,f:0.5,k:132,cat:"Legumbres"},
-  {n:"Broccoli",p:2.8,c:7,f:0.4,k:34,cat:"Verduras"},
-  {n:"Espinaca",p:2.9,c:3.6,f:0.4,k:23,cat:"Verduras"},
-  {n:"Tomate",p:0.9,c:3.9,f:0.2,k:18,cat:"Verduras"},
+  {n:"Pasta integral cocida",p:5.3,c:25,f:1.1,k:124,cat:"Carbohidratos"},
+  // ── GRASAS ──
   {n:"Palta / Aguacate",p:2,c:9,f:15,k:160,cat:"Grasas"},
   {n:"Aceite de oliva",p:0,c:0,f:100,k:884,cat:"Grasas"},
-  {n:"Almendras",p:21,c:22,f:49,k:579,cat:"Grasas"},
-  {n:"Mantequilla de mani",p:25,c:20,f:50,k:588,cat:"Grasas"},
+  {n:"Aceite de girasol",p:0,c:0,f:100,k:884,cat:"Grasas"},
+  {n:"Aceitunas verdes",p:1,c:6,f:15,k:145,cat:"Grasas"},
+  // ── SUPLEMENTOS ──
   {n:"Proteina en polvo (whey)",p:80,c:8,f:4,k:390,cat:"Suplementos"},
+  {n:"Proteina vegetal en polvo",p:75,c:10,f:5,k:380,cat:"Suplementos"},
   {n:"Creatina monohidrato",p:0,c:0,f:0,k:0,cat:"Suplementos"},
 ];
+
 
 // ─── NUTRITION TAB ───
 function NutritionTab({data,setData,apiKey}){
@@ -703,9 +911,11 @@ function NutritionTab({data,setData,apiKey}){
 
   const USER_TUPPERS=[
     "Quinoa","Arroz","Lentejas","Porotos negros","Garbanzos",
-    "Tomate cherry","Huevo duro","Lechuga","Rúcula","Zanahoria rallada",
-    "Remolacha en cubos","Cebolla de verdeo","Palta","Frutos secos",
-    "Atún en lata","Tofu",
+    "Cuscús","Porotos blancos","Arvejas partidas","Habas",
+    "Tomate cherry","Huevo duro","Lechuga","Rúcula","Radicheta","Kale","Zanahoria rallada",
+    "Remolacha en cubos","Repollo colorado en juliana","Hinojo","Pepino","Rabanito",
+    "Cebolla de verdeo","Palta","Frutos secos","Semillas (girasol, zapallo, sésamo, chía, lino)",
+    "Atún en lata","Tofu","Tempeh","Edamame",
     "Tarta de cebolla (guarnición)","Tarta de choclo (guarnición)",
     "Tarta de zucchini (guarnición)","Tarta de calabaza (guarnición)",
     "Tarta de acelga (guarnición)","Tarta de pollo (principal)","Tarta de ricota/huevo (principal)",
@@ -734,14 +944,19 @@ function NutritionTab({data,setData,apiKey}){
     "Puré de papa","Puré de batata","Papas al horno","Batatas al horno",
     "Batatas fritas al horno","Papas fritas al horno","Knishes de papa",
     "Brócoli al vapor","Espinaca salteada","Zucchini a la plancha",
+    "Coliflor asada","Repollitos de Bruselas al horno","Berenjena al horno",
+    "Chauchas salteadas","Espárragos a la plancha","Champiñones salteados",
+    "Cuscús con verduras","Hummus como guarnición",
+    "Topping de semillas mixtas (girasol, zapallo, sésamo, chía)",
   ];
 
   const genPlan=async()=>{
     if(!apiKey){alert("Necesitas API key en Config.");return;}
     setAiLoad(true);
     const ph=PHASES[data.phase||0];
-    const trainDays=ph.schedule.map(d=>d.day+": "+d.name).join(" | ");
-    const restDays=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].filter(d=>!ph.schedule.map(s=>s.day).some(td2=>d.startsWith(td2.slice(0,3)))).join(", ");
+    const schedEff=phSched(data,data.phase||0);
+    const trainDays=schedEff.map(d=>d.day+": "+d.name).join(" | ");
+    const restDays=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].filter(d=>!schedEff.map(s=>s.day).some(td2=>d.startsWith(td2.slice(0,3)))).join(", ");
     const weightKg=data.anthropometry?.length?
       (data.anthropometry.sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77):77;
     const protMin=Math.round(weightKg*1.8),protMax=Math.round(weightKg*2.1);
