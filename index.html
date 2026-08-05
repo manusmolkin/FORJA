@@ -714,7 +714,7 @@ const GD={
   tok:null, exp:0, _t:null,
   cfg(){try{return JSON.parse(localStorage.getItem(GDK))||{}}catch{return {}}},
   setCfg(c){try{localStorage.setItem(GDK,JSON.stringify({...GD.cfg(),...c}))}catch{}},
-  clear(){try{localStorage.removeItem(GDK)}catch{};GD.tok=null;GD.exp=0},
+  clear(){if(GD._t){clearTimeout(GD._t);GD._t=null};try{localStorage.removeItem(GDK)}catch{};GD.tok=null;GD.exp=0},
   ready(){return typeof google!=="undefined"&&google.accounts&&google.accounts.oauth2},
   getToken(){
     return new Promise((res,rej)=>{
@@ -793,7 +793,7 @@ const GD={
   schedulePush(d){
     if(!GD.cfg().auto)return;
     if(GD._t)clearTimeout(GD._t);
-    GD._t=setTimeout(()=>{GD.push(d).catch(()=>{})},4000);
+    GD._t=setTimeout(()=>{GD._t=null;if(!GD.cfg().auto)return;GD.push(d).catch(()=>{})},4000);   // se revalida al disparar, no solo al agendar
   },
 };
 
@@ -1792,13 +1792,16 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
               <span style={{fontSize:12,color:"#CCC"}}>{k}</span><span style={{fontSize:12,color:"#FFF",fontWeight:600}}>{stats[k]}</span></div>)}
             {Object.keys(stats).every(k=>stats[k]===0)&&<p style={{fontSize:12,color:"#888",margin:0}}>No hay nada guardado todavía.</p>}
           </div>
-          <p style={{fontSize:11.5,color:"#CCC",marginBottom:8,lineHeight:1.5}}>Antes de borrar se descarga un backup automático. Además se corta la sincronización, para que el Drive <b>no</b> se pise con datos vacíos.</p>
+          <p style={{fontSize:11.5,color:"#CCC",marginBottom:8,lineHeight:1.5}}>Antes de borrar se descarga un backup automático: si esa descarga falla, no se borra nada. También se corta la sincronización y se cancela cualquier subida pendiente, para que el Drive <b>no</b> quede pisado con datos vacíos. Se borra además la API key.</p>
           <label style={{fontSize:11.5,color:"#888",display:"block",marginBottom:4}}>Escribí BORRAR para confirmar</label>
           <input value={wipeTxt} onChange={e=>setWipeTxt(e.target.value)} placeholder="BORRAR" style={{...S.inp,marginBottom:10}}/>
           <button disabled={wipeTxt.trim().toUpperCase()!=="BORRAR"} onClick={()=>{
-            try{bkExport(data)}catch(e){}
+            try{bkExport(data)}catch(e){window.alert("No se pudo descargar el backup, así que NO se borró nada. Probá con el botón Exportar backup de arriba y volvé a intentar.");return}
             GD.clear();
-            setTimeout(()=>{try{localStorage.removeItem(SK)}catch(e){};window.location.reload()},1200);
+            if(!window.confirm("Se descargó el backup. Revisá que esté en tus archivos.\n\nEsta es la última confirmación: al aceptar se borra todo."))return;
+            try{localStorage.removeItem(SK)}catch(e){}
+            try{localStorage.removeItem(AK)}catch(e){}
+            window.location.reload();
           }} style={{...S.btn,width:"100%",background:wipeTxt.trim().toUpperCase()==="BORRAR"?"linear-gradient(135deg,#E74C3C,#C0392B)":"#3a3a3a",opacity:wipeTxt.trim().toUpperCase()==="BORRAR"?1:0.5}}>Borrar todo definitivamente</button>
           <button onClick={()=>{setWipeOn(false);setWipeTxt("")}} style={{...S.aset,marginTop:8,color:"#888"}}>Cancelar</button>
         </div>}
