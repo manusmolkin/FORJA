@@ -420,6 +420,13 @@ const GD={
     GD.setCfg({last:new Date().toISOString(),auto:true});
     return true;
   },
+  // Mira si ya existe un backup en Drive, sin escribir nada ni activar la sync
+  async peek(){
+    const id=await GD.findFile();
+    if(!id)return null;
+    const r=await GD.api("https://www.googleapis.com/drive/v3/files/"+id+"?alt=media");
+    try{return bkParse(await r.text())}catch(e){return null}
+  },
   async pull(){
     const id=await GD.findFile();
     if(!id)throw new Error("Todav\u00eda no hay ning\u00fan backup en Drive");
@@ -1043,10 +1050,27 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const gdRun=async(fn,okTxt)=>{
     setGdBusy(true);setGdMsg(null);
     try{await fn();setGd(GD.cfg());setGdMsg({ok:true,t:okTxt})}
-    catch(e){setGdMsg({ok:false,t:e.message||"Fall\u00f3 la sincronizaci\u00f3n"})}
+    catch(e){if(e.message!=="__ELEGIR__")setGdMsg({ok:false,t:e.message||"Fall\u00f3 la sincronizaci\u00f3n"})}
     setGdBusy(false);
   };
-  const gdConnect=()=>gdRun(async()=>{await GD.getToken();await GD.push(data)},"Conectado. Tus datos ya est\u00e1n en Drive.");
+  const[gdElegir,setGdElegir]=useState(null);   // {remoto, resumenRemoto, resumenLocal}
+  const resumir=d=>{const st=bkStats(d);const partes=Object.keys(st).filter(k=>st[k]>0).map(k=>st[k]+" "+k.toLowerCase());return partes.length?partes.join(", "):"nada guardado"};
+  const gdConnect=()=>gdRun(async()=>{
+    await GD.getToken();
+    const remoto=await GD.peek();
+    if(remoto&&bkStats(remoto).Sesiones+bkStats(remoto).Comidas+bkStats(remoto)["Antropometr\u00edas"]>0){
+      // Ya hay algo en Drive: que decida el usuario, no piso nada
+      setGdElegir({remoto,rRemoto:resumir(remoto),rLocal:resumir(data)});
+      throw new Error("__ELEGIR__");
+    }
+    await GD.push(data);
+  },"Conectado. Tus datos ya est\u00e1n en Drive.");
+  const gdUsarDrive=()=>gdRun(async()=>{
+    const nd=gdElegir.remoto;
+    sv(nd);setData(nd);GD.setCfg({auto:true,last:new Date().toISOString()});
+    setGdElegir(null);setTimeout(()=>window.location.reload(),900);
+  },"Listo. Trayendo los datos de Drive...");
+  const gdUsarLocal=()=>gdRun(async()=>{await GD.push(data);setGdElegir(null)},"Listo. Se subieron los datos de este dispositivo.");
   const gdPush=()=>gdRun(()=>GD.push(data),"Subido a Drive.");
   const gdPull=()=>gdRun(async()=>{
     const nd=await GD.pull();
@@ -1112,6 +1136,22 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
             <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"\u2193 Traer de Drive"}</button>
           </div>
           <button onClick={gdOff} style={{...S.aset,marginTop:8,color:"#777"}}>Desconectar este dispositivo</button>
+        </div>
+      : gdElegir
+      ? <div style={{border:"1px solid rgba(66,133,244,0.4)",borderRadius:12,padding:"14px",background:"rgba(66,133,244,0.06)"}}>
+          <div style={{fontSize:13,color:"#FFF",fontWeight:700,marginBottom:4}}>Ya hay datos en Drive</div>
+          <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,marginTop:0,marginBottom:12}}>Eleg\u00ed con cu\u00e1l te qued\u00e1s. Lo otro se pierde.</p>
+          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
+            <div style={{fontSize:11,color:"#4285F4",fontWeight:700,letterSpacing:0.5}}>EN DRIVE</div>
+            <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rRemoto}</div>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px",marginBottom:12}}>
+            <div style={{fontSize:11,color:"#FF6B35",fontWeight:700,letterSpacing:0.5}}>EN ESTE DISPOSITIVO</div>
+            <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rLocal}</div>
+          </div>
+          <button onClick={gdUsarDrive} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",fontSize:13,padding:"12px 16px",opacity:gdBusy?0.6:1}}>{"\u2193 Traer lo de Drive"}</button>
+          <button onClick={gdUsarLocal} disabled={gdBusy} style={{...S.aset,marginTop:8,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"\u2191 Subir lo de este dispositivo (pisa Drive)"}</button>
+          <button onClick={()=>{setGdElegir(null);setGdMsg(null)}} style={{...S.aset,marginTop:6,color:"#777"}}>Cancelar</button>
         </div>
       : <button onClick={gdConnect} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",opacity:gdBusy?0.6:1}}>{gdBusy?"Conectando...":"Conectar con Google Drive"}</button>}
     {gdMsg&&<p style={{fontSize:11.5,color:gdMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0,lineHeight:1.5}}>{gdMsg.t}</p>}
