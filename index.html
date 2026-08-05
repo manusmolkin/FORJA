@@ -40,7 +40,7 @@ chest:{l:"Pecho",i:"\u{1FAC1}",c:"#E74C3C"},back:{l:"Espalda",i:"\u{1F519}",c:"#
 shoulders:{l:"Hombros",i:"\u{1F53A}",c:"#E67E22"},biceps:{l:"Biceps",i:"\u{1F4AA}",c:"#2ECC71"},
 triceps:{l:"Triceps",i:"\u{1F9BE}",c:"#1ABC9C"},legs:{l:"Piernas",i:"\u{1F9B5}",c:"#9B59B6"},
 glutes:{l:"Gluteos",i:"\u{1F351}",c:"#F39C12"},abs:{l:"Abdominales",i:"\u{1F3AF}",c:"#E91E63"},
-calves:{l:"Gemelos",i:"\u{1F9B6}",c:"#16A085"},forearms:{l:"Antebrazos",i:"\u270A",c:"#795548"},
+calves:{l:"Gemelos",i:"\u{1F9B6}",c:"#16A085"},forearms:{l:"Antebrazos",i:"✊",c:"#795548"},
 };
 
 const EC={
@@ -58,20 +58,42 @@ forearms:["Curl muneca","Curl reverso","Pronacion/supinacion","Extension muneca 
 
 const CT={
 running:{l:"Correr",i:"\u{1F3C3}",u:"km",su:"min"},cycling:{l:"Bicicleta",i:"\u{1F6B4}",u:"km",su:"min"},
-swimming:{l:"Nadar",i:"\u{1F3CA}",u:"m",su:"min"},hiit:{l:"HIIT",i:"\u26A1",u:"min",su:"rondas"},
+swimming:{l:"Nadar",i:"\u{1F3CA}",u:"m",su:"min"},hiit:{l:"HIIT",i:"⚡",u:"min",su:"rondas"},
 walking:{l:"Caminar",i:"\u{1F6B6}",u:"km",su:"min"},elliptical:{l:"Eliptica",i:"\u{1F504}",u:"min",su:"nivel"},
 rowing:{l:"Remo",i:"\u{1F6A3}",u:"m",su:"min"},stairs:{l:"Escaleras",i:"\u{1FA9C}",u:"pisos",su:"min"},
 };
 
 const ANTHRO=[
-{id:"weight",l:"Peso",u:"kg"},{id:"height",l:"Talla",u:"cm"},
-{id:"chest_p",l:"Perimetro pecho",u:"cm"},{id:"waist_p",l:"Perimetro cintura",u:"cm"},
-{id:"hip_p",l:"Perimetro cadera",u:"cm"},{id:"arm_p",l:"Perimetro brazo",u:"cm"},
-{id:"thigh_p",l:"Perimetro muslo",u:"cm"},{id:"calf_p",l:"Perimetro pantorrilla",u:"cm"},
-{id:"triceps_f",l:"Pliegue triceps",u:"mm"},{id:"subscap_f",l:"Pliegue subescapular",u:"mm"},
-{id:"supra_f",l:"Pliegue suprailíaco",u:"mm"},{id:"abd_f",l:"Pliegue abdominal",u:"mm"},
-{id:"body_fat",l:"% Grasa corporal",u:"%"},{id:"muscle_mass",l:"Masa muscular",u:"kg"},
+// Básicos
+{id:"weight",l:"Peso",u:"kg",g:"Básico"},{id:"height",l:"Talla",u:"cm",g:"Básico"},
+{id:"bmi",l:"IMC",u:"",g:"Básico"},{id:"bmr",l:"Metabolismo basal",u:"kcal",g:"Básico"},
+// Composición corporal
+{id:"body_fat",l:"% Grasa corporal",u:"%",g:"Composición"},{id:"fat_mass",l:"Masa grasa",u:"kg",g:"Composición"},
+{id:"muscle_mass",l:"Masa muscular",u:"kg",g:"Composición"},{id:"muscle_pct",l:"% Masa muscular",u:"%",g:"Composición"},
+{id:"lean_mass",l:"Masa magra (libre de grasa)",u:"kg",g:"Composición"},{id:"bone_mass",l:"Masa ósea",u:"kg",g:"Composición"},
+{id:"residual_mass",l:"Masa residual",u:"kg",g:"Composición"},{id:"body_water",l:"Agua corporal",u:"%",g:"Composición"},
+{id:"visceral_fat",l:"Grasa visceral",u:"",g:"Composición"},
+// Índices
+{id:"sum6",l:"Suma 6 pliegues",u:"mm",g:"Índices"},{id:"sum8",l:"Suma 8 pliegues",u:"mm",g:"Índices"},
+{id:"imo",l:"IMO (músculo/óseo)",u:"",g:"Índices"},{id:"iam",l:"IAM (adiposo/muscular)",u:"",g:"Índices"},
+{id:"somatotype",l:"Somatotipo",u:"",g:"Índices"},
+// Perímetros
+{id:"neck_p",l:"Perímetro cuello",u:"cm",g:"Perímetros"},{id:"chest_p",l:"Perímetro pecho",u:"cm",g:"Perímetros"},
+{id:"waist_p",l:"Perímetro cintura",u:"cm",g:"Perímetros"},{id:"hip_p",l:"Perímetro cadera",u:"cm",g:"Perímetros"},
+{id:"arm_p",l:"Perímetro brazo relajado",u:"cm",g:"Perímetros"},{id:"arm_flex_p",l:"Perímetro brazo flexionado",u:"cm",g:"Perímetros"},
+{id:"forearm_p",l:"Perímetro antebrazo",u:"cm",g:"Perímetros"},{id:"thigh_p",l:"Perímetro muslo",u:"cm",g:"Perímetros"},
+{id:"calf_p",l:"Perímetro pantorrilla",u:"cm",g:"Perímetros"},
+// Pliegues
+{id:"triceps_f",l:"Pliegue tríceps",u:"mm",g:"Pliegues"},{id:"biceps_f",l:"Pliegue bíceps",u:"mm",g:"Pliegues"},
+{id:"subscap_f",l:"Pliegue subescapular",u:"mm",g:"Pliegues"},{id:"supra_f",l:"Pliegue suprailíaco",u:"mm",g:"Pliegues"},
+{id:"supraspinal_f",l:"Pliegue supraespinal",u:"mm",g:"Pliegues"},{id:"abd_f",l:"Pliegue abdominal",u:"mm",g:"Pliegues"},
+{id:"chest_f",l:"Pliegue pectoral",u:"mm",g:"Pliegues"},{id:"axilar_f",l:"Pliegue axilar medio",u:"mm",g:"Pliegues"},
+{id:"thigh_f",l:"Pliegue muslo",u:"mm",g:"Pliegues"},{id:"calf_f",l:"Pliegue pantorrilla",u:"mm",g:"Pliegues"},
+// Diámetros
+{id:"humerus_d",l:"Diámetro húmero",u:"cm",g:"Diámetros"},{id:"femur_d",l:"Diámetro fémur",u:"cm",g:"Diámetros"},
+{id:"wrist_d",l:"Diámetro muñeca",u:"cm",g:"Diámetros"},{id:"biacromial_d",l:"Diámetro biacromial",u:"cm",g:"Diámetros"},
 ];
+const ANTHRO_G=["Básico","Composición","Índices","Perímetros","Pliegues","Diámetros"];
 
 // Phases for someone returning after months off
 const PHASES=[
@@ -224,7 +246,7 @@ exercises:[
 cardio:"Z2 30-40 min martes, miercoles y viernes. Sabado: si haces la sesion de pierna ligera, el trote va suave; si no entrenas, tirada larga 45-50 min.",
 goals:["Frecuencia 2 para pecho, espalda y hombro","10-20 series semanales por grupo muscular","Gluteo con frecuencia 2 (lunes + sabado)","Progresar en peso O en reps cada semana","Deload cada 5-6 semanas (volumen -40/50%)","Segunda antropometria ISAK con Carina al final de la fase"]
 },
-{name:"Intensificacion",wk:"13+",days:5,c:"#D62828",ic:"\u26A1",
+{name:"Intensificacion",wk:"13+",days:5,c:"#D62828",ic:"⚡",
 rpe:{title:"RIR 0-1 (RPE 9-10)",desc:"Esfuerzo maximo. En compuestos principales apunta a RIR 1 (te queda 1 sola rep). En aislamientos podes ir al fallo (RIR 0) en las ultimas 1-2 series. Cada 4-5 semanas hace una semana de deload (RPE 6-7) para recuperar.",color:"#D62828"},
 desc:"5 dias. Se suma el miercoles de hombro y brazo, que no toca piernas para llegar entero al futbol del jueves.",
 schedule:[
@@ -315,11 +337,11 @@ const EXP={
 "Curl reverso":"Extensores de muneca","Curl muneca":"Flexores de muneca","Pronacion/supinacion":"Rotadores de muneca","Dead hang":"Agarre",
 };
 const DAY_CARDIO={
-Lunes:"No corras antes de pierna. Trote muy suave 15-20 min despu\u00e9s, opcional.",
+Lunes:"No corras antes de pierna. Trote muy suave 15-20 min después, opcional.",
 Martes:"Z2 suave, 30-40 min.",Miercoles:"Z2 suave, 30-40 min. Cuidar piernas para el jueves.",
-Jueves:"A lo sumo 15-20 min muy suave a la ma\u00f1ana. Piernas frescas.",
-Viernes:"Z2 30-40 min. Si hay agujetas del f\u00fatbol, caminata o bici.",
-Sabado:"Tu tirada m\u00e1s larga: hasta 45-50 min.",Domingo:"Descanso o caminata."};
+Jueves:"A lo sumo 15-20 min muy suave a la mañana. Piernas frescas.",
+Viernes:"Z2 30-40 min. Si hay agujetas del fútbol, caminata o bici.",
+Sabado:"Tu tirada más larga: hasta 45-50 min.",Domingo:"Descanso o caminata."};
 const CORE_HOME=[{n:"Dead bug",s:3,r:"8-10 por lado",note:"Lumbar pegada al piso todo el tiempo"},
 {n:"Bird dog",s:3,r:"8-10 por lado",note:"Lento, sin que se mueva la cadera"},
 {n:"Plancha lateral",s:3,r:"20-30s por lado",note:"Cadera arriba, cuerpo en linea"},
@@ -330,7 +352,7 @@ const CORE_DAYS=["Miercoles","Sabado"];
 const BK_VER=1;
 const bkStats=d=>({
   Sesiones:(d.sessions||[]).length, Cardio:(d.cardioSessions||[]).length,
-  Comidas:(d.meals||[]).length, "Antropometr\u00edas":(d.anthropometry||[]).length,
+  Comidas:(d.meals||[]).length, "Antropometrías":(d.anthropometry||[]).length,
   Estudios:(d.healthStudies||[]).length, "Notas del coach":(d.coachNotes||[]).length,
 });
 const bkSize=()=>{try{return Math.round((localStorage.getItem(SK)||"").length/1024)}catch{return 0}};
@@ -365,7 +387,7 @@ const GD={
   getToken(){
     return new Promise((res,rej)=>{
       if(GD.tok&&Date.now()<GD.exp-60000)return res(GD.tok);
-      if(!GD.ready())return rej(new Error("Google todav\u00eda no carg\u00f3. Prob\u00e1 de nuevo en unos segundos."));
+      if(!GD.ready())return rej(new Error("Google todavía no cargó. Probá de nuevo en unos segundos."));
       let hecho=false;
       const tc=google.accounts.oauth2.initTokenClient({client_id:GCID,scope:GSCOPE,
         callback:r=>{
@@ -383,7 +405,7 @@ const GD={
     const r=await fetch(url,{...o,headers:{...(o.headers||{}),Authorization:"Bearer "+t}});
     if(!r.ok){
       if(r.status===401||r.status===403){GD.tok=null;GD.exp=0}
-      throw new Error("Drive respondi\u00f3 "+r.status);
+      throw new Error("Drive respondió "+r.status);
     }
     return r;
   },
@@ -429,7 +451,7 @@ const GD={
   },
   async pull(){
     const id=await GD.findFile();
-    if(!id)throw new Error("Todav\u00eda no hay ning\u00fan backup en Drive");
+    if(!id)throw new Error("Todavía no hay ningún backup en Drive");
     const r=await GD.api("https://www.googleapis.com/drive/v3/files/"+id+"?alt=media");
     const d=bkParse(await r.text());
     GD.setCfg({last:new Date().toISOString()});
@@ -441,6 +463,41 @@ const GD={
     if(GD._t)clearTimeout(GD._t);
     GD._t=setTimeout(()=>{GD.push(d).catch(()=>{})},4000);
   },
+};
+
+// ─── BLOQUES NUTRICIONALES ───
+// La fase de entrenamiento y el bloque de nutrición son cosas distintas:
+// podés estar en Hipertrofia y a la vez en una semana de mantenimiento.
+const NBLOCKS=[
+ {id:"deficit",l:"Déficit",i:"📉",c:"#E67E22",ajuste:0,
+  desc:"Bajar grasa manteniendo el músculo. Déficit leve, proteína alta.",max:12,
+  aviso:"Llevás 12 semanas o más en déficit. Toca 1-2 semanas al mantenimiento: ayuda a la adherencia, a las hormonas del apetito y al rendimiento, sin perder el progreso."},
+ {id:"mantenimiento",l:"Mantenimiento",i:"⚖️",c:"#3498DB",ajuste:400,
+  desc:"Comer al nivel de gasto. Para recuperar entre bloques de déficit.",max:null,aviso:null},
+ {id:"dietbreak",l:"Diet break",i:"🌿",c:"#2ECC71",ajuste:400,
+  desc:"Pausa planificada de 1-2 semanas al mantenimiento, en medio de un bloque de déficit.",max:2,
+  aviso:"El diet break ya lleva más de 2 semanas. Si te sentís recuperado, volvé al déficit."},
+ {id:"superavit",l:"Superávit",i:"📈",c:"#9B59B6",ajuste:700,
+  desc:"Ganar masa con superávit leve. No es lo indicado con grasa corporal alta.",max:null,aviso:null},
+];
+const nblock=data=>NBLOCKS.find(b=>b.id===(data.nutrBlock&&data.nutrBlock.id))||NBLOCKS[0];
+// Semanas transcurridas desde una fecha ISO
+const semanasDesde=iso=>{if(!iso)return null;const d=Math.floor((Date.now()-new Date(iso+"T00:00:00").getTime())/86400000);return d<0?null:Math.floor(d/7)+1};
+// Aviso de bloque nutricional: solo sugiere, no cambia nada
+const avisoBloque=data=>{
+  const b=nblock(data), sem=semanasDesde(data.nutrBlock&&data.nutrBlock.desde);
+  if(!b.max||!sem||sem<=b.max)return null;
+  return {sem,texto:b.aviso,color:b.c};
+};
+// ─── AVANCE DE FASE ───
+// Semanas que dura cada fase, leídas del campo wk ("1-3", "13+")
+const phaseWeeks=()=>{const out=[];let acc=0;PHASES.forEach((p,i)=>{const t=String(p.wk).split("-");const fin=p.wk.indexOf("+")>=0?null:Number(t[1]||t[0]);out.push({i,desde:acc+1,hasta:fin});acc=fin||acc});return out};
+// Fase que corresponde por calendario, según la fecha de inicio del plan
+const faseSugerida=data=>{
+  const sem=semanasDesde(data.planStart);
+  if(!sem)return null;
+  const r=phaseWeeks().filter(x=>sem>=x.desde&&(x.hasta===null||sem<=x.hasta));
+  return r.length?{fase:r[r.length-1].i,semana:sem}:null;
 };
 
 // ─── OBJETIVOS NUTRICIONALES SEGUN EL CALENDARIO ───
@@ -455,11 +512,11 @@ const dayLoad=(data,dayName)=>{
   if(dayName==="Sabado")return "normal";   // sin pesas pero es la tirada larga de running
   return "bajo";
 };
-const LOAD_LBL={alto:{l:"Carga alta",c:"#FF6B35",i:"\u{1F525}"},normal:{l:"Normal",c:"#3498DB",i:"\u{1F3CB}\uFE0F"},bajo:{l:"Bajo",c:"#7F8C8D",i:"\u{1F634}"}};
+const LOAD_LBL={alto:{l:"Carga alta",c:"#FF6B35",i:"\u{1F525}"},normal:{l:"Normal",c:"#3498DB",i:"\u{1F3CB}️"},bajo:{l:"Bajo",c:"#7F8C8D",i:"\u{1F634}"}};
 // Devuelve {kcal,p,c,f,load} para un dia
 const nutrTargets=(data,dayName,pesoKg)=>{
-  const cf=nutrCfg(data), load=dayLoad(data,dayName);
-  const kcal=Math.round(cf.base+(load==="alto"?cf.alto:load==="bajo"?cf.bajo:0));
+  const cf=nutrCfg(data), load=dayLoad(data,dayName), bl=nblock(data);
+  const kcal=Math.round(cf.base+bl.ajuste+(load==="alto"?cf.alto:load==="bajo"?cf.bajo:0));
   const p=Math.round(pesoKg*cf.prot);
   const f=Math.max(Math.round(pesoKg*cf.fat),cf.fatMin);
   const c=Math.max(Math.round((kcal-p*4-f*9)/4),0);
@@ -469,7 +526,7 @@ const nutrTargets=(data,dayName,pesoKg)=>{
 // ─── DIAS DE ENTRENAMIENTO CONFIGURABLES ───
 const WEEKDAYS=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"];
 // Compromisos fijos: editables aca si cambian tus deportes
-const SPORT_DAYS={Jueves:"\u26BD F\u00fatbol",Domingo:"\u{1F3BE} Tenis"};
+const SPORT_DAYS={Jueves:"⚽ Fútbol",Domingo:"\u{1F3BE} Tenis"};
 const dayIdx=d=>{const i=WEEKDAYS.findIndex(w=>w.slice(0,3)===String(d||"").slice(0,3));return i<0?99:i};
 // Devuelve el schedule de la fase con los dias personalizados aplicados y ordenado por dia de semana
 const phSched=(data,pi)=>{
@@ -492,8 +549,8 @@ const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,dayOverrides:{}
 const STUDY_TYPES=[
   {id:"laboratorio",l:"Laboratorio / Sangre",i:"\u{1FA78}"},
   {id:"imagen",l:"Imagen (Rx, eco, RMN)",i:"\u{1FA7B}"},
-  {id:"composicion",l:"Composici\u00f3n corporal",i:"\u2696\uFE0F"},
-  {id:"cardiologia",l:"Cardiolog\u00eda (ECG, ergo)",i:"\u2764\uFE0F"},
+  {id:"composicion",l:"Composición corporal",i:"⚖️"},
+  {id:"cardiologia",l:"Cardiología (ECG, ergo)",i:"❤️"},
   {id:"otro",l:"Otro",i:"\u{1F4C4}"},
 ];
 
@@ -594,7 +651,7 @@ function pj(txt){
     const closed=closeFrom(s.slice(0,i));
     if(closed){try{return JSON.parse(closed);}catch(e){}}
   }
-  throw new Error("No se pudo interpretar la respuesta de la IA (formato inv\u00e1lido).");
+  throw new Error("No se pudo interpretar la respuesta de la IA (formato inválido).");
 }
 
 async function callAIVision(parts,key,maxTokens){
@@ -636,7 +693,7 @@ stl:{fontSize:11,color:"#888",display:"block",marginTop:4,textTransform:"upperca
 function Logo({size=40}){return <svg width={size} height={size} viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="url(#fg2)"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#D62828"/></linearGradient></defs><path d="M25 65 L75 65 L70 55 L65 45 L35 45 L30 55 Z" fill="#FFF" opacity="0.95"/><rect x="40" y="30" width="20" height="18" rx="3" fill="#FFF" opacity="0.95"/><rect x="20" y="65" width="60" height="6" rx="3" fill="#FFF" opacity="0.7"/><circle cx="72" cy="32" r="3" fill="#FFD166"/><circle cx="78" cy="26" r="2" fill="#FFD166" opacity="0.7"/><circle cx="65" cy="28" r="1.5" fill="#FFD166" opacity="0.5"/></svg>}
 
 function TabBar({active,onChange}){
-  const tabs=[{id:"today",l:"Hoy",i:"\u2600\uFE0F"},{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
+  const tabs=[{id:"today",l:"Hoy",i:"\u{1F4C5}"},{id:"plan",l:"Plan",i:"\u{1F4CB}"},{id:"train",l:"Entrenar",i:"\u{1F3CB}️"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"⚙️"}];
   return <div style={S.tbar}>{tabs.map(t=><button key={t.id} onClick={()=>onChange(t.id)} style={{...S.tab,...(active===t.id?S.tabA:{})}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontWeight:active===t.id?700:400}}>{t.l}</span></button>)}</div>;
 }
 
@@ -654,10 +711,10 @@ function TodayTab({data,onGo}){
   const coreCasa=!sess&&CORE_DAYS.indexOf(dayName)>=0;
   const porciones=sess?[...new Set(sess.exercises.map(e=>EXP[e.n]).filter(Boolean))]:[];
   const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx));
-  const tipo=sess?{t:sess.name,c:ph.c,i:"\u{1F3CB}\uFE0F",s:"Gimnasio"}
+  const tipo=sess?{t:sess.name,c:ph.c,i:"\u{1F3CB}️",s:"Gimnasio"}
     :sport?{t:sport.split(" ").slice(1).join(" "),c:"#F39C12",i:sport.split(" ")[0],s:"Deporte"}
     :coreCasa?{t:"Core en casa",c:"#3E9A8C",i:"\u{1F3E0}",s:"8-10 min, sin equipo"}
-    :{t:"Descanso",c:"#666",i:"\u{1F634}",s:"Recuperaci\u00f3n"};
+    :{t:"Descanso",c:"#666",i:"\u{1F634}",s:"Recuperación"};
   return <div style={S.pg}>
     <h2 style={S.t1}>{esHoy?"Hoy":dayName}</h2>
     <div style={{display:"flex",gap:5,marginBottom:16}}>
@@ -677,15 +734,15 @@ function TodayTab({data,onGo}){
         <span style={{fontSize:30}}>{tipo.i}</span>
         <h3 style={{fontFamily:"'Oswald',sans-serif",fontSize:19,color:tipo.c,margin:0,lineHeight:1.2}}>{tipo.t}</h3>
       </div>
-      <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"\u00b7"} {ph.ic} {ph.name}</div>
+      <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"·"} {ph.ic} {ph.name}</div>
     </div>
     {sess&&<div>
       <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>{sess.muscles.map(g=><span key={g} style={{fontSize:10,padding:"3px 9px",borderRadius:10,background:MG[g]?.c+"22",color:MG[g]?.c,fontWeight:600}}>{MG[g]?.i} {MG[g]?.l}</span>)}</div>
       {porciones.length>0&&<div style={{...S.cd,padding:"12px 14px"}}>
-        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:8}}>PORCIONES QUE TOC\u00c1S HOY</div>
-        {porciones.map(x=><div key={x} style={{fontSize:12.5,color:"#CCC",padding:"3px 0"}}>{"\u2022"} {x}</div>)}
+        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:8}}>PORCIONES QUE TOCÁS HOY</div>
+        {porciones.map(x=><div key={x} style={{fontSize:12.5,color:"#CCC",padding:"3px 0"}}>{"•"} {x}</div>)}
       </div>}
-      <button onClick={()=>onGo("workout")} style={{...S.btn,marginTop:4,width:"100%"}}>Empezar entreno {"\u2192"}</button>
+      <button onClick={()=>onGo("train","pesas")} style={{...S.btn,marginTop:4,width:"100%"}}>Empezar entreno {"→"}</button>
       <h3 style={{...S.t1,fontSize:14,marginTop:18}}>Los {sess.exercises.length} ejercicios</h3>
       {sess.exercises.map((e,i)=><div key={i} style={{...S.cd,padding:"9px 14px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
@@ -698,7 +755,7 @@ function TodayTab({data,onGo}){
     </div>}
     {coreCasa&&<div>
       <div style={{...S.cd,borderLeft:"3px solid #3E9A8C",background:"rgba(62,154,140,0.06)"}}>
-        <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>Sin gimnasio hoy. Trabajo anti-extensi\u00f3n: le ense\u00f1a al core a NO dejar arquear la lumbar. Especialmente \u00fatil con hiperlaxitud.</p>
+        <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>Sin gimnasio hoy. Trabajo anti-extensión: le enseña al core a NO dejar arquear la lumbar. Especialmente útil con hiperlaxitud.</p>
       </div>
       {CORE_HOME.map((e,i)=><div key={i} style={{...S.cd,padding:"9px 14px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -706,10 +763,10 @@ function TodayTab({data,onGo}){
           <span style={{fontSize:12,color:"#3E9A8C",fontWeight:700}}>{e.s} x {e.r}</span></div>
         <div style={{fontSize:11,color:"#999",marginTop:4,fontStyle:"italic"}}>{e.note}</div>
       </div>)}
-      {dayName==="Sabado"&&<p style={{fontSize:11,color:"#888",marginTop:6}}>El s\u00e1bado es opcional: hacelo solo si ven\u00eds entero. Ma\u00f1ana ten\u00e9s tenis.</p>}
+      {dayName==="Sabado"&&<p style={{fontSize:11,color:"#888",marginTop:6}}>El sábado es opcional: hacelo solo si venís entero. Mañana tenés tenis.</p>}
     </div>}
     {sport&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.06)"}}>
-      <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>{dayName==="Jueves"?"D\u00eda de f\u00fatbol: nada de pesas. Las piernas tienen que llegar frescas al partido. Comida con carbos y prote\u00edna 2-3 h antes.":"D\u00eda de tenis. Recuperaci\u00f3n real: sin pesas."}</p>
+      <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>{dayName==="Jueves"?"Día de fútbol: nada de pesas. Las piernas tienen que llegar frescas al partido. Comida con carbos y proteína 2-3 h antes.":"Día de tenis. Recuperación real: sin pesas."}</p>
     </div>}
     <div style={{...S.cd,marginTop:14,padding:"12px 14px"}}>
       <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:6}}>{"\u{1F3C3}"} CARDIO</div>
@@ -723,6 +780,10 @@ function PlanTab({data,setData}){
   const ph=PHASES[pi];
   const[selDay,setSelDay]=useState(null);
   const[editDays,setEditDays]=useState(false);
+  const sug=faseSugerida(data);
+  const semPlan=semanasDesde(data.planStart);
+  const setInicio=v=>{const nd={...data,planStart:v};setData(nd);sv(nd)};
+  const pasarAFase=i=>{const nd={...data,phase:i};setData(nd);sv(nd);setEditDays(false)};
   const sched=phSched(data,pi);
   if(selDay!==null){const day=sched.find(d=>d._i===selDay)||ph.schedule[selDay];return <div style={S.pg}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setSelDay(null)} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>{day.day}: {day.name}</h2></div>
@@ -738,7 +799,17 @@ function PlanTab({data,setData}){
   const dupDays=[...new Set(usedDays.filter((d,i)=>usedDays.indexOf(d)!==i))];
   const customized=!!(data.dayOverrides||{})[pi];
   return <div style={S.pg}>
-    <h2 style={S.t1}>{"\u{1F4C5}"} Plan de entrenamiento</h2>
+    <h2 style={S.t1}>{"\u{1F4CB}"} Plan de entrenamiento</h2>
+    {!data.planStart&&<div style={{...S.cd,borderLeft:"3px solid #3498DB",background:"rgba(52,152,219,0.06)"}}>
+      <div style={{fontSize:12.5,color:"#FFF",fontWeight:600,marginBottom:4}}>¿Cuándo arrancaste el plan?</div>
+      <p style={{fontSize:11.5,color:"#999",marginTop:0,marginBottom:8,lineHeight:1.5}}>Con esa fecha la app sabe en qué semana estás y te avisa cuando te toca cambiar de fase. No cambia nada sola.</p>
+      <input type="date" value={td()} onChange={e=>setInicio(e.target.value)} style={S.inp}/>
+    </div>}
+    {sug&&sug.fase!==pi&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.08)"}}>
+      <div style={{fontSize:12,color:"#F39C12",fontWeight:700,marginBottom:4}}>{"\u26A0\uFE0F"} Semana {sug.semana} del plan</div>
+      <p style={{fontSize:12,color:"#CCC",marginTop:0,marginBottom:10,lineHeight:1.5}}>Por calendario ya te toca <b style={{color:"#FFF"}}>{PHASES[sug.fase].name}</b>, pero seguís en {ph.name}. Cambiá cuando te sientas listo: si faltaste o venís cansado, quedate donde estás.</p>
+      <button onClick={()=>{if(window.confirm("Pasar a "+PHASES[sug.fase].name+"?"))pasarAFase(sug.fase)}} style={{...S.btn,width:"100%",padding:"11px 16px",fontSize:13,background:"linear-gradient(135deg,#F39C12,#D68910)"}}>Pasar a {PHASES[sug.fase].name}</button>
+    </div>}
     <div style={{...S.cd,borderLeft:"3px solid "+ph.c,background:"linear-gradient(135deg,"+ph.c+"15,"+ph.c+"05)"}}>
       <span style={{fontSize:32}}>{ph.ic}</span>
       <h3 style={{fontFamily:"'Oswald',sans-serif",fontSize:20,color:ph.c,margin:"4px 0"}}>{ph.name}</h3>
@@ -747,24 +818,24 @@ function PlanTab({data,setData}){
     </div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:16,marginBottom:4}}>
       <h3 style={{...S.t1,fontSize:14,margin:0}}>Sesiones de la semana</h3>
-      <button onClick={()=>setEditDays(v=>!v)} style={{...S.sm,color:editDays?"#FF6B35":"#888"}}>{editDays?"Listo":"\u270F\uFE0F Dias"}</button>
+      <button onClick={()=>setEditDays(v=>!v)} style={{...S.sm,color:editDays?"#FF6B35":"#888"}}>{editDays?"Listo":"✏️ Dias"}</button>
     </div>
     {editDays?<div>
-      <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>Eleg\u00ed qu\u00e9 d\u00eda de la semana hac\u00e9s cada sesi\u00f3n. Se guarda por fase.</p>
+      <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>Elegí qué día de la semana hacés cada sesión. Se guarda por fase.</p>
       {ph.schedule.map((sess,i)=>{
         const cur=((data.dayOverrides||{})[pi]||{})[i]||sess.day;
         return <div key={i} style={{...S.cd,padding:"10px 14px"}}>
           <div style={{fontSize:13,color:"#FFF",fontWeight:600,marginBottom:6}}>{sess.name}</div>
           <select value={cur} onChange={e=>setDayOv(data,setData,pi,i,e.target.value)} style={S.inp}>
-            {WEEKDAYS.map(d=><option key={d} value={d} style={{background:"#1a1a1a"}}>{d}{SPORT_DAYS[d]?" \u2014 "+SPORT_DAYS[d]:""}</option>)}
+            {WEEKDAYS.map(d=><option key={d} value={d} style={{background:"#1a1a1a"}}>{d}{SPORT_DAYS[d]?" — "+SPORT_DAYS[d]:""}</option>)}
           </select>
-          {SPORT_DAYS[cur]&&<p style={{fontSize:11,color:"#F39C12",marginTop:6,marginBottom:0}}>{"\u26A0\uFE0F"} Ese d\u00eda ten\u00e9s {SPORT_DAYS[cur]}. Ojo con las piernas.</p>}
+          {SPORT_DAYS[cur]&&<p style={{fontSize:11,color:"#F39C12",marginTop:6,marginBottom:0}}>{"⚠️"} Ese día tenés {SPORT_DAYS[cur]}. Ojo con las piernas.</p>}
         </div>;
       })}
       {dupDays.length>0&&<div style={{...S.cd,borderLeft:"3px solid #E74C3C",background:"rgba(231,76,60,0.06)",padding:"10px 14px"}}>
-        <p style={{fontSize:12,color:"#E74C3C",margin:0}}>Ten\u00e9s 2 sesiones el mismo d\u00eda: {dupDays.join(", ")}</p>
+        <p style={{fontSize:12,color:"#E74C3C",margin:0}}>Tenés 2 sesiones el mismo día: {dupDays.join(", ")}</p>
       </div>}
-      {customized&&<button onClick={()=>resetDayOv(data,setData,pi)} style={{...S.eo,justifyContent:"center",color:"#888"}}>Restaurar d\u00edas por defecto</button>}
+      {customized&&<button onClick={()=>resetDayOv(data,setData,pi)} style={{...S.eo,justifyContent:"center",color:"#888"}}>Restaurar días por defecto</button>}
     </div>:sched.map(day=><button key={day._i} onClick={()=>setSelDay(day._i)} style={S.eo}>
       <div><span style={{fontWeight:700,color:"#FFF"}}>{day.day}</span>{SPORT_DAYS[day.day]&&<span style={{fontSize:11,color:"#F39C12",marginLeft:6}}>{SPORT_DAYS[day.day]}</span>}<br/><span style={{fontSize:12,color:"#AAA"}}>{day.name}</span></div>
       <span style={{fontSize:12,color:ph.c}}>{day.exercises.length} ej. &#8594;</span>
@@ -784,9 +855,21 @@ function PlanTab({data,setData}){
     {data.planNotes?.length>0&&<div style={{marginTop:16}}><h3 style={{...S.t1,fontSize:14}}>{"\u{1F9E0}"} Notas del Coach sobre el plan</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.planNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.planNotes.at(-1).date)}</p></div></div>}
     <div style={{marginTop:20}}>
       <h3 style={{...S.t1,fontSize:14}}>Todas las fases</h3>
-      {PHASES.map((p,i)=><div key={i} style={{...S.cd,padding:"10px 14px",borderLeft:"3px solid "+p.c,opacity:i===pi?1:0.5,cursor:"pointer"}} onClick={()=>{const nd={...data,phase:i};setData(nd);sv(nd);setEditDays(false)}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===pi?p.c:"#888"}}>{p.ic} {p.name}</span><span style={{fontSize:11,color:"#888"}}>Sem {p.wk} - {p.days}d/sem</span></div>
+      {semPlan&&<p style={{fontSize:11,color:"#888",marginBottom:8}}>Vas por la semana {semPlan} desde que arrancaste.</p>}
+      {PHASES.map((p,i)=><div key={i} onClick={()=>{if(i!==pi&&window.confirm("Cambiar a "+p.name+"?"))pasarAFase(i)}} style={{...S.cd,padding:"10px 14px",borderLeft:"3px solid "+(i===pi?p.c:"transparent"),background:i===pi?p.c+"14":"rgba(255,255,255,0.02)",opacity:i===pi?1:0.55,cursor:"pointer"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+          <span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===pi?p.c:"#888"}}>{p.ic} {p.name}</span>
+          <span style={{display:"flex",alignItems:"center",gap:8,whiteSpace:"nowrap"}}>
+            {i===pi&&<span style={{fontSize:10,fontWeight:700,color:"#0A0A0B",background:p.c,borderRadius:6,padding:"2px 7px",letterSpacing:0.5}}>ACTUAL</span>}
+            {sug&&sug.fase===i&&i!==pi&&<span style={{fontSize:10,fontWeight:700,color:"#F39C12"}}>TE TOCA</span>}
+            <span style={{fontSize:11,color:"#888"}}>Sem {p.wk} · {p.days}d</span>
+          </span>
+        </div>
       </div>)}
+      {data.planStart&&<div style={{marginTop:10,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:11,color:"#777"}}>Inicio del plan</span>
+        <input type="date" value={data.planStart} onChange={e=>setInicio(e.target.value)} style={{...S.inp,flex:1,fontSize:12,padding:"6px 10px"}}/>
+      </div>}
     </div>
   </div>;
 }
@@ -802,6 +885,7 @@ function BodyTab({data,setData,apiKey}){
   const[selM,setSelM]=useState(null);
   const[exLoad,setExLoad]=useState(false);
   const[exNote,setExNote]=useState("");
+  const[extras,setExtras]=useState([]);
   const anthroRef=React.useRef(null);
   // estudios
   const[stView,setStView]=useState("list");
@@ -814,24 +898,25 @@ function BodyTab({data,setData,apiKey}){
   const[stErr,setStErr]=useState("");
   const studyRef=React.useRef(null);
 
-  const doSave=()=>{const nd={...data,anthropometry:[...(data.anthropometry||[]),{id:gi(),date,...vals}]};setData(nd);sv(nd);setAdding(false);setVals({});setExNote("")};
+  const doSave=()=>{const reg={id:gi(),date,...vals};if(extras.length)reg._extras=extras;const nd={...data,anthropometry:[...(data.anthropometry||[]),reg]};setData(nd);sv(nd);setAdding(false);setVals({});setExtras([]);setExNote("")};
 
   const onAnthroFile=async(e)=>{
     const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;
-    if(!apiKey){alert("Necesit\u00e1s cargar tu API key en Config.");return;}
+    if(!apiKey){alert("Necesitás cargar tu API key en Config.");return;}
     setExLoad(true);setExNote("");
     try{
       const block=await fileToBlock(file);
-      const fields=ANTHRO.map(f=>'"'+f.id+'": '+f.l+" ("+f.u+")").join(", ");
-      const txt="Analiz\u00e1 este estudio antropom\u00e9trico o de composici\u00f3n corporal (antropometr\u00eda ISAK, InBody, DEXA, balanza inteligente, etc.) y extra\u00e9 los valores que encuentres. Campos disponibles (id: etiqueta): "+fields+". Devolv\u00e9 SOLO JSON v\u00e1lido, sin markdown, sin texto antes ni despu\u00e9s:\n{\"date\":\"YYYY-MM-DD o null si no figura\",\"values\":{\"weight\":77.5,\"body_fat\":15.2}}\nEn \"values\" inclu\u00ed \u00fanicamente los campos que puedas leer con certeza, usando exactamente los ids indicados. Convert\u00ed unidades si hace falta (peso en kg, pliegues en mm, per\u00edmetros en cm). Si un dato no corresponde a ning\u00fan campo, ignoralo.";
-      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,1500);
+      const fields=ANTHRO.map(f=>'"'+f.id+'": '+f.l+(f.u?" ("+f.u+")":"")).join(", ");
+      const txt="Analizá este estudio de composición corporal (antropometría ISAK, InBody, DEXA, balanza, etc.) y extraé ABSOLUTAMENTE TODOS los valores numéricos que figuren. No omitas ninguno, aunque parezca menor o redundante.\n\nCampos conocidos (usá exactamente estos ids): "+fields+"\n\nDevolvé SOLO JSON válido, sin markdown:\n{\"date\":\"YYYY-MM-DD o null\",\"values\":{\"weight\":77.5,\"body_fat\":26.5},\"extras\":[{\"label\":\"nombre tal como figura\",\"value\":\"valor\",\"unit\":\"unidad o vacío\"}]}\n\nReglas:\n- En \"values\" van SOLO los que correspondan a un id conocido. Convertí unidades si hace falta (peso kg, pliegues mm, perímetros cm).\n- En \"extras\" va TODO lo demás que traiga el informe: percentiles, z-scores, sumatorias parciales, proporciones, índices propios del laboratorio, mediciones por segmento. NO descartes nada por no entrar en la lista.\n- Si el informe trae el mismo dato en kg y en %, incluí los dos.\n- Recorré el documento entero, incluidas tablas al pie y páginas siguientes.";
+      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,6000);
       const parsed=pj(resp);
       const nv={};
       Object.entries(parsed.values||{}).forEach(([k,v])=>{if(ANTHRO.some(f=>f.id===k)&&v!=null&&v!=="")nv[k]=String(v)});
-      if(!Object.keys(nv).length){setExNote("No se reconocieron valores. Prob\u00e1 una foto m\u00e1s n\u00edtida o carg\u00e1 manual.");setExLoad(false);return;}
-      setVals(nv);
+      const ex=(Array.isArray(parsed.extras)?parsed.extras:[]).filter(x=>x&&x.label&&x.value!=null&&x.value!=="").map(x=>({label:String(x.label),value:String(x.value),unit:String(x.unit||"")}));
+      if(!Object.keys(nv).length&&!ex.length){setExNote("No se reconocieron valores. Probá una foto más nítida o cargá manual.");setExLoad(false);return;}
+      setVals(nv);setExtras(ex);
       if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setDate(parsed.date);
-      setExNote("Se extrajeron "+Object.keys(nv).length+" valores. Revisalos y guard\u00e1.");
+      setExNote("Se extrajeron "+Object.keys(nv).length+" valores conocidos"+(ex.length?" y "+ex.length+" adicionales":"")+". Revisalos y guardá.");
       setAdding(true);
     }catch(err){alert("Error al analizar: "+err.message);}
     setExLoad(false);
@@ -840,14 +925,14 @@ function BodyTab({data,setData,apiKey}){
   const onStudyFile=(e)=>{const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;setStFile(file);setStResult(null);setStErr("");setStDate(td());setStView("new")};
 
   const analyzeStudy=async()=>{
-    if(!apiKey){alert("Necesit\u00e1s cargar tu API key en Config.");return;}
+    if(!apiKey){alert("Necesitás cargar tu API key en Config.");return;}
     if(!stFile)return;
     setStLoad(true);setStErr("");
     try{
       const block=await fileToBlock(stFile);
       const tl=STUDY_TYPES.find(t=>t.id===stType)?.l||"estudio";
-      const txt="Sos un asistente que ORDENA y RESUME estudios m\u00e9dicos para que la persona los registre en su app de salud. Este estudio es de tipo \""+tl+"\". Extra\u00e9 la informaci\u00f3n TAL COMO figura en el estudio. NO diagnostiques ni recomiendes tratamientos. Devolv\u00e9 SOLO JSON v\u00e1lido, sin markdown:\n{\"title\":\"t\u00edtulo corto\",\"date\":\"YYYY-MM-DD o null\",\"values\":[{\"label\":\"par\u00e1metro\",\"value\":\"valor\",\"unit\":\"unidad o vac\u00edo\",\"ref\":\"rango de referencia o vac\u00edo\",\"flag\":\"alto|bajo|normal|\"}],\"findings\":\"para im\u00e1genes/informes: hallazgos y conclusi\u00f3n tal como aparecen, resumido\",\"summary\":\"2-4 frases en lenguaje claro de QU\u00c9 dice el estudio, sin diagnosticar\"}\nPara laboratorios complet\u00e1 \"values\" con cada analito (hemograma, l\u00edpidos, glucemia, hep\u00e1tico, renal, tiroideo, vitaminas, etc.). Para im\u00e1genes dej\u00e1 \"values\" vac\u00edo y us\u00e1 \"findings\". En \"flag\" marc\u00e1 \"alto\"/\"bajo\" solo si el estudio o el rango lo indican; si est\u00e1 en rango \"normal\"; si no hay rango, vac\u00edo.";
-      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,3500);
+      const txt="Sos un asistente que ORDENA y RESUME estudios médicos para que la persona los registre en su app de salud. Este estudio es de tipo \""+tl+"\". Extraé la información TAL COMO figura en el estudio. NO diagnostiques ni recomiendes tratamientos. Devolvé SOLO JSON válido, sin markdown:\n{\"title\":\"título corto\",\"date\":\"YYYY-MM-DD o null\",\"values\":[{\"label\":\"parámetro\",\"value\":\"valor\",\"unit\":\"unidad o vacío\",\"ref\":\"rango de referencia o vacío\",\"flag\":\"alto|bajo|normal|\"}],\"findings\":\"para imágenes/informes: hallazgos y conclusión tal como aparecen, resumido\",\"summary\":\"2-4 frases en lenguaje claro de QUÉ dice el estudio, sin diagnosticar\"}\nREGLA PRINCIPAL: extraé TODOS los parámetros del informe, sin excepción. Un laboratorio completo puede tener 40 o 60 analitos: van todos. No resumas la lista, no agrupes, no omitas los que estén dentro del rango. Recorré el documento entero, incluidas las tablas al pie y las páginas siguientes.\nPara laboratorios completá \"values\" con cada analito (hemograma con su fórmula leucocitaria, lípidos, glucemia, hepatograma, función renal, ionograma, tiroideo, vitaminas, hormonas, orina, etc.). Para imágenes usá \"findings\", y si el informe trae mediciones numéricas ponelas igual en \"values\". En \"flag\" marcá \"alto\"/\"bajo\" solo si el estudio o el rango lo indican; si está en rango \"normal\"; si no hay rango, vacío.";
+      const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,8000);
       const parsed=pj(resp);
       setStResult(parsed);
       if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setStDate(parsed.date);
@@ -864,8 +949,8 @@ function BodyTab({data,setData,apiKey}){
   const delStudy=(id)=>{const nd={...data,healthStudies:(data.healthStudies||[]).filter(s=>s.id!==id)};setData(nd);sv(nd);setStSel(null);setStView("list")};
 
   const flagC=(f)=>f==="alto"?"#E74C3C":f==="bajo"?"#F39C12":f==="normal"?"#2ECC71":"#888";
-  const flagT=(f)=>f==="alto"?"\u2191 Alto":f==="bajo"?"\u2193 Bajo":f==="normal"?"\u2713":"";
-  const disclaimer=<p style={{fontSize:11,color:"#888",lineHeight:1.5,marginTop:12,fontStyle:"italic"}}>{"\u26A0\uFE0F"} Esto es un resumen de lo que dice el estudio, no un diagn\u00f3stico. Consult\u00e1 los resultados con tu m\u00e9dico.</p>;
+  const flagT=(f)=>f==="alto"?"↑ Alto":f==="bajo"?"↓ Bajo":f==="normal"?"✓":"";
+  const disclaimer=<p style={{fontSize:11,color:"#888",lineHeight:1.5,marginTop:12,fontStyle:"italic"}}>{"⚠️"} Esto es un resumen de lo que dice el estudio, no un diagnóstico. Consultá los resultados con tu médico.</p>;
 
   // ── ANTROPOMETRIA: detalle de una metrica ──
   if(selM){const f=ANTHRO.find(x=>x.id===selM);const pts=(data.anthropometry||[]).filter(a=>a[selM]).sort((a,b)=>a.date.localeCompare(b.date));const vs=pts.map(p=>Number(p[selM]));const mx=vs.length?Math.max(...vs):0;const mn=vs.length?Math.min(...vs):0;const rng=mx-mn||1;
@@ -881,13 +966,29 @@ function BodyTab({data,setData,apiKey}){
     <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:12,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio y autocompletar"}</button>
     {exNote&&<div style={{...S.tbdg,marginTop:0,marginBottom:12,background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.3)",color:"#5DADE2"}}>{exNote}</div>}
     <label style={S.lbl}>Fecha</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...S.inp,marginBottom:16}}/>
-    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Complet\u00e1 solo lo que tengas. No hace falta todo.</p>
-    {ANTHRO.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-      <label style={{fontSize:13,color:"#CCC",flex:1}}>{f.l}</label>
-      <input type="number" value={vals[f.id]||""} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:80,textAlign:"right"}} step="0.1" placeholder="-"/>
-      <span style={{fontSize:11,color:"#888",width:24}}>{f.u}</span>
+    <p style={{fontSize:12,color:"#888",marginBottom:12}}>Completá solo lo que tengas. No hace falta todo.</p>
+    {ANTHRO_G.map(g=><div key={g} style={{marginBottom:14}}>
+      <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
+      {ANTHRO.filter(f=>f.g===g).map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+        <label style={{fontSize:12.5,color:vals[f.id]?"#FFF":"#999",flex:1}}>{f.l}</label>
+        <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:78,textAlign:"right"}} step="any" placeholder="-"/>
+        <span style={{fontSize:11,color:"#888",width:30}}>{f.u}</span>
+      </div>)}
     </div>)}
-    <button onClick={doSave} disabled={!Object.keys(vals).length} style={{...S.btn,width:"100%",marginTop:16,opacity:Object.keys(vals).length?1:0.5}}>Guardar</button>
+    <div style={{marginBottom:14}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+        <span style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700}}>OTROS VALORES DEL INFORME</span>
+        <button onClick={()=>setExtras([...extras,{label:"",value:"",unit:""}])} style={{...S.sm,fontSize:11}}>+ Agregar</button>
+      </div>
+      {extras.length===0&&<p style={{fontSize:11,color:"#777",margin:0}}>Todo lo que el estudio traiga y no entre en las categorías de arriba aparece acá.</p>}
+      {extras.map((x,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+        <input value={x.label} placeholder="Parámetro" onChange={e=>{const n=[...extras];n[i]={...n[i],label:e.target.value};setExtras(n)}} style={{...S.inp,flex:1,fontSize:12}}/>
+        <input value={x.value} placeholder="Valor" onChange={e=>{const n=[...extras];n[i]={...n[i],value:e.target.value};setExtras(n)}} style={{...S.inp,width:70,textAlign:"right",fontSize:12}}/>
+        <input value={x.unit} placeholder="ud." onChange={e=>{const n=[...extras];n[i]={...n[i],unit:e.target.value};setExtras(n)}} style={{...S.inp,width:44,fontSize:12}}/>
+        <button onClick={()=>setExtras(extras.filter((_,j)=>j!==i))} style={S.sm}>x</button>
+      </div>)}
+    </div>
+    <button onClick={doSave} disabled={!Object.keys(vals).length&&!extras.length} style={{...S.btn,width:"100%",marginTop:16,opacity:(Object.keys(vals).length||extras.length)?1:0.5}}>Guardar</button>
   </div>;
 
   // ── ESTUDIOS: nuevo (analizar/revisar) ──
@@ -911,7 +1012,7 @@ function BodyTab({data,setData,apiKey}){
   // ── ESTUDIOS: detalle ──
   if(stView==="detail"&&stSel){const s=(data.healthStudies||[]).find(x=>x.id===stSel);if(!s)return <div style={S.pg}><button onClick={()=>{setStView("list");setStSel(null)}} style={S.sm}>&#8592;</button><p style={{color:"#888",marginTop:16}}>Estudio no encontrado.</p></div>;const ti=STUDY_TYPES.find(t=>t.id===s.type);
     return <div style={S.pg}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>{setStView("list");setStSel(null)}} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0,flex:1}}>{ti?.i} {s.title}</h2><button onClick={()=>delStudy(s.id)} style={S.sm}>x</button></div>
-    <p style={{fontSize:12,color:"#888",marginBottom:16}}>{ti?.l} \u00b7 {fd(s.date)}</p>
+    <p style={{fontSize:12,color:"#888",marginBottom:16}}>{ti?.l} · {fd(s.date)}</p>
     {s.summary&&<div style={S.aicd}><h4 style={{fontSize:12,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>RESUMEN</h4><p style={{fontSize:13,lineHeight:1.5,color:"#DDD"}}>{s.summary}</p></div>}
     {s.values&&s.values.length>0&&<div style={{marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>VALORES</h4>{s.values.map((v,i)=><div key={i} style={{...S.cd,padding:"10px 12px",marginBottom:6}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:13,color:"#CCC"}}>{v.label}</span><span style={{fontSize:14,fontWeight:700,color:flagC(v.flag)}}>{v.value} {v.unit} {flagT(v.flag)&&<span style={{fontSize:11}}>{flagT(v.flag)}</span>}</span></div>{v.ref&&<span style={{fontSize:11,color:"#666"}}>Ref: {v.ref}</span>}</div>)}</div>}
     {s.findings&&<div style={{...S.cd,marginTop:12}}><h4 style={{fontSize:12,color:"#888",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>HALLAZGOS</h4><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{s.findings}</p></div>}
@@ -922,7 +1023,7 @@ function BodyTab({data,setData,apiKey}){
   const latest=(data.anthropometry||[]).length?(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
   const studies=[...(data.healthStudies||[])].sort((a,b)=>b.date.localeCompare(a.date));
   const subNav=<div style={{display:"flex",gap:8,marginBottom:18}}>
-    <button onClick={()=>setSub("anthro")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="anthro"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="anthro"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1F4D0}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="anthro"?"#FFF":"#AAA"}}>Antropometr\u00eda</span></button>
+    <button onClick={()=>setSub("anthro")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="anthro"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="anthro"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1F4D0}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="anthro"?"#FFF":"#AAA"}}>Antropometría</span></button>
     <button onClick={()=>setSub("studies")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="studies"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="studies"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1FA7A}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="studies"?"#FFF":"#AAA"}}>Estudios</span></button>
   </div>;
 
@@ -930,24 +1031,75 @@ function BodyTab({data,setData,apiKey}){
     {sub==="anthro"&&<div>
       <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
       <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:8,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio (autocompleta)"}</button>
-      <button onClick={()=>{setVals({});setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
-      {latest&&<div style={{marginBottom:16}}><h3 style={{...S.t1,fontSize:14}}>Ultima medicion - {fd(latest.date)}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{ANTHRO.filter(f=>latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}</div></div>}
-      {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Saca\u0301 una foto o sub\u00ed el PDF de tu antropometr\u00eda (ISAK), InBody o DEXA y la app carga los datos sola. Tambi\u00e9n pod\u00e9s cargar manual.</p></div>}
+      <button onClick={()=>{setVals({});setExtras([]);setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
+      {latest&&<div style={{marginBottom:16}}>
+        <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
+        {ANTHRO_G.filter(g=>ANTHRO.some(f=>f.g===g&&latest[f.id])).map(g=><div key={g} style={{marginBottom:14}}>
+          <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {ANTHRO.filter(f=>f.g===g&&latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}
+          </div></div>)}
+        {(latest._extras||[]).length>0&&<div>
+          <div style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>OTROS VALORES DEL INFORME</div>
+          <div style={{...S.cd,padding:"10px 14px"}}>
+            {latest._extras.map((x,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"4px 0",borderTop:i?"1px solid rgba(255,255,255,0.05)":"none"}}>
+              <span style={{fontSize:12.5,color:"#CCC",flex:1,paddingRight:10}}>{x.label}</span>
+              <span style={{fontSize:13,color:"#FFF",fontWeight:600,whiteSpace:"nowrap"}}>{x.value}<span style={{fontSize:10.5,color:"#888"}}> {x.unit}</span></span>
+            </div>)}
+          </div></div>}
+        <p style={{fontSize:11,color:"#777",marginTop:10}}>{ANTHRO.filter(f=>latest[f.id]).length+(latest._extras||[]).length} valores registrados. Tocá cualquiera para ver su evolución.</p>
+      </div>}
+      {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Sacá una foto o subí el PDF de tu antropometría (ISAK), InBody o DEXA y la app carga los datos sola. También podés cargar manual.</p></div>}
     </div>}
     {sub==="studies"&&<div>
       <input ref={studyRef} type="file" accept="image/*,application/pdf" onChange={onStudyFile} style={{display:"none"}}/>
       <button onClick={()=>studyRef.current&&studyRef.current.click()} style={{...S.btn,width:"100%",marginBottom:20}}>{"\u{1F4CE}"} Adjuntar estudio de salud</button>
-      {studies.length===0&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Adjunt\u00e1 an\u00e1lisis de sangre, radiograf\u00edas, ecograf\u00edas, ECG, etc. La app extrae los valores y arma un resumen.</p></div>}
+      {studies.length===0&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Adjuntá análisis de sangre, radiografías, ecografías, ECG, etc. La app extrae los valores y arma un resumen.</p></div>}
       {studies.map(s=>{const ti=STUDY_TYPES.find(t=>t.id===s.type);const ab=(s.values||[]).filter(v=>v.flag==="alto"||v.flag==="bajo").length;
-        return <button key={s.id} onClick={()=>{setStSel(s.id);setStView("detail")}} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{ti?.i}</span><div><div style={{fontSize:14,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>{s.title}</div><div style={{fontSize:11,color:"#888"}}>{ti?.l} \u00b7 {fd(s.date)}</div></div></div>{ab>0&&<span style={{fontSize:11,color:"#E74C3C",fontWeight:700}}>{ab} fuera de rango</span>}{ab===0&&(s.values||[]).length>0&&<span style={{fontSize:11,color:"#2ECC71"}}>{"\u2713"} {s.values.length}</span>}</div></button>})}
+        return <button key={s.id} onClick={()=>{setStSel(s.id);setStView("detail")}} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{ti?.i}</span><div><div style={{fontSize:14,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>{s.title}</div><div style={{fontSize:11,color:"#888"}}>{ti?.l} · {fd(s.date)}</div></div></div>{ab>0&&<span style={{fontSize:11,color:"#E74C3C",fontWeight:700}}>{ab} fuera de rango</span>}{ab===0&&(s.values||[]).length>0&&<span style={{fontSize:11,color:"#2ECC71"}}>{"✓"} {s.values.length}</span>}</div></button>})}
     </div>}
   </div>;
 }
 
 // ─── WORKOUT TAB ───
+function TrainTab({data,setData,apiKey,modo,setModo}){
+  const pi=data.phase||0, ph=PHASES[pi];
+  const hoy=WEEKDAYS[(new Date().getDay()+6)%7];
+  const sess=phSched(data,pi).find(d=>d.day===hoy);
+  if(modo==="pesas")return <div><div style={{...S.pg,paddingBottom:0}}><button onClick={()=>setModo(null)} style={S.sm}>&#8592; Entrenar</button></div><WorkoutTab data={data} setData={setData} apiKey={apiKey}/></div>;
+  if(modo==="cardio")return <div><div style={{...S.pg,paddingBottom:0}}><button onClick={()=>setModo(null)} style={S.sm}>&#8592; Entrenar</button></div><CardioTab data={data} setData={setData}/></div>;
+  const hoyPesas=(data.sessions||[]).filter(x=>x.date===td()).length;
+  const hoyCardio=(data.cardioSessions||[]).filter(x=>x.date===td()).length;
+  return <div style={S.pg}>
+    <h2 style={S.t1}>{"\u{1F3CB}\uFE0F"} Entrenar</h2>
+    <div style={{...S.cd,padding:"12px 14px",marginBottom:16}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600}}>HOY, {hoy.toUpperCase()}</div>
+      <div style={{fontSize:14,color:sess?"#FFF":"#888",fontWeight:600,marginTop:4}}>{sess?sess.name:(SPORT_DAYS[hoy]?SPORT_DAYS[hoy]:"Sin pesas programadas")}</div>
+      <div style={{fontSize:11.5,color:"#999",marginTop:6,lineHeight:1.5}}>{DAY_CARDIO[hoy]}</div>
+    </div>
+    <button onClick={()=>setModo("pesas")} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",borderLeft:"3px solid "+ph.c}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:26}}>{"\u{1F3CB}\uFE0F"}</span>
+          <div><div style={{fontSize:16,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>Pesas</div>
+          <div style={{fontSize:11.5,color:"#888",marginTop:2}}>{hoyPesas?hoyPesas+" sesión registrada hoy":"Registrar series, reps y peso"}</div></div>
+        </div><span style={{fontSize:18,color:ph.c}}>{"\u2192"}</span>
+      </div></button>
+    <button onClick={()=>setModo("cardio")} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",borderLeft:"3px solid #3498DB"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:26}}>{"\u{1F3C3}"}</span>
+          <div><div style={{fontSize:16,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>Cardio</div>
+          <div style={{fontSize:11.5,color:"#888",marginTop:2}}>{hoyCardio?hoyCardio+" registro hoy":"Running, bici, pilates, yoga"}</div></div>
+        </div><span style={{fontSize:18,color:"#3498DB"}}>{"\u2192"}</span>
+      </div></button>
+  </div>;
+}
+
 function WorkoutTab({data,setData,apiKey}){
   const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
-  const start=()=>{setSes({id:gi(),date:td(),exercises:[]});setSg(null);setExQ("")};
+  const start=(f)=>{setSes({id:gi(),date:f||td(),exercises:[]});setSg(null);setExQ("")};
+  const setFecha=f=>setSes(x=>({...x,date:f}));
   const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const t2=tgt(hist);const uni=isUni(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));setSg(null);setExQ("")};
   const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:f==="done"?v:(v===""?"":Number(v))}:st)}:ex)}));
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{if(ex.id!==eid)return ex;const l=ex.sets.at(-1)||{};const nx={weight:l.weight??"",reps:l.reps??"",done:false};if(ex.uni)nx.repsR=l.repsR??"";return{...ex,sets:[...ex.sets,nx]}})}));
@@ -962,10 +1114,26 @@ function WorkoutTab({data,setData,apiKey}){
 
   if(showFb)return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4DD}"} Como estuvo?</h2>{!aiRes?<><textarea value={fb} onChange={e=>setFb(e.target.value)} placeholder="Como te sentiste? Pesado? Facil? Dolor? Dormiste bien?" style={S.ta} rows={5}/><button onClick={submit} disabled={!fb.trim()||aiLoad} style={{...S.btn,opacity:!fb.trim()||aiLoad?0.5:1,width:"100%",marginTop:12}}>{aiLoad?"\u{1F525} Analizando...":"Enviar al Coach IA"}</button></>:<div style={S.aicd}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><span style={{fontSize:24}}>{"\u{1F9E0}"}</span><span style={{fontFamily:"'Oswald',sans-serif",fontSize:16,fontWeight:700,color:"#FF6B35"}}>COACH FORJA</span></div><p style={{fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap",color:"#E0E0E0"}}>{aiRes}</p><button onClick={reset} style={{...S.btn,marginTop:16,width:"100%"}}>Cerrar</button></div>}</div>;
 
-  if(!ses){const last=data.sessions.at(-1);return <div style={S.pg}><div style={S.hero}><span style={{fontSize:48}}>{"\u{1F525}"}</span><h2 style={{fontFamily:"'Oswald',sans-serif",fontSize:22,margin:"8px 0 4px"}}>Listo para forjar?</h2><p style={{fontSize:13,color:"#AAA",margin:0}}>{last?"Ultima: "+fd(last.date):"Comenza a registrar"}</p><button onClick={start} style={{...S.btn,marginTop:16,width:"100%"}}>Iniciar sesion</button></div>{data.coachNotes.length>0&&<div style={{marginTop:20}}><h3 style={S.t1}>{"\u{1F9E0}"} Coach</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.coachNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.coachNotes.at(-1).date)}</p></div></div>}</div>}
+  if(!ses){const last=data.sessions.at(-1);return <div style={S.pg}><div style={S.hero}><span style={{fontSize:48}}>{"\u{1F525}"}</span><h2 style={{fontFamily:"'Oswald',sans-serif",fontSize:22,margin:"8px 0 4px"}}>Listo para forjar?</h2><p style={{fontSize:13,color:"#AAA",margin:0}}>{last?"Ultima: "+fd(last.date):"Comenza a registrar"}</p><button onClick={()=>start()} style={{...S.btn,marginTop:16,width:"100%"}}>Iniciar sesión</button>
+    <button onClick={()=>{const d=window.prompt("¿De qué día es el entrenamiento? Formato AAAA-MM-DD",td());if(!d)return;if(d.length!==10||d[4]!=="-"||d[7]!=="-"||isNaN(new Date(d+"T00:00:00").getTime())){window.alert("Fecha inválida. Usá el formato 2026-08-03.");return}if(d>td()){window.alert("No se puede registrar un entrenamiento futuro.");return}start(d)}} style={{...S.aset,marginTop:10,borderStyle:"solid"}}>Registrar un día anterior</button></div>{(()=>{const pend=[];for(let k=1;k<=7;k++){const dt=new Date();dt.setDate(dt.getDate()-k);const iso=dt.toISOString().slice(0,10);const dia=WEEKDAYS[(dt.getDay()+6)%7];const prog=phSched(data,data.phase||0).find(x=>x.day===dia);if(prog&&!(data.sessions||[]).some(x=>x.date===iso))pend.push({iso,dia,nombre:prog.name})}
+      return pend.length>0&&<div style={{marginTop:20}}><h3 style={{...S.t1,fontSize:14}}>Entrenamientos sin registrar</h3>
+        <p style={{fontSize:11,color:"#888",marginBottom:10}}>De los últimos 7 días. Tocá uno para cargarlo con esa fecha.</p>
+        {pend.map(x=><button key={x.iso} onClick={()=>start(x.iso)} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",padding:"10px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+            <div style={{minWidth:0}}><div style={{fontSize:13,color:"#FFF",fontWeight:600}}>{x.dia} {fd(x.iso)}</div>
+            <div style={{fontSize:11,color:"#888",marginTop:2}}>{x.nombre}</div></div>
+            <span style={{fontSize:15,color:"#F39C12"}}>+</span>
+          </div></button>)}
+      </div>;})()}
+    {data.coachNotes.length>0&&<div style={{marginTop:20}}><h3 style={S.t1}>{"\u{1F9E0}"} Coach</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.coachNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.coachNotes.at(-1).date)}</p></div></div>}</div>}
 
   return <div style={S.pg}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={S.t1}>Sesion en curso</h2><span style={{fontSize:12,color:"#888"}}>{fd(ses.date)}</span></div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><h2 style={{...S.t1,margin:0}}>Sesión en curso</h2>{ses.date!==td()&&<span style={{fontSize:10,fontWeight:700,color:"#0A0A0B",background:"#F39C12",borderRadius:6,padding:"3px 8px",letterSpacing:0.5}}>ATRASADA</span>}</div>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+      <span style={{fontSize:11.5,color:"#888",whiteSpace:"nowrap"}}>Fecha</span>
+      <input type="date" value={ses.date} max={td()} onChange={e=>{if(e.target.value)setFecha(e.target.value)}} style={{...S.inp,flex:1,fontSize:12,padding:"7px 10px",color:ses.date!==td()?"#F39C12":"#FFF"}}/>
+      {ses.date!==td()&&<button onClick={()=>setFecha(td())} style={{...S.sm,fontSize:11,whiteSpace:"nowrap"}}>Hoy</button>}
+    </div>
     {ses.exercises.map(ex=>{
       const uni=!!ex.uni;
       const gt=uni?"24px 1fr 1fr 1fr 34px 26px":"40px 1fr 1fr 40px 40px";
@@ -975,13 +1143,13 @@ function WorkoutTab({data,setData,apiKey}){
       if(ex.closed)return <div key={ex.id} style={{...S.cd,padding:"10px 14px",background:"rgba(46,204,113,0.06)",borderLeft:"3px solid #2ECC71"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
           <div style={{minWidth:0}}>
-            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{"\u2713"} {ex.name}</div>
-            <div style={{fontSize:11,color:"#888",marginTop:2}}>{ex.sets.length+" series \u00b7 "+(vol>0?Math.round(vol)+" kg de volumen":"sin carga")}</div>
+            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{"✓"} {ex.name}</div>
+            <div style={{fontSize:11,color:"#888",marginTop:2}}>{ex.sets.length+" series · "+(vol>0?Math.round(vol)+" kg de volumen":"sin carga")}</div>
           </div>
           <button onClick={()=>togEx(ex.id)} style={{...S.sm,color:"#888",whiteSpace:"nowrap"}}>Reabrir</button>
         </div></div>;
       return <div key={ex.id} style={S.cd}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3>{uni&&<div style={{fontSize:10,color:"#F39C12",fontWeight:700,marginTop:3,letterSpacing:0.5}}>{"\u2194 UNILATERAL \u2014 REPS POR LADO"}</div>}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3>{uni&&<div style={{fontSize:10,color:"#F39C12",fontWeight:700,marginTop:3,letterSpacing:0.5}}>{"↔ UNILATERAL — REPS POR LADO"}</div>}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
       {ex.targets&&<div style={S.tbdg}>{"\u{1F3AF}"} {ex.targets.suggestion}</div>}
       <div style={{marginTop:12}}>
         <div style={{display:"grid",gridTemplateColumns:gt,gap:6,marginBottom:6}}><span style={S.colh}>#</span><span style={S.colh}>Kg</span><span style={S.colh}>{uni?"Izq":"Reps"}</span>{uni&&<span style={S.colh}>Der</span>}<span style={S.colh}>Ok</span><span></span></div>
@@ -995,9 +1163,9 @@ function WorkoutTab({data,setData,apiKey}){
         </div>)}
         <div style={{display:"flex",gap:8,marginTop:6}}>
           <button onClick={()=>addSet(ex.id)} style={{...S.aset,flex:1,marginTop:0}}>+ Serie</button>
-          <button onClick={()=>togEx(ex.id)} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",borderColor:todas?"#2ECC71":"rgba(255,255,255,0.12)",color:todas?"#2ECC71":"#888",fontWeight:todas?700:400}}>{"\u2713 Listo"}</button>
+          <button onClick={()=>togEx(ex.id)} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",borderColor:todas?"#2ECC71":"rgba(255,255,255,0.12)",color:todas?"#2ECC71":"#888",fontWeight:todas?700:400}}>{"✓ Listo"}</button>
         </div>
-        {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series \u00b7 "+sl+" reps izq / "+sr+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{(sl+sr)+" repeticiones totales"}</span></div>}
+        {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series · "+sl+" reps izq / "+sr+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{(sl+sr)+" repeticiones totales"}</span></div>}
       </div></div>;
     })}
     {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>!exQ.trim()||n.toLowerCase().includes(exQ.trim().toLowerCase())).map(n=><button key={n} onClick={()=>addEx(n,sg)} style={S.eo}>{n}</button>)}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
@@ -1030,19 +1198,6 @@ function ProgressTab({data}){
 function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
-  const cf=nutrCfg(data);
-  const pesoAct=data.anthropometry?.length?(data.anthropometry.slice().sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77.7):77.7;
-  const setCf=(campo,val)=>{const nd={...data,nutrCfg:{...(data.nutrCfg||{}),[campo]:val===""?NUTR_DEF[campo]:Number(val)}};setData(nd);sv(nd)};
-  const resetCf=()=>{const nd={...data};delete nd.nutrCfg;setData(nd);sv(nd)};
-  const fila=(campo,etiqueta,ayuda,sufijo)=><div style={{marginBottom:12}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-      <span style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>{etiqueta}</span>
-      <span style={{fontSize:10,color:"#666"}}>{sufijo}</span></div>
-    <input type="number" inputMode="decimal" value={cf[campo]} onFocus={e=>e.target.select()} onChange={e=>setCf(campo,e.target.value)} style={{...S.inp,marginTop:4}} step="any"/>
-    <div style={{fontSize:10.5,color:"#777",marginTop:3,lineHeight:1.4}}>{ayuda}</div>
-  </div>;
-  const prev=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d=>({d,...nutrTargets(data,d,pesoAct)}));
-  const prom=Math.round(prev.reduce((a,x)=>a+x.kcal,0)/7);
   const[impMsg,setImpMsg]=useState(null);
   const[gd,setGd]=useState(GD.cfg());
   const[gdMsg,setGdMsg]=useState(null);
@@ -1050,7 +1205,7 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const gdRun=async(fn,okTxt)=>{
     setGdBusy(true);setGdMsg(null);
     try{await fn();setGd(GD.cfg());setGdMsg({ok:true,t:okTxt})}
-    catch(e){if(e.message!=="__ELEGIR__")setGdMsg({ok:false,t:e.message||"Fall\u00f3 la sincronizaci\u00f3n"})}
+    catch(e){if(e.message!=="__ELEGIR__")setGdMsg({ok:false,t:e.message||"Falló la sincronización"})}
     setGdBusy(false);
   };
   const[gdElegir,setGdElegir]=useState(null);   // {remoto, resumenRemoto, resumenLocal}
@@ -1058,13 +1213,13 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const gdConnect=()=>gdRun(async()=>{
     await GD.getToken();
     const remoto=await GD.peek();
-    if(remoto&&bkStats(remoto).Sesiones+bkStats(remoto).Comidas+bkStats(remoto)["Antropometr\u00edas"]>0){
+    if(remoto&&bkStats(remoto).Sesiones+bkStats(remoto).Comidas+bkStats(remoto)["Antropometrías"]>0){
       // Ya hay algo en Drive: que decida el usuario, no piso nada
       setGdElegir({remoto,rRemoto:resumir(remoto),rLocal:resumir(data)});
       throw new Error("__ELEGIR__");
     }
     await GD.push(data);
-  },"Conectado. Tus datos ya est\u00e1n en Drive.");
+  },"Conectado. Tus datos ya están en Drive.");
   const gdUsarDrive=()=>gdRun(async()=>{
     const nd=gdElegir.remoto;
     sv(nd);setData(nd);GD.setCfg({auto:true,last:new Date().toISOString()});
@@ -1076,10 +1231,10 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     const nd=await GD.pull();
     const st=bkStats(nd);
     const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
-    if(!window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. \u00bfSeguir?"))throw new Error("Cancelado");
+    if(!window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. ¿Seguir?"))throw new Error("Cancelado");
     sv(nd);setData(nd);setTimeout(()=>window.location.reload(),900);
-  },"Datos tra\u00eddos de Drive. Recargando...");
-  const gdOff=()=>{if(window.confirm("Se corta la sincronizaci\u00f3n en este dispositivo. El archivo de Drive queda como est\u00e1. \u00bfSeguir?")){GD.clear();setGd({});setGdMsg(null)}};
+  },"Datos traídos de Drive. Recargando...");
+  const gdOff=()=>{if(window.confirm("Se corta la sincronización en este dispositivo. El archivo de Drive queda como está. ¿Seguir?")){GD.clear();setGd({});setGdMsg(null)}};
   const stats=bkStats(data);
   const doImport=ev=>{
     const f=ev.target.files&&ev.target.files[0];if(!f)return;
@@ -1089,7 +1244,7 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
         const nd=bkParse(String(rd.result));
         const st=bkStats(nd);
         const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
-        if(window.confirm("El backup contiene: "+resumen+".\n\nEsto REEMPLAZA todos los datos actuales de este dispositivo. \u00bfSeguir?")){
+        if(window.confirm("El backup contiene: "+resumen+".\n\nEsto REEMPLAZA todos los datos actuales de este dispositivo. ¿Seguir?")){
           sv(nd);setData(nd);setImpMsg({ok:true,t:"Datos restaurados. Recargando..."});
           setTimeout(()=>window.location.reload(),1200);
         }
@@ -1098,49 +1253,29 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     rd.onerror=()=>setImpMsg({ok:false,t:"No se pudo leer el archivo"});
     rd.readAsText(f);ev.target.value="";
   };
-  return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}>
-    <h3 style={{fontSize:14,color:"#2ECC71",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Objetivos nutricionales</h3>
-    <p style={{fontSize:11,color:"#888",marginBottom:14,lineHeight:1.5}}>Las calor\u00edas se ajustan solas seg\u00fan lo que toca entrenar cada d\u00eda. Ac\u00e1 mov\u00e9s la base cuando cambies de bloque (d\u00e9ficit, mantenimiento, diet break).</p>
-    {fila("base","Calor\u00edas base","D\u00eda normal: sesi\u00f3n de tren superior o s\u00e1bado.","kcal")}
-    {fila("alto","Ajuste d\u00eda de carga alta","Se suma a la base los d\u00edas de piernas y el jueves de f\u00fatbol.","+kcal")}
-    {fila("bajo","Ajuste d\u00eda bajo","Se suma a la base los d\u00edas sin pesas. Us\u00e1 n\u00famero negativo.","-kcal")}
-    {fila("prot","Prote\u00edna","Por kg de peso. No la bajes de 1,8 en d\u00e9ficit.","g/kg")}
-    {fila("fat","Grasas","Por kg de peso, con piso de "+cf.fatMin+" g.","g/kg")}
-    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginTop:4}}>
-      <div style={{fontSize:11,color:"#888",letterSpacing:1,fontWeight:600,marginBottom:8}}>C\u00d3MO QUEDA TU SEMANA ({pesoAct} kg)</div>
-      {prev.map(x=><div key={x.d} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0"}}>
-        <span style={{fontSize:12,color:"#CCC"}}>{x.d}</span>
-        <span style={{fontSize:11,color:"#777"}}>{x.p}P {"\u00b7"} {x.c}C {"\u00b7"} {x.f}G</span>
-        <span style={{fontSize:12,color:LOAD_LBL[x.load].c,fontWeight:700,minWidth:62,textAlign:"right"}}>{x.kcal} kcal</span>
-      </div>)}
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-        <span style={{fontSize:12,color:"#FFF",fontWeight:700}}>Promedio semanal</span>
-        <span style={{fontSize:13,color:"#FF6B35",fontWeight:700}}>{prom} kcal</span></div>
-    </div>
-    <button onClick={resetCf} style={{...S.aset,marginTop:10}}>Restaurar valores por defecto</button>
-  </div>
+  return <div style={S.pg}><h2 style={S.t1}>{"⚙️"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div>
   <div style={{...S.cd,marginTop:16}}>
-    <h3 style={{fontSize:14,color:"#4285F4",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Sincronizaci\u00f3n con Google Drive</h3>
-    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Guarda un archivo <b>forja-data.json</b> en tu Drive y lo mantiene al d\u00eda. As\u00ed ves los mismos datos en el tel\u00e9fono y en la computadora. FORJA solo puede tocar ese archivo: el resto de tu Drive le queda invisible.</p>
+    <h3 style={{fontSize:14,color:"#4285F4",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Sincronización con Google Drive</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Guarda un archivo <b>forja-data.json</b> en tu Drive y lo mantiene al día. Así ves los mismos datos en el teléfono y en la computadora. FORJA solo puede tocar ese archivo: el resto de tu Drive le queda invisible.</p>
     {gd.auto
       ? <div>
           <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(66,133,244,0.08)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
             <span style={{width:8,height:8,borderRadius:4,background:"#2ECC71",flexShrink:0}}></span>
             <div style={{minWidth:0}}>
-              <div style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>Sincronizaci\u00f3n activa</div>
-              <div style={{fontSize:10.5,color:"#888",marginTop:2}}>{gd.last?"\u00daltima vez: "+new Date(gd.last).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Sin sincronizar todav\u00eda"}</div>
+              <div style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>Sincronización activa</div>
+              <div style={{fontSize:10.5,color:"#888",marginTop:2}}>{gd.last?"Última vez: "+new Date(gd.last).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Sin sincronizar todavía"}</div>
             </div>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={gdPush} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"\u2191 Subir ahora"}</button>
-            <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"\u2193 Traer de Drive"}</button>
+            <button onClick={gdPush} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"↑ Subir ahora"}</button>
+            <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"↓ Traer de Drive"}</button>
           </div>
           <button onClick={gdOff} style={{...S.aset,marginTop:8,color:"#777"}}>Desconectar este dispositivo</button>
         </div>
       : gdElegir
       ? <div style={{border:"1px solid rgba(66,133,244,0.4)",borderRadius:12,padding:"14px",background:"rgba(66,133,244,0.06)"}}>
           <div style={{fontSize:13,color:"#FFF",fontWeight:700,marginBottom:4}}>Ya hay datos en Drive</div>
-          <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,marginTop:0,marginBottom:12}}>Eleg\u00ed con cu\u00e1l te qued\u00e1s. Lo otro se pierde.</p>
+          <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,marginTop:0,marginBottom:12}}>Elegí con cuál te quedás. Lo otro se pierde.</p>
           <div style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
             <div style={{fontSize:11,color:"#4285F4",fontWeight:700,letterSpacing:0.5}}>EN DRIVE</div>
             <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rRemoto}</div>
@@ -1149,33 +1284,33 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
             <div style={{fontSize:11,color:"#FF6B35",fontWeight:700,letterSpacing:0.5}}>EN ESTE DISPOSITIVO</div>
             <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rLocal}</div>
           </div>
-          <button onClick={gdUsarDrive} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",fontSize:13,padding:"12px 16px",opacity:gdBusy?0.6:1}}>{"\u2193 Traer lo de Drive"}</button>
-          <button onClick={gdUsarLocal} disabled={gdBusy} style={{...S.aset,marginTop:8,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"\u2191 Subir lo de este dispositivo (pisa Drive)"}</button>
+          <button onClick={gdUsarDrive} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",fontSize:13,padding:"12px 16px",opacity:gdBusy?0.6:1}}>{"↓ Traer lo de Drive"}</button>
+          <button onClick={gdUsarLocal} disabled={gdBusy} style={{...S.aset,marginTop:8,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"↑ Subir lo de este dispositivo (pisa Drive)"}</button>
           <button onClick={()=>{setGdElegir(null);setGdMsg(null)}} style={{...S.aset,marginTop:6,color:"#777"}}>Cancelar</button>
         </div>
       : <button onClick={gdConnect} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",opacity:gdBusy?0.6:1}}>{gdBusy?"Conectando...":"Conectar con Google Drive"}</button>}
     {gdMsg&&<p style={{fontSize:11.5,color:gdMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0,lineHeight:1.5}}>{gdMsg.t}</p>}
-    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Con la sync activa, cada cambio se sube solo unos segundos despu\u00e9s. Si edit\u00e1s en dos dispositivos sin sincronizar en el medio, gana el \u00faltimo que guarda.</p>
+    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Con la sync activa, cada cambio se sube solo unos segundos después. Si editás en dos dispositivos sin sincronizar en el medio, gana el último que guarda.</p>
   </div>
   <div style={{...S.cd,marginTop:16}}>
     <h3 style={{fontSize:14,color:"#3498DB",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Copia de seguridad</h3>
-    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Tus datos viven solo en este dispositivo: no se sincronizan con la computadora ni con otro navegador. Export\u00e1 cada tanto y guard\u00e1 el archivo donde quieras.</p>
+    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Tus datos viven solo en este dispositivo: no se sincronizan con la computadora ni con otro navegador. Exportá cada tanto y guardá el archivo donde quieras.</p>
     <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
       <div style={{fontSize:11,color:"#888",letterSpacing:1,fontWeight:600,marginBottom:8}}>LO QUE HAY GUARDADO</div>
       {Object.keys(stats).map(k=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"2px 0"}}>
         <span style={{fontSize:12,color:"#CCC"}}>{k}</span>
         <span style={{fontSize:12,color:stats[k]>0?"#FFF":"#555",fontWeight:600}}>{stats[k]}</span></div>)}
       <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-        <span style={{fontSize:11,color:"#666"}}>Tama\u00f1o</span>
+        <span style={{fontSize:11,color:"#666"}}>Tamaño</span>
         <span style={{fontSize:11,color:"#666"}}>{bkSize()} KB de ~5.000 disponibles</span></div>
     </div>
-    <button onClick={()=>bkExport(data)} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#3498DB,#2471A3)"}}>{"\u2193"} Exportar backup</button>
+    <button onClick={()=>bkExport(data)} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#3498DB,#2471A3)"}}>{"↓"} Exportar backup</button>
     <label style={{...S.aset,marginTop:10,display:"block",textAlign:"center",lineHeight:"20px"}}>
-      {"\u2191 Importar backup"}
+      {"↑ Importar backup"}
       <input type="file" accept="application/json,.json" onChange={doImport} style={{display:"none"}}/>
     </label>
     {impMsg&&<p style={{fontSize:11.5,color:impMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0}}>{impMsg.t}</p>}
-    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Importar <b>reemplaza</b> todo lo que tengas en este dispositivo. Si ten\u00e9s algo que no quer\u00e9s perder, export\u00e1 primero.</p>
+    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Importar <b>reemplaza</b> todo lo que tengas en este dispositivo. Si tenés algo que no querés perder, exportá primero.</p>
   </div>
   <div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
 }
@@ -1377,7 +1512,24 @@ const FOOD_DB=[
 
 // ─── NUTRITION TAB ───
 function NutritionTab({data,setData,apiKey}){
-  const[view,setView]=useState("home"); // home | add | history | plan | shopping | fooddb
+  const[view,setView]=useState("home"); // home | add | history | plan | shopping | fooddb | objetivos
+  const cf=nutrCfg(data);
+  const bloqueAct=nblock(data);
+  const avisoBl=avisoBloque(data);
+  const semBl=semanasDesde(data.nutrBlock&&data.nutrBlock.desde);
+  const pesoAct=data.anthropometry?.length?(data.anthropometry.slice().sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77.7):77.7;
+  const setCf=(campo,val)=>{const nd={...data,nutrCfg:{...(data.nutrCfg||{}),[campo]:val===""?NUTR_DEF[campo]:Number(val)}};setData(nd);sv(nd)};
+  const resetCf=()=>{const nd={...data};delete nd.nutrCfg;setData(nd);sv(nd)};
+  const setBloque=id=>{const nd={...data,nutrBlock:{id,desde:td()}};setData(nd);sv(nd)};
+  const fila=(campo,etiqueta,ayuda,sufijo)=><div style={{marginBottom:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+      <span style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>{etiqueta}</span>
+      <span style={{fontSize:10,color:"#666"}}>{sufijo}</span></div>
+    <input type="number" inputMode="decimal" value={cf[campo]} onFocus={e=>e.target.select()} onChange={e=>setCf(campo,e.target.value)} style={{...S.inp,marginTop:4}} step="any"/>
+    <div style={{fontSize:10.5,color:"#777",marginTop:3,lineHeight:1.4}}>{ayuda}</div>
+  </div>;
+  const prev=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d=>({d,...nutrTargets(data,d,pesoAct)}));
+  const prom=Math.round(prev.reduce((a,x)=>a+x.kcal,0)/7);
   const[date,setDate]=useState(td());
   const[type,setType]=useState("desayuno");
   const[food,setFood]=useState("");
@@ -1595,9 +1747,9 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
       const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:8000,messages:[{role:"user",content:prompt}]})});
       const d=await r.json();if(d.error)throw new Error(d.error.message);
       const txt=d.content?.map(c=>c.text||"").join("")||"";
-      if(!txt.trim())throw new Error("La IA no devolvi\u00f3 contenido. Intent\u00e1 de nuevo.");
+      if(!txt.trim())throw new Error("La IA no devolvió contenido. Intentá de nuevo.");
       const plan=pj(txt);
-      if(!plan||!plan.days||!plan.days.length)throw new Error("El plan lleg\u00f3 incompleto. Intent\u00e1 regenerar.");
+      if(!plan||!plan.days||!plan.days.length)throw new Error("El plan llegó incompleto. Intentá regenerar.");
       const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
       setData(nd);sv(nd);setAiPlan(plan);setView("plan");
     }catch(e){alert("Error: "+e.message);}
@@ -1689,6 +1841,56 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
   }
 
   // ── ADD VIEW ──
+  if(view==="objetivos")return <div style={S.pg}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setView("home")} style={S.sm}>&#8592;</button><h2 style={{...S.t1,margin:0}}>Objetivos nutricionales</h2></div>
+    <div style={{...S.cd,borderLeft:"3px solid "+bloqueAct.c,background:"linear-gradient(135deg,"+bloqueAct.c+"15,"+bloqueAct.c+"05)"}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600}}>BLOQUE ACTUAL</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6}}>
+        <span style={{fontSize:26}}>{bloqueAct.i}</span>
+        <div><div style={{fontSize:18,fontFamily:"'Oswald',sans-serif",color:bloqueAct.c}}>{bloqueAct.l}</div>
+        <div style={{fontSize:11,color:"#888",marginTop:2}}>{semBl?"Semana "+semBl:"Sin fecha de inicio"}</div></div>
+      </div>
+      <p style={{fontSize:12,color:"#CCC",marginTop:8,marginBottom:0,lineHeight:1.5}}>{bloqueAct.desc}</p>
+    </div>
+    {avisoBl&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.08)"}}>
+      <div style={{fontSize:12,color:"#F39C12",fontWeight:700,marginBottom:4}}>{"\u26A0\uFE0F"} Semana {avisoBl.sem}</div>
+      <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>{avisoBl.texto}</p>
+    </div>}
+    <h3 style={{...S.t1,fontSize:14,marginTop:18}}>Cambiar de bloque</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>Al elegir uno, las calorías de toda la semana se recalculan solas y arranca a contar desde hoy.</p>
+    {NBLOCKS.map(b=><button key={b.id} onClick={()=>{if(b.id!==bloqueAct.id&&window.confirm("Pasar a "+b.l+"? Las calorías pasan a "+(cf.base+b.ajuste)+" en un día normal."))setBloque(b.id)}} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",borderLeft:"3px solid "+(b.id===bloqueAct.id?b.c:"transparent"),opacity:b.id===bloqueAct.id?1:0.65}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+          <span style={{fontSize:20}}>{b.i}</span>
+          <div style={{minWidth:0}}><div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{b.l}{b.id===bloqueAct.id?" · actual":""}</div>
+          <div style={{fontSize:11,color:"#888",marginTop:2,lineHeight:1.4}}>{b.desc}</div></div>
+        </div>
+        <span style={{fontSize:12,color:b.c,fontWeight:700,whiteSpace:"nowrap"}}>{cf.base+b.ajuste}</span>
+      </div></button>)}
+<div style={{...S.cd,marginTop:18}}>
+    <h3 style={{fontSize:14,color:"#2ECC71",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Objetivos nutricionales</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:14,lineHeight:1.5}}>Las calorías se ajustan solas según lo que toca entrenar cada día. Acá movés la base cuando cambies de bloque (déficit, mantenimiento, diet break).</p>
+    {fila("base","Calorías base","Día normal: sesión de tren superior o sábado.","kcal")}
+    {fila("alto","Ajuste día de carga alta","Se suma a la base los días de piernas y el jueves de fútbol.","+kcal")}
+    {fila("bajo","Ajuste día bajo","Se suma a la base los días sin pesas. Usá número negativo.","-kcal")}
+    {fila("prot","Proteína","Por kg de peso. No la bajes de 1,8 en déficit.","g/kg")}
+    {fila("fat","Grasas","Por kg de peso, con piso de "+cf.fatMin+" g.","g/kg")}
+    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginTop:4}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1,fontWeight:600,marginBottom:8}}>CÓMO QUEDA TU SEMANA ({pesoAct} kg)</div>
+      {prev.map(x=><div key={x.d} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0"}}>
+        <span style={{fontSize:12,color:"#CCC"}}>{x.d}</span>
+        <span style={{fontSize:11,color:"#777"}}>{x.p}P {"·"} {x.c}C {"·"} {x.f}G</span>
+        <span style={{fontSize:12,color:LOAD_LBL[x.load].c,fontWeight:700,minWidth:62,textAlign:"right"}}>{x.kcal} kcal</span>
+      </div>)}
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <span style={{fontSize:12,color:"#FFF",fontWeight:700}}>Promedio semanal</span>
+        <span style={{fontSize:13,color:"#FF6B35",fontWeight:700}}>{prom} kcal</span></div>
+    </div>
+    <button onClick={resetCf} style={{...S.aset,marginTop:10}}>Restaurar valores por defecto</button>
+  </div>
+    <p style={{fontSize:10.5,color:"#777",marginTop:14,lineHeight:1.5}}>La proteína no se toca en ningún bloque: se mantiene alta siempre. Lo que sube y baja son los carbohidratos.</p>
+  </div>;
+
   if(view==="add")return <div style={S.pg}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
       <button onClick={()=>{setView("home");setSelFood(null);}} style={S.sm}>&#8592;</button>
@@ -1884,6 +2086,15 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
         <div style={{fontSize:10,color:plan?.shoppingList?"#2ECC71":"#666"}}>{plan?.shoppingList?"Ver lista":"Requiere plan"}</div>
       </button>
     </div>
+    <button onClick={()=>setView("objetivos")} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",marginBottom:16,borderLeft:"3px solid "+bloqueAct.c}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:20}}>{bloqueAct.i}</span>
+          <div><div style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>Objetivos · {bloqueAct.l}</div>
+          <div style={{fontSize:11,color:"#888",marginTop:2}}>{semBl?"Semana "+semBl+" del bloque":"Definí desde cuándo"} · {totalKcal} kcal hoy</div></div>
+        </div>
+        {avisoBl?<span style={{fontSize:11,color:"#F39C12",fontWeight:700}}>{"\u26A0\uFE0F"}</span>:<span style={{fontSize:16,color:bloqueAct.c}}>{"\u2192"}</span>}
+      </div></button>
     <div style={{display:"flex",gap:8,marginBottom:16}}>
       <button onClick={()=>setView("add")} style={{...S.btn,flex:1,padding:"12px 16px",fontSize:14}}>+ Registrar</button>
       <button onClick={()=>setView("history")} style={{...S.sm,padding:"12px 14px",fontSize:12,color:"#AAA"}}>📅</button>
@@ -1921,7 +2132,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 
 // ─── APP ───
 function App(){
-  const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
+  const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[modoTrain,setModoTrain]=useState(null);const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
   useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
   // Si la sync esta activa, avisa cuando Drive tiene algo mas nuevo que este dispositivo
   const[gdNuevo,setGdNuevo]=useState(false);
@@ -1942,7 +2153,7 @@ function App(){
       const nd=await GD.pull();
       const st=bkStats(nd);
       const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
-      if(window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. \u00bfSeguir?")){
+      if(window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. ¿Seguir?")){
         sv(nd);setData(nd);window.location.reload();
       }else setGdNuevo(false);
     }catch(e){window.alert("No se pudo traer de Drive: "+(e.message||""));setGdNuevo(false)}
@@ -1951,18 +2162,17 @@ function App(){
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
     {gdNuevo&&<div style={{position:"sticky",top:0,zIndex:90,background:"linear-gradient(135deg,#4285F4,#2B62C7)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
-      <span style={{fontSize:12,color:"#FFF",lineHeight:1.4}}>Hay datos m\u00e1s nuevos en Drive</span>
+      <span style={{fontSize:12,color:"#FFF",lineHeight:1.4}}>Hay datos más nuevos en Drive</span>
       <span style={{display:"flex",gap:6,flexShrink:0}}>
         <button onClick={traerDeDrive} style={{background:"rgba(255,255,255,0.9)",color:"#2B62C7",border:"none",borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Traer</button>
-        <button onClick={()=>setGdNuevo(false)} style={{background:"none",color:"rgba(255,255,255,0.85)",border:"none",fontSize:16,cursor:"pointer",padding:"0 4px"}}>{"\u00d7"}</button>
+        <button onClick={()=>setGdNuevo(false)} style={{background:"none",color:"rgba(255,255,255,0.85)",border:"none",fontSize:16,cursor:"pointer",padding:"0 4px"}}>{"×"}</button>
       </span>
     </div>}
     <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>ENTRENA CON CIENCIA</span></div>
     <div style={S.cnt}>
-      {tab==="today"&&<TodayTab data={data} onGo={setTab}/>}
+      {tab==="today"&&<TodayTab data={data} onGo={(t,m)=>{setModoTrain(m||null);setTab(t)}}/>}
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
-      {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
-      {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
+      {tab==="train"&&<TrainTab data={data} setData={setData} apiKey={apiKey} modo={modoTrain} setModo={setModoTrain}/>}
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="body"&&<BodyTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
