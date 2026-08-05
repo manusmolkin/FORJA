@@ -320,6 +320,37 @@ goals:["Frecuencia 2 para todos los grupos","RIR 0-1 en aislamientos, RIR 1 en c
 ];
 
 
+
+// ─── RANGOS DE REFERENCIA ───
+// Poblacionales, no diagnósticos. Las bandas de suma de pliegues, IMO e IAM son
+// las del propio informe ISAK; IMC de OMS; % graso de ACE (hombres); cintura de OMS.
+const ANTHRO_REF={
+bmi:{fuente:"OMS",bandas:[{h:18.5,l:"Bajo peso",c:"#3498DB"},{h:25,l:"Normal",c:"#2ECC71"},{h:30,l:"Sobrepeso",c:"#F39C12"},{h:null,l:"Obesidad",c:"#E74C3C"}]},
+body_fat:{fuente:"ACE (hombres)",bandas:[{h:6,l:"Grasa esencial",c:"#3498DB"},{h:14,l:"Atletas",c:"#2ECC71"},{h:18,l:"Fitness",c:"#2ECC71"},{h:25,l:"Aceptable",c:"#F39C12"},{h:null,l:"Obesidad",c:"#E74C3C"}]},
+sum6:{fuente:"ISAK",bandas:[{h:30.1,l:"Excelente",c:"#2ECC71"},{h:51,l:"Muy bueno",c:"#2ECC71"},{h:71,l:"Bueno",c:"#F1C40F"},{h:90.1,l:"Alto",c:"#F39C12"},{h:110.1,l:"Elevado",c:"#E67E22"},{h:null,l:"Muy elevado",c:"#E74C3C"}]},
+imo:{fuente:"ISAK",bandas:[{h:3.51,l:"Muy bajo",c:"#E74C3C"},{h:4.0,l:"Bajo",c:"#E67E22"},{h:4.6,l:"Bueno",c:"#F1C40F"},{h:5.0,l:"Muy bueno",c:"#2ECC71"},{h:null,l:"Excelente",c:"#2ECC71"}]},
+iam:{fuente:"ISAK",bandas:[{h:0.301,l:"Excelente",c:"#2ECC71"},{h:0.40,l:"Muy bueno",c:"#2ECC71"},{h:0.56,l:"Bueno",c:"#F1C40F"},{h:0.71,l:"Elevado",c:"#E67E22"},{h:null,l:"Muy elevado",c:"#E74C3C"}]},
+waist_p:{fuente:"OMS (hombres)",bandas:[{h:94,l:"Bajo riesgo",c:"#2ECC71"},{h:102,l:"Riesgo elevado",c:"#F39C12"},{h:null,l:"Riesgo muy elevado",c:"#E74C3C"}]},
+};
+const clasificar=(id,valor)=>{
+  const r=ANTHRO_REF[id]; if(!r)return null;
+  const v=Number(String(valor).replace(",",".")); if(isNaN(v))return null;
+  for(const b of r.bandas){if(b.h===null||v<b.h)return {l:b.l,c:b.c,fuente:r.fuente}}
+  return null;
+};
+// Texto del rango completo, para mostrar en detalle
+const textoRangos=id=>{
+  const r=ANTHRO_REF[id]; if(!r)return null;
+  let ant=null; const partes=[];
+  r.bandas.forEach(b=>{
+    const desde=ant===null?"":String(Math.round(ant*100)/100);
+    const hasta=b.h===null?"":String(Math.round(b.h*100)/100);
+    partes.push(b.l+": "+(desde&&hasta?desde+"-"+hasta:(hasta?"< "+hasta:"> "+desde)));
+    ant=b.h;
+  });
+  return {fuente:r.fuente,partes};
+};
+
 // ─── RECONOCIMIENTO DE NOMBRES EQUIVALENTES ───
 // Los informes usan nomenclaturas distintas (ISAK, InBody, DEXA). Esto mapea
 // lo que diga el papel al campo que corresponde, en vez de tirarlo a "otros".
@@ -431,6 +462,9 @@ const idPorEtiqueta=(label,unit)=>{
 const repartirExtras=(vals,extras)=>{
   const v={...vals}, sobran=[]; let movidos=0;
   extras.forEach(x=>{
+    const num0=Number(String(x.value).replace(",","."));
+    // filas de tabla de referencia ("Suma de pliegues - rango Alto: 71-90"): la app ya las tiene
+    if(isNaN(num0)&&normLbl(x.label).indexOf(" rango ")>=0)return;
     const id=idPorEtiqueta(x.label,x.unit);
     const num=Number(String(x.value).replace(",","."));
     if(id&&!isNaN(num)&&String(x.value).trim()!==""){
@@ -1066,7 +1100,8 @@ function BodyTab({data,setData,apiKey}){
     try{
       const block=await fileToBlock(file);
       const fields=ANTHRO.map(f=>'"'+f.id+'": '+f.l+(f.u?" ("+f.u+")":"")).join(", ");
-      const txt="Analizá este estudio de composición corporal (antropometría ISAK, InBody, DEXA, balanza, etc.) y extraé ABSOLUTAMENTE TODOS los valores numéricos que figuren. No omitas ninguno, aunque parezca menor o redundante.\n\nCampos conocidos (usá exactamente estos ids): "+fields+"\n\nDevolvé SOLO JSON válido, sin markdown:\n{\"date\":\"YYYY-MM-DD o null\",\"values\":{\"weight\":77.5,\"body_fat\":26.5},\"extras\":[{\"label\":\"nombre tal como figura\",\"value\":\"valor\",\"unit\":\"unidad o vacío\"}]}\n\nReglas:\n- En \"values\" van SOLO los que correspondan a un id conocido. Convertí unidades si hace falta (peso kg, pliegues mm, perímetros cm).\n- En \"extras\" va TODO lo demás que traiga el informe: percentiles, z-scores, sumatorias parciales, proporciones, índices propios del laboratorio, mediciones por segmento. NO descartes nada por no entrar en la lista.\n- Si el informe trae el mismo dato en kg y en %, incluí los dos.\n- Recorré el documento entero, incluidas tablas al pie y páginas siguientes.";
+      const txt="Analizá este estudio de composición corporal (antropometría ISAK, InBody, DEXA, balanza) y extraé TODOS los valores numéricos. No omitas ninguno.\n\nMUY IMPORTANTE: si el informe trae una tabla de MEDICIONES INDIVIDUALES —pliegues cutáneos uno por uno, perímetros, diámetros óseos— extraé CADA FILA por separado. Esa tabla suele estar en una página distinta de la del resumen de composición: buscala. No te quedes solo con las sumatorias ni con la tabla de porcentajes.\n\nCampos conocidos (usá exactamente estos ids): "+fields+"\n\nDevolvé SOLO JSON válido, sin markdown:\n{\"date\":\"YYYY-MM-DD o null\",\"values\":{\"weight\":77.5,\"triceps_f\":12.4},\"extras\":[{\"label\":\"nombre tal como figura\",\"value\":\"valor\",\"unit\":\"unidad o vacío\"}]}\n\nReglas:\n- En \"values\" van los que correspondan a un id conocido, aunque el informe los llame distinto (masa adiposa = fat_mass, pliegue tricipital = triceps_f, sumatoria de 6 pliegues = sum6).\n- En \"extras\" va todo lo demás. NO incluyas las tablas de rangos de referencia (Excelente/Bueno/Alto con sus cortes): esas no son mediciones tuyas.\n- Si el mismo dato figura en kg y en %, incluí los dos.\n- Recorré el documento entero, todas las páginas.";
+
       const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,6000);
       const parsed=pj(resp);
       const nv={};
@@ -1137,6 +1172,11 @@ function BodyTab({data,setData,apiKey}){
         <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>cambiarVal(f.id,e.target.value)} style={{...S.inp,width:78,textAlign:"right",color:derIds.indexOf(f.id)>=0?"#3E9A8C":"#FFF",borderColor:derIds.indexOf(f.id)>=0?"rgba(62,154,140,0.4)":undefined}} step="any" placeholder="-"/>
         <span style={{fontSize:11,color:"#888",width:30}}>{f.u}</span>
       </div>)}
+      {ANTHRO.filter(f=>f.g===g&&vals[f.id]&&clasificar(f.id,vals[f.id])).map(f=>{const cl=clasificar(f.id,vals[f.id]);
+        return <div key={f.id+"-cl"} style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:6,marginTop:-3,marginBottom:7}}>
+          <span style={{fontSize:10,color:"#777"}}>{f.l}</span>
+          <span style={{fontSize:10,fontWeight:700,color:"#0A0A0B",background:cl.c,borderRadius:5,padding:"2px 7px"}}>{cl.l}</span>
+        </div>})}
     </div>)}
     <div style={{marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -1204,7 +1244,12 @@ function BodyTab({data,setData,apiKey}){
         {ANTHRO_G.filter(g=>ANTHRO.some(f=>f.g===g&&latest[f.id])).map(g=><div key={g} style={{marginBottom:14}}>
           <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {ANTHRO.filter(f=>f.g===g&&latest[f.id]).map(f=><button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0}}><span style={{fontSize:11,color:"#888"}}>{f.l}</span><span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span></button>)}
+            {ANTHRO.filter(f=>f.g===g&&latest[f.id]).map(f=>{const cl=clasificar(f.id,latest[f.id]);
+              return <button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0,borderLeft:cl?"3px solid "+cl.c:undefined}}>
+                <span style={{fontSize:11,color:"#888"}}>{f.l}</span>
+                <span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span>
+                {cl&&<span style={{display:"block",fontSize:10,fontWeight:700,color:cl.c,marginTop:3}}>{cl.l}<span style={{color:"#666",fontWeight:400}}> · {cl.fuente}</span></span>}
+              </button>})}
           </div></div>)}
         {(latest._extras||[]).length>0&&<div>
           <div style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>OTROS VALORES DEL INFORME</div>
