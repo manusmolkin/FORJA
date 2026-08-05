@@ -1096,6 +1096,7 @@ function BodyTab({data,setData,apiKey}){
   const[extras,setExtras]=useState([]);
   const[derIds,setDerIds]=useState([]);
   const[interp,setInterp]=useState("");
+  const[selA,setSelA]=useState(null);
   const anthroRef=React.useRef(null);
   // estudios
   const[stView,setStView]=useState("list");
@@ -1261,7 +1262,10 @@ function BodyTab({data,setData,apiKey}){
   </div>;}
 
   // ── VISTA PRINCIPAL ──
-  const latest=(data.anthropometry||[]).length?(data.anthropometry||[]).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+  const meds=[...(data.anthropometry||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  const latest=selA?(meds.find(m=>m.id===selA)||meds[0]):(meds[0]||null);
+  const nVals=m=>ANTHRO.filter(f=>m[f.id]).length+((m._extras||[]).length);
+  const delMed=id=>{if(!window.confirm("¿Borrar esta medición?"))return;const nd={...data,anthropometry:(data.anthropometry||[]).filter(m=>m.id!==id)};setData(nd);sv(nd);setSelA(null)};
   const studies=[...(data.healthStudies||[])].sort((a,b)=>b.date.localeCompare(a.date));
   const subNav=<div style={{display:"flex",gap:8,marginBottom:18}}>
     <button onClick={()=>setSub("anthro")} style={{...S.mb2,flexDirection:"row",flex:1,padding:"10px",border:sub==="anthro"?"2px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",background:sub==="anthro"?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}><span>{"\u{1F4D0}"}</span><span style={{fontSize:12,fontWeight:600,color:sub==="anthro"?"#FFF":"#AAA"}}>Antropometría</span></button>
@@ -1273,8 +1277,22 @@ function BodyTab({data,setData,apiKey}){
       <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
       <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:8,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio (autocompleta)"}</button>
       <button onClick={()=>{setVals({});setExtras([]);setDerIds([]);setInterp("");setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
+      {meds.length>1&&<div style={{marginBottom:14}}>
+        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:8}}>MEDICIONES GUARDADAS ({meds.length})</div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
+          {meds.map(m=><button key={m.id} onClick={()=>setSelA(m.id)} style={{flexShrink:0,padding:"8px 12px",borderRadius:10,cursor:"pointer",
+            border:latest.id===m.id?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",
+            background:latest.id===m.id?"rgba(255,107,53,0.15)":"rgba(255,255,255,0.03)"}}>
+            <div style={{fontSize:12,color:latest.id===m.id?"#FFF":"#AAA",fontWeight:600}}>{fd(m.date)}</div>
+            <div style={{fontSize:10,color:"#777",marginTop:2}}>{nVals(m)} valores</div>
+          </button>)}
+        </div>
+      </div>}
       {latest&&<div style={{marginBottom:16}}>
-        <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <h3 style={{...S.t1,fontSize:14,margin:0}}>{meds[0]&&meds[0].id===latest.id?"Última medición":"Medición"} — {fd(latest.date)}</h3>
+          <button onClick={()=>delMed(latest.id)} style={{...S.sm,fontSize:11,color:"#777"}}>Borrar</button>
+        </div>
         {ANTHRO_G.filter(g=>ANTHRO.some(f=>f.g===g&&latest[f.id])).map(g=><div key={g} style={{marginBottom:14}}>
           <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
@@ -1301,7 +1319,7 @@ function BodyTab({data,setData,apiKey}){
               <span style={{fontSize:13,color:"#FFF",fontWeight:600,whiteSpace:"nowrap"}}>{x.value}<span style={{fontSize:10.5,color:"#888"}}> {x.unit}</span></span>
             </div>)}
           </div></div>}
-        <p style={{fontSize:11,color:"#777",marginTop:10}}>{ANTHRO.filter(f=>latest[f.id]).length+(latest._extras||[]).length} valores registrados. Tocá cualquiera para ver su evolución.</p>
+        <p style={{fontSize:11,color:"#777",marginTop:10}}>{nVals(latest)===1?"1 valor registrado":nVals(latest)+" valores registrados"}. Tocá cualquiera para ver su evolución.</p>
       </div>}
       {!latest&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Sacá una foto o subí el PDF de tu antropometría (ISAK), InBody o DEXA y la app carga los datos sola. También podés cargar manual.</p></div>}
     </div>}
