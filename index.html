@@ -896,12 +896,90 @@ const MEAL_TYPES=[
   {id:"suplemento",l:"Suplemento",i:"💊"},
 ];
 
+// ─── CÓMO SE REGISTRA CADA EJERCICIO ───
+// "bi"   = un solo peso, los dos lados a la vez (barra, máquina, polea con barra)
+// "mano" = una mancuerna por mano, las dos a la vez: cada brazo puede rendir distinto
+// "uni"  = un lado por vez: la serie cubre los dos lados
+const EX_MODE={
+// Pecho
+"Press banca":"bi","Press banca plano (mancuernas)":"mano","Press inclinado":"bi","Press inclinado (mancuernas)":"mano",
+"Press declinado":"bi","Press mancuernas":"mano","Press maquina":"bi","Aperturas":"mano","Cruces polea":"bi",
+"Peck deck":"bi","Fondos":"bi","Pull-over mancuerna":"bi",
+// Espalda
+"Dominadas":"bi","Dominadas asistidas":"bi","Jalon al pecho":"bi","Jalon agarre neutro":"bi","Jalon agarre supino":"bi",
+"Remo barra":"bi","Remo mancuerna":"uni","Remo con apoyo en banco":"mano","Remo en T":"bi","Remo polea baja":"bi",
+"Remo maquina":"bi","Pull-over":"bi","Encogimiento hombros":"mano","Hiperextension 45":"bi","Superman":"bi",
+// Hombros
+"Press militar":"bi","Press militar (mancuernas)":"mano","Press Arnold":"mano","Press maquina hombro":"bi",
+"Elev. laterales":"mano","Elev. laterales polea":"uni","Elev. frontales":"mano","Pajaros":"mano",
+"Face pull":"bi","Remo al menton":"bi",
+// Biceps
+"Curl barra":"bi","Curl mancuernas":"mano","Curl inclinado":"mano","Curl martillo":"mano",
+"Curl concentrado":"uni","Curl polea":"bi","Curl predicador":"mano","Curl arana":"mano",
+// Triceps
+"Extension polea":"bi","Extension polea soga":"bi","Extension cabeza":"bi","Press frances":"bi",
+"Patada triceps":"uni","Press cerrado":"bi","Fondos banco":"bi","Fondos paralelas":"bi",
+// Piernas
+"Sentadilla":"bi","Sentadilla frontal":"bi","Sentadilla goblet":"bi","Sentadilla hack":"bi","Prensa":"bi",
+"Extension cuadriceps":"bi","Curl femoral":"bi","Curl femoral sentado":"bi","Curl femoral tumbado":"bi",
+"Peso muerto rumano":"bi","Peso muerto convencional":"bi","Buenos dias":"bi",
+"Zancadas":"uni","Zancadas caminando":"uni","Sentadilla bulgara":"uni","Step up":"uni","Hip thrust":"bi",
+// Gluteos
+"Hip thrust unilateral":"uni","Peso muerto sumo":"bi","Peso muerto rumano unilateral":"uni",
+"Patada gluteo":"uni","Abduccion cadera":"bi","Puente gluteo":"bi","Frog pump":"bi",
+// Gemelos
+"Gemelo de pie":"bi","Gemelo sentado":"bi","Gemelo en prensa":"bi","Gemelo burro":"bi","Gemelo unilateral":"uni",
+// Abdomen
+"Crunch":"bi","Crunch polea":"bi","Plancha":"bi","Plancha lateral":"uni","Ab wheel":"bi",
+"Elevacion piernas":"bi","Elevacion piernas colgado":"bi","Russian twist":"bi","Pallof press":"uni",
+"Crunch inverso":"bi","Crunch maquina":"bi","Elevacion rodillas colgado":"bi","Dead bug":"uni","Bird dog":"uni",
+// Antebrazos
+"Curl muneca":"mano","Curl reverso":"bi","Pronacion/supinacion":"uni","Extension muneca isometrica":"uni",
+"Farmer walk":"bi","Dead hang":"bi",
+};
+const MODO_INFO={
+bi:{l:"Bilateral",d:"Un solo peso, los dos lados a la vez",c:"#888",lados:false},
+mano:{l:"Mancuernas",d:"Una por mano: cada lado puede rendir distinto",c:"#3498DB",lados:true},
+uni:{l:"Unilateral",d:"Un lado por vez: la serie cubre los dos",c:"#F39C12",lados:true},
+};
+// Modo de un ejercicio: primero el catálogo, después palabras clave, y bilateral por defecto
+const exModo=n=>{
+  if(EX_MODE[n])return EX_MODE[n];
+  const t=normLbl(n);
+  if(t.indexOf("unilateral")>=0||t.indexOf("bulgara")>=0||t.indexOf("zancada")>=0||t.indexOf("concentrado")>=0||t.indexOf("step up")>=0||t.indexOf("patada")>=0)return "uni";
+  if(t.indexOf("mancuerna")>=0||t.indexOf("mancuernas")>=0)return "mano";
+  return "bi";
+};
+
 // ─── EJERCICIOS UNILATERALES (se registran por lado) ───
-const UNI_NAMES=["Sentadilla bulgara","Zancadas","Zancadas caminando","Step up","Remo mancuerna","Remo unilateral polea","Curl concentrado","Patada gluteo","Curl femoral unilateral","Gemelo unilateral","Hip thrust unilateral","Peso muerto rumano unilateral","Plancha lateral","Pallof press","Pronacion/supinacion","Farmer walk"];
-const UNI_KEYS=["unilateral","bulgara","zancada","step up","concentrado","patada gluteo","remo mancuerna","plancha lateral","pallof","pronacion"];
-const isUni=n=>{const t=String(n||"").toLowerCase();return UNI_NAMES.some(u=>u.toLowerCase()===t)||UNI_KEYS.some(k=>t.indexOf(k)>=0)};
+const isUni=n=>MODO_INFO[exModo(n)].lados;
 // reps totales de una serie (unilateral = izq + der)
 const setReps=st=>(Number(st.reps)||0)+(Number(st.repsR)||0);
+
+// ─── AJUSTES DEL COACH ───
+// Lo que el coach recomienda tras una sesión, aplicado la próxima vez que hagas
+// ese ejercicio. Nunca se aplica en silencio: siempre se ve y se puede editar.
+const ajusteDe=(data,nombre)=>{
+  const a=data.coachAdjust;
+  if(!a||!Array.isArray(a.items))return null;
+  const n=normLbl(nombre);
+  const it=a.items.find(x=>normLbl(x.ejercicio)===n);
+  if(!it)return null;
+  if((a.usados||[]).indexOf(it.ejercicio)>=0)return null;
+  return {...it,fecha:a.date};
+};
+const marcarAjusteUsado=(data,setData,nombre)=>{
+  const a=data.coachAdjust; if(!a)return;
+  const it=(a.items||[]).find(x=>normLbl(x.ejercicio)===normLbl(nombre));
+  if(!it)return;
+  const nd={...data,coachAdjust:{...a,usados:[...(a.usados||[]),it.ejercicio]}};
+  setData(nd);sv(nd);
+};
+const ajustesPendientes=data=>{
+  const a=data.coachAdjust;
+  if(!a||!Array.isArray(a.items))return [];
+  return a.items.filter(x=>(a.usados||[]).indexOf(x.ejercicio)<0);
+};
 
 function tgt(hist){
   if(!hist?.length)return null;
@@ -921,7 +999,12 @@ function buildPrompt(ses,all,fb,meals){
   const recent=all.slice(-5).map(s=>fd(s.date)+": "+[...new Set(s.exercises.map(e=>MG[e.muscleGroup]?.l))].join(", ")).join("\n");
   const todayMeals=(meals||[]).filter(m=>m.date===ses.date);
   const nutCtx=todayMeals.length>0?"Alimentacion del dia:\n"+todayMeals.map(m=>{let txt=MEAL_TYPES.find(t=>t.id===m.type)?.l+": "+m.food;if(m.kcal)txt+=" ("+m.kcal+"kcal";if(m.protein)txt+=", "+m.protein+"g prot";if(m.carbs)txt+=", "+m.carbs+"g carb";if(m.fat)txt+=", "+m.fat+"g grasa";if(m.kcal||m.protein)txt+=")";return txt}).join("\n"):"";
-  return "Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).\nSesion completada:\nFecha: "+fd(ses.date)+"\nEjercicios:\n"+exd+"\nRecientes:\n"+recent+"\n"+(nutCtx?nutCtx+"\n":"")+"\nComentario: \""+fb+"\"\n\nEl usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.\nResponde en espanol, conciso (max 220 palabras). Evalua:\n1. Volumen e intensidad (son adecuados para su nivel actual?)\n2. Recomendaciones concretas para la proxima sesion\n3. Si deberia mantenerse en la fase actual o avanzar a la siguiente\n4. Frecuencia y recuperacion\n"+(nutCtx?"5. Comentario breve sobre la alimentacion del dia en relacion al entreno\n":"")+"Se directo y practico.";
+  const cat=[...new Set(ses.exercises.map(e=>e.name))].join(", ");
+  return "Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).\nSesion completada:\nFecha: "+fd(ses.date)+"\nEjercicios:\n"+exd+"\nRecientes:\n"+recent+"\n"+(nutCtx?nutCtx+"\n":"")+"\nComentario: \""+fb+"\"\n\nEl usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.\nResponde en espanol, conciso (max 220 palabras). Evalua:\n1. Volumen e intensidad (son adecuados para su nivel actual?)\n2. Recomendaciones concretas para la proxima sesion\n3. Si deberia mantenerse en la fase actual o avanzar a la siguiente\n4. Frecuencia y recuperacion\n"+(nutCtx?"5. Comentario breve sobre la alimentacion del dia en relacion al entreno\n":"")+"Se directo y practico. No uses markdown ni asteriscos: texto plano.\n\n"
+  +"DESPUES del texto, agrega una linea con exactamente ---AJUSTES--- y debajo SOLO un JSON con los cambios concretos para la proxima vez que haga cada ejercicio:\n"
+  +"{\"ajustes\":[{\"ejercicio\":\"nombre exacto de la lista\",\"peso\":numero o null,\"series\":numero o null,\"reps\":\"8-10\" o null,\"motivo\":\"una frase corta\"}],\"avanzarFase\":true o false,\"motivoFase\":\"una frase\"}\n"
+  +"Reglas del JSON: usa los nombres de ejercicio TAL CUAL aparecen en esta lista: "+cat+". Incluí SOLO los ejercicios que realmente cambian (si algo se mantiene igual, no lo pongas). Los campos que no cambian van en null. Si no hay ningun cambio, devolve \"ajustes\":[].";
+
 }
 
 async function callAI(prompt,key){
@@ -1137,7 +1220,11 @@ function PlanTab({data,setData}){
       <p style={{fontSize:11.5,color:"#999",marginTop:0,marginBottom:8,lineHeight:1.5}}>Con esa fecha la app sabe en qué semana estás y te avisa cuando te toca cambiar de fase. No cambia nada sola.</p>
       <input type="date" value={td()} onChange={e=>setInicio(e.target.value)} style={S.inp}/>
     </div>}
-    {sug&&sug.fase!==pi&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.08)"}}>
+    {sug&&sug.fase!==pi&&data.coachAdjust&&data.coachAdjust.avanzarFase===false&&<div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.07)"}}>
+      <div style={{fontSize:12,color:"#9B59B6",fontWeight:700,marginBottom:4}}>{"\u{1F9E0}"} El coach dice esperar</div>
+      <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>Por calendario ya sería {PHASES[sug.fase].name}, pero después de tu sesión del {fd(data.coachAdjust.date)} el coach recomendó quedarte donde estás{data.coachAdjust.motivoFase?": "+data.coachAdjust.motivoFase:"."}</p>
+    </div>}
+    {sug&&sug.fase!==pi&&!(data.coachAdjust&&data.coachAdjust.avanzarFase===false)&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.08)"}}>
       <div style={{fontSize:12,color:"#F39C12",fontWeight:700,marginBottom:4}}>{"\u26A0\uFE0F"} Semana {sug.semana} del plan</div>
       <p style={{fontSize:12,color:"#CCC",marginTop:0,marginBottom:10,lineHeight:1.5}}>Por calendario ya te toca <b style={{color:"#FFF"}}>{PHASES[sug.fase].name}</b>, pero seguís en {ph.name}. Cambiá cuando te sientas listo: si faltaste o venís cansado, quedate donde estás.</p>
       <button onClick={()=>{if(window.confirm("Pasar a "+PHASES[sug.fase].name+"?"))pasarAFase(sug.fase)}} style={{...S.btn,width:"100%",padding:"11px 16px",fontSize:13,background:"linear-gradient(135deg,#F39C12,#D68910)"}}>Pasar a {PHASES[sug.fase].name}</button>
@@ -1543,6 +1630,17 @@ function TrainTab({data,setData,apiKey,modo,setModo}){
       <div style={{fontSize:14,color:sess?"#FFF":"#888",fontWeight:600,marginTop:4}}>{sess?sess.name:(SPORT_DAYS[hoy]?SPORT_DAYS[hoy]:"Sin pesas programadas")}</div>
       <div style={{fontSize:11.5,color:"#999",marginTop:6,lineHeight:1.5}}>{DAY_CARDIO[hoy]}</div>
     </div>
+    {(()=>{const pend=ajustesPendientes(data);const a=data.coachAdjust;
+      return pend.length>0&&<div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.06)"}}>
+        <div style={{fontSize:12,color:"#9B59B6",fontWeight:700,marginBottom:2}}>{"\u{1F9E0}"} Ajustes del coach</div>
+        <p style={{fontSize:11,color:"#888",margin:"0 0 8px"}}>De tu sesión del {fd(a.date)}. Se aplican solos cuando agregues el ejercicio.</p>
+        {pend.map((x,i)=><div key={i} style={{padding:"6px 0",borderTop:i?"1px solid rgba(255,255,255,0.05)":"none"}}>
+          <div style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>{x.ejercicio}</div>
+          <div style={{fontSize:11.5,color:"#C39BD3",marginTop:2}}>{[x.peso!=null?x.peso+" kg":null,x.series!=null?x.series+" series":null,x.reps!=null?x.reps+" reps":null].filter(Boolean).join(" \u00b7 ")||"sin cambio de carga"}</div>
+          {x.motivo&&<div style={{fontSize:11,color:"#999",marginTop:2,fontStyle:"italic"}}>{x.motivo}</div>}
+        </div>)}
+        {a.avanzarFase===false&&a.motivoFase&&<p style={{fontSize:11,color:"#F39C12",marginTop:8,marginBottom:0}}>{"\u26A0\uFE0F"} El coach dice todavía no avanzar de fase: {a.motivoFase}</p>}
+      </div>;})()}
     <button onClick={()=>setModo("pesas")} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block",borderLeft:"3px solid "+ph.c}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -1566,14 +1664,27 @@ function WorkoutTab({data,setData,apiKey}){
   const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
   const start=(f)=>{setSes({id:gi(),date:f||td(),exercises:[]});setSg(null);setExQ("")};
   const setFecha=f=>setSes(x=>({...x,date:f}));
-  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const t2=tgt(hist);const uni=isUni(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));setSg(null);setExQ("")};
+  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const aj=ajusteDe(data,name);const t0=tgt(hist);const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" \u2192 "+aj.peso+"kg":"")+(aj.series!=null?" \u00b7 "+aj.series+" series":"")+(aj.reps!=null?" \u00b7 "+aj.reps+" reps":""),coach:true}:t0;const modo=exModo(name);const uni=MODO_INFO[modo].lados;const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,modo,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));if(aj)marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
   const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:f==="done"?v:(v===""?"":Number(v))}:st)}:ex)}));
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{if(ex.id!==eid)return ex;const l=ex.sets.at(-1)||{};const nx={weight:l.weight??"",reps:l.reps??"",done:false};if(ex.uni)nx.repsR=l.repsR??"";return{...ex,sets:[...ex.sets,nx]}})}));
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
   const rmEx=eid=>setSes(s=>({...s,exercises:s.exercises.filter(ex=>ex.id!==eid)}));
   const togEx=eid=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,closed:!ex.closed}:ex)}));
+  // Cambiar cómo se registra: útil si hoy hiciste con barra lo que solés hacer con mancuernas
+  const cicloModo=eid=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{
+    if(ex.id!==eid)return ex;
+    const orden=["bi","mano","uni"], m2=orden[(orden.indexOf(ex.modo||"bi")+1)%3], lados=MODO_INFO[m2].lados;
+    const sets=ex.sets.map(st=>{const o={...st};if(lados&&o.repsR===undefined)o.repsR=o.reps;if(!lados)delete o.repsR;return o});
+    return {...ex,modo:m2,uni:lados,sets};
+  })}));
   const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns};
-    if(apiKey){try{const txt=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
+    if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);
+      const corte=raw.indexOf("---AJUSTES---");
+      const txt=(corte>=0?raw.slice(0,corte):raw).trim();
+      let aj=null;
+      if(corte>=0){try{const j=pj(raw.slice(corte+13));if(j&&Array.isArray(j.ajustes))aj={date:toSave.date,sessionId:toSave.id,items:j.ajustes.filter(x=>x&&x.ejercicio),avanzarFase:!!j.avanzarFase,motivoFase:j.motivoFase||""}}catch(e){}}
+      if(aj)nd.coachAdjust=aj;
+      setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
     else{setAiRes("Sin API key. Sesion guardada. Anda a Config.")}
     setData(nd);sv(nd);setAiLoad(false)};
   const reset=()=>{setSes(null);setShowFb(false);setFb("");setAiRes("")};
@@ -1615,8 +1726,12 @@ function WorkoutTab({data,setData,apiKey}){
           <button onClick={()=>togEx(ex.id)} style={{...S.sm,color:"#888",whiteSpace:"nowrap"}}>Reabrir</button>
         </div></div>;
       return <div key={ex.id} style={S.cd}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3>{uni&&<div style={{fontSize:10,color:"#F39C12",fontWeight:700,marginTop:3,letterSpacing:0.5}}>{"↔ UNILATERAL — REPS POR LADO"}</div>}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
-      {ex.targets&&<div style={S.tbdg}>{"\u{1F3AF}"} {ex.targets.suggestion}</div>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3>{(()=>{const mi=MODO_INFO[ex.modo||(uni?"uni":"bi")];
+        return <button onClick={()=>cicloModo(ex.id)} style={{background:"none",border:"none",padding:"3px 0 0",cursor:"pointer",textAlign:"left",display:"block"}}>
+          <span style={{fontSize:10,color:mi.c,fontWeight:700,letterSpacing:0.5}}>{(mi.lados?"↔ ":"")+mi.l.toUpperCase()}</span>
+          <span style={{fontSize:10,color:"#666",marginLeft:6}}>{mi.d} · tocá para cambiar</span>
+        </button>})()}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
+      {ex.targets&&<div style={{...S.tbdg,...(ex.targets.coach?{background:"rgba(155,89,182,0.12)",border:"1px solid rgba(155,89,182,0.35)",color:"#C39BD3"}:{})}}>{ex.targets.coach?"\u{1F9E0}":"\u{1F3AF}"} {ex.targets.suggestion}</div>}
       <div style={{marginTop:12}}>
         <div style={{display:"grid",gridTemplateColumns:gt,gap:6,marginBottom:6}}><span style={S.colh}>#</span><span style={S.colh}>Kg</span><span style={S.colh}>{uni?"Izq":"Reps"}</span>{uni&&<span style={S.colh}>Der</span>}<span style={S.colh}>Ok</span><span></span></div>
         {ex.sets.map((set,idx)=><div key={idx} style={{display:"grid",gridTemplateColumns:gt,gap:6,alignItems:"center",marginBottom:4,opacity:set.done?0.6:1}}>
@@ -1631,10 +1746,10 @@ function WorkoutTab({data,setData,apiKey}){
           <button onClick={()=>addSet(ex.id)} style={{...S.aset,flex:1,marginTop:0}}>+ Serie</button>
           <button onClick={()=>togEx(ex.id)} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",borderColor:todas?"#2ECC71":"rgba(255,255,255,0.12)",color:todas?"#2ECC71":"#888",fontWeight:todas?700:400}}>{"✓ Listo"}</button>
         </div>
-        {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series · "+sl+" reps izq / "+sr+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{(sl+sr)+" repeticiones totales"}</span></div>}
+        {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series · "+sl+" reps izq / "+sr+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{(sl+sr)+" repeticiones totales"}</span><br/><span style={{color:"#666"}}>{ex.modo==="mano"?"El peso es por mancuerna, no la suma de las dos":"La serie cuenta los dos lados"}</span></div>}
       </div></div>;
     })}
-    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>!exQ.trim()||n.toLowerCase().includes(exQ.trim().toLowerCase())).map(n=><button key={n} onClick={()=>addEx(n,sg)} style={S.eo}>{n}</button>)}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
+    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>!exQ.trim()||n.toLowerCase().includes(exQ.trim().toLowerCase())).map(n=>{const mi=MODO_INFO[exModo(n)];return <button key={n} onClick={()=>addEx(n,sg)} style={S.eo}><span>{n}</span><span style={{fontSize:10,color:mi.c,fontWeight:600,whiteSpace:"nowrap"}}>{mi.lados?"Izq/Der":""}</span></button>})}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
     {ses.exercises.length>0&&<button onClick={()=>setShowFb(true)} style={{...S.btn,marginTop:24,width:"100%"}}>Finalizar {"\u{1F525}"}</button>}
   </div>;
 }
