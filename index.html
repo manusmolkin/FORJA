@@ -68,12 +68,14 @@ rowing:{l:"Remo",i:"\u{1F6A3}",u:"m",su:"min"},stairs:{l:"Escaleras",i:"\u{1FA9C
 const ANTHRO=[
 // Básicos
 {id:"weight",l:"Peso",u:"kg",g:"Básico"},{id:"height",l:"Talla",u:"cm",g:"Básico"},
-{id:"bmi",l:"IMC",u:"",g:"Básico"},{id:"bmr",l:"Metabolismo basal",u:"kcal",g:"Básico"},
+{id:"bmi",l:"IMC",u:"",g:"Básico"},{id:"bmr",l:"Metabolismo basal",u:"kcal",g:"Básico"},{id:"age",l:"Edad",u:"años",g:"Básico"},
 // Composición corporal
 {id:"body_fat",l:"% Grasa corporal",u:"%",g:"Composición"},{id:"fat_mass",l:"Masa grasa",u:"kg",g:"Composición"},
 {id:"muscle_mass",l:"Masa muscular",u:"kg",g:"Composición"},{id:"muscle_pct",l:"% Masa muscular",u:"%",g:"Composición"},
 {id:"lean_mass",l:"Masa magra (libre de grasa)",u:"kg",g:"Composición"},{id:"bone_mass",l:"Masa ósea",u:"kg",g:"Composición"},
-{id:"residual_mass",l:"Masa residual",u:"kg",g:"Composición"},{id:"body_water",l:"Agua corporal",u:"%",g:"Composición"},
+{id:"residual_mass",l:"Masa residual",u:"kg",g:"Composición"},{id:"residual_pct",l:"% Masa residual",u:"%",g:"Composición"},
+{id:"bone_pct",l:"% Masa ósea",u:"%",g:"Composición"},{id:"skin_mass",l:"Masa de la piel",u:"kg",g:"Composición"},{id:"skin_pct",l:"% Masa de la piel",u:"%",g:"Composición"},
+{id:"body_water",l:"Agua corporal",u:"%",g:"Composición"},
 {id:"visceral_fat",l:"Grasa visceral",u:"",g:"Composición"},
 // Índices
 {id:"sum6",l:"Suma 6 pliegues",u:"mm",g:"Índices"},{id:"sum8",l:"Suma 8 pliegues",u:"mm",g:"Índices"},
@@ -316,6 +318,115 @@ cardio:"Z2 30-40 min martes y viernes. Miercoles suave. Sabado tirada larga 45-5
 goals:["Frecuencia 2 para todos los grupos","RIR 0-1 en aislamientos, RIR 1 en compuestos","Deload cada 4-5 semanas","Tercera antropometria ISAK"]
 },
 ];
+
+
+// ─── RECONOCIMIENTO DE NOMBRES EQUIVALENTES ───
+// Los informes usan nomenclaturas distintas (ISAK, InBody, DEXA). Esto mapea
+// lo que diga el papel al campo que corresponde, en vez de tirarlo a "otros".
+const ANTHRO_ALIAS={
+weight:["peso","masa total","masa corporal","masa corporal total","peso corporal"],
+height:["talla","estatura","altura"],
+bmi:["imc","bmi","indice de masa corporal"],
+bmr:["metabolismo basal","tmb","bmr","gasto energetico basal","metabolismo basal estimado"],
+age:["edad"],
+body_fat:["porcentaje adiposo","porcentaje graso","porcentaje de grasa","porcentaje de masa grasa","porcentaje tejido adiposo","porcentaje de tejido adiposo","grasa corporal","adiposidad relativa","masa adiposa relativa","porcentaje grasa","grasa"],
+fat_mass:["masa adiposa","masa grasa","masa de grasa","tejido adiposo","masa de tejido adiposo"],
+muscle_mass:["masa muscular","tejido muscular","masa de tejido muscular","masa musculo esqueletica","masa muscular esqueletica"],
+muscle_pct:["porcentaje muscular","porcentaje de masa muscular","porcentaje tejido muscular","porcentaje de tejido muscular"],
+lean_mass:["masa magra","masa libre de grasa","mlg","masa corporal magra","ffm","peso libre de grasa"],
+bone_mass:["masa osea","tejido oseo","masa de hueso","masa de tejido oseo"],
+bone_pct:["porcentaje oseo","porcentaje de masa osea","porcentaje tejido oseo"],
+residual_mass:["masa residual","tejido residual"],
+residual_pct:["porcentaje residual","porcentaje de masa residual"],
+skin_mass:["masa de la piel","masa piel","masa cutanea","tejido cutaneo"],
+skin_pct:["porcentaje cutaneo","porcentaje de la piel","porcentaje piel"],
+body_water:["agua corporal","agua corporal total","porcentaje de agua","act"],
+visceral_fat:["grasa visceral","nivel de grasa visceral"],
+sum6:["suma 6 pliegues","suma de 6 pliegues","sumatoria 6 pliegues","sumatoria de 6 pliegues","sumatoria de seis pliegues","z6"],
+sum8:["suma 8 pliegues","suma de 8 pliegues","sumatoria 8 pliegues","sumatoria de 8 pliegues"],
+imo:["imo","indice musculo oseo","indice musculo hueso"],
+iam:["iam","indice adiposo muscular","indice adipo muscular","indice adiposo sobre muscular"],
+somatotype:["somatotipo"],
+neck_p:["perimetro cuello","perimetro de cuello","circunferencia cuello","cuello"],
+chest_p:["perimetro pecho","perimetro toracico","perimetro de torax","circunferencia pecho","torax","pecho"],
+waist_p:["perimetro cintura","perimetro de cintura","circunferencia cintura","cintura"],
+hip_p:["perimetro cadera","perimetro de cadera","circunferencia cadera","cadera","gluteo maximo"],
+arm_p:["perimetro brazo relajado","brazo relajado","perimetro brazo","circunferencia brazo"],
+arm_flex_p:["perimetro brazo flexionado","brazo flexionado","brazo contraido","perimetro brazo tenso"],
+forearm_p:["perimetro antebrazo","antebrazo"],
+thigh_p:["perimetro muslo","muslo medio","perimetro muslo medio","circunferencia muslo"],
+calf_p:["perimetro pantorrilla","pantorrilla","perimetro gemelo","perimetro pierna"],
+triceps_f:["pliegue triceps","pliegue tricipital","triceps"],
+biceps_f:["pliegue biceps","pliegue bicipital","biceps"],
+subscap_f:["pliegue subescapular","subescapular"],
+supra_f:["pliegue suprailiaco","suprailiaco","pliegue iliocrestal","iliocrestal"],
+supraspinal_f:["pliegue supraespinal","supraespinal"],
+abd_f:["pliegue abdominal","abdominal"],
+chest_f:["pliegue pectoral","pectoral","pliegue pecho"],
+axilar_f:["pliegue axilar medio","axilar medio","pliegue axilar"],
+thigh_f:["pliegue muslo","pliegue muslo anterior","muslo anterior"],
+calf_f:["pliegue pantorrilla","pliegue pierna","pliegue gemelo","pantorrilla medial"],
+humerus_d:["diametro humero","diametro biepicondileo humero","biepicondileo humeral","humero"],
+femur_d:["diametro femur","diametro biepicondileo femur","biepicondileo femoral","femur"],
+wrist_d:["diametro muneca","diametro biestiloideo","muneca"],
+biacromial_d:["diametro biacromial","biacromial"],
+};
+// texto -> minusculas, sin acentos, sin puntuacion
+const normLbl=t=>{
+  const x=String(t||"").toLowerCase().normalize("NFD");
+  let o="";
+  for(const ch of x){
+    const c=ch.charCodeAt(0);
+    if(c>=768&&c<=879)continue;
+    o+=((ch>="a"&&ch<="z")||(ch>="0"&&ch<="9"))?ch:" ";
+  }
+  return " "+o.split(" ").filter(Boolean).join(" ")+" ";
+};
+// Pares [alias, id] ordenados de mas largo a mas corto, para que gane el mas especifico
+const ALIAS_PARES=(()=>{const out=[];Object.keys(ANTHRO_ALIAS).forEach(id=>ANTHRO_ALIAS[id].forEach(a=>out.push([" "+a+" ",id])));return out.sort((x,y)=>y[0].length-x[0].length)})();
+const idPorEtiqueta=(label,unit)=>{
+  const l=normLbl(label), u=normLbl(unit);
+  const esPct=u.indexOf(" ")>=0&&String(unit||"").indexOf("%")>=0;
+  for(const [a,id] of ALIAS_PARES){
+    if(l.indexOf(a)<0)continue;
+    const f=ANTHRO.find(x=>x.id===id);
+    if(!f)continue;
+    // no meter un porcentaje en un campo de kg ni al reves
+    if(esPct&&f.u&&f.u!=="%")continue;
+    if(!esPct&&f.u==="%"&&String(unit||"")!=="")continue;
+    return id;
+  }
+  return null;
+};
+// Reparte los extras en los campos conocidos. Devuelve {vals, extras, movidos}
+const repartirExtras=(vals,extras)=>{
+  const v={...vals}, sobran=[]; let movidos=0;
+  extras.forEach(x=>{
+    const id=idPorEtiqueta(x.label,x.unit);
+    const num=Number(String(x.value).replace(",","."));
+    if(id&&!isNaN(num)&&String(x.value).trim()!==""){
+      if(v[id]===undefined||v[id]===""){v[id]=String(num);movidos++;return}
+      const prev=Number(String(v[id]).replace(",","."));
+      if(!isNaN(prev)&&prev!==0&&Math.abs(num-prev)/Math.abs(prev)<0.05)return; // duplicado, se descarta
+    }
+    sobran.push(x);
+  });
+  return {vals:v,extras:sobran,movidos};
+};
+// Completa lo que se puede calcular a partir de lo que ya hay
+const derivarAnthro=v=>{
+  const n=k=>{const x=Number(String(v[k]).replace(",","."));return isNaN(x)?null:x};
+  const o={...v}; let calc=0;
+  const set=(k,val)=>{if((o[k]===undefined||o[k]==="")&&val!=null&&isFinite(val)){o[k]=String(Math.round(val*10)/10);calc++}};
+  const P=n("weight"), H=n("height"), GP=n("body_fat"), GM=n("fat_mass"), MM=n("muscle_mass");
+  if(P&&H)set("bmi",P/Math.pow(H/100,2));
+  if(P&&GP!=null&&GM==null)set("fat_mass",P*GP/100);
+  if(P&&GM!=null&&GP==null)set("body_fat",GM/P*100);
+  const GM2=n("fat_mass");
+  if(P&&GM2!=null)set("lean_mass",P-GM2);
+  if(P&&MM!=null)set("muscle_pct",MM/P*100);
+  return {vals:o,calc};
+};
 
 // ─── PORCIONES QUE TRABAJA CADA EJERCICIO ───
 const EXP={
@@ -914,11 +1025,15 @@ function BodyTab({data,setData,apiKey}){
       const parsed=pj(resp);
       const nv={};
       Object.entries(parsed.values||{}).forEach(([k,v])=>{if(ANTHRO.some(f=>f.id===k)&&v!=null&&v!=="")nv[k]=String(v)});
-      const ex=(Array.isArray(parsed.extras)?parsed.extras:[]).filter(x=>x&&x.label&&x.value!=null&&x.value!=="").map(x=>({label:String(x.label),value:String(x.value),unit:String(x.unit||"")}));
-      if(!Object.keys(nv).length&&!ex.length){setExNote("No se reconocieron valores. Probá una foto más nítida o cargá manual.");setExLoad(false);return;}
-      setVals(nv);setExtras(ex);
+      const ex0=(Array.isArray(parsed.extras)?parsed.extras:[]).filter(x=>x&&x.label&&x.value!=null&&x.value!=="").map(x=>({label:String(x.label),value:String(x.value),unit:String(x.unit||"")}));
+      if(!Object.keys(nv).length&&!ex0.length){setExNote("No se reconocieron valores. Probá una foto más nítida o cargá manual.");setExLoad(false);return;}
+      // los que vinieron con otro nombre se reubican en su campo; después se calcula lo derivable
+      const rp=repartirExtras(nv,ex0);
+      const dv=derivarAnthro(rp.vals);
+      const ex=rp.extras;
+      setVals(dv.vals);setExtras(ex);
       if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setDate(parsed.date);
-      setExNote("Se extrajeron "+Object.keys(nv).length+" valores conocidos"+(ex.length?" y "+ex.length+" adicionales":"")+". Revisalos y guardá.");
+      setExNote("Se cargaron "+Object.keys(dv.vals).length+" valores"+(rp.movidos?" ("+rp.movidos+" reconocidos por nombre equivalente)":"")+(dv.calc?", "+dv.calc+" calculados":"")+(ex.length?" y quedaron "+ex.length+" adicionales":"")+". Revisalos y guardá.");
       setAdding(true);
     }catch(err){alert("Error al analizar: "+err.message);}
     setExLoad(false);
@@ -980,7 +1095,10 @@ function BodyTab({data,setData,apiKey}){
     <div style={{marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
         <span style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700}}>OTROS VALORES DEL INFORME</span>
-        <button onClick={()=>setExtras([...extras,{label:"",value:"",unit:""}])} style={{...S.sm,fontSize:11}}>+ Agregar</button>
+        <span style={{display:"flex",gap:6}}>
+          {extras.length>0&&<button onClick={()=>{const rp=repartirExtras(vals,extras);const dv=derivarAnthro(rp.vals);setVals(dv.vals);setExtras(rp.extras);setExNote(rp.movidos||dv.calc?"Se reubicaron "+rp.movidos+" y se calcularon "+dv.calc+".":"No se pudo reubicar ninguno.")}} style={{...S.sm,fontSize:11}}>Reubicar</button>}
+          <button onClick={()=>setExtras([...extras,{label:"",value:"",unit:""}])} style={{...S.sm,fontSize:11}}>+ Agregar</button>
+        </span>
       </div>
       {extras.length===0&&<p style={{fontSize:11,color:"#777",margin:0}}>Todo lo que el estudio traiga y no entre en las categorías de arriba aparece acá.</p>}
       {extras.map((x,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
