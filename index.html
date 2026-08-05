@@ -89,7 +89,7 @@ exercises:[
 {n:"Extension cuadriceps",s:2,r:"12-15",rest:"60s",note:"Sin trabar la rodilla: dejar microflexion (hiperlaxitud)"},
 {n:"Gemelo de pie",s:3,r:"12-15",rest:"60s",note:"Gastrocnemio. Pausa 1s arriba"},
 {n:"Gemelo sentado",s:3,r:"15-20",rest:"60s",note:"Soleo. Rango completo"},
-{n:"Plancha",s:3,r:"20-30s",rest:"30s",note:"Core bloque A. Sin hundir cadera"},
+{n:"Crunch polea",s:3,r:"12-15",rest:"45s",note:"Core con carga. Enrollar costillas hacia la pelvis, lumbar sin arquear"},
 ]},
 {day:"Martes",name:"Pecho, Espalda y Brazos",muscles:["chest","back","shoulders","triceps","biceps","abs"],
 exercises:[
@@ -98,6 +98,7 @@ exercises:[
 {n:"Press inclinado (mancuernas)",s:2,r:"10-12",rest:"60s",note:"30 grados. Muneca neutra"},
 {n:"Jalon al pecho",s:3,r:"10-12",rest:"90s",note:"Tirar con codos. O dominadas asistidas"},
 {n:"Elev. laterales",s:2,r:"12-15",rest:"45s",note:"Livianas, sin balanceo"},
+{n:"Pajaros",s:2,r:"15",rest:"45s",note:"Deltoides posterior. Muy livianas, pulgares hacia abajo"},
 {n:"Extension polea",s:2,r:"12-15",rest:"45s",note:"Codos pegados"},
 {n:"Curl inclinado",s:2,r:"12-15",rest:"45s",note:"Cabeza larga del biceps"},
 {n:"Pallof press",s:3,r:"10-12",rest:"45s",note:"Core bloque B. Anti-rotacion, cada lado"},
@@ -109,10 +110,10 @@ exercises:[
 {n:"Jalon agarre neutro",s:3,r:"10-12",rest:"90s",note:"Agarre distinto al del martes"},
 {n:"Press inclinado (mancuernas)",s:2,r:"10-12",rest:"60s",note:"O fondos asistidos si la muneca lo permite"},
 {n:"Face pull",s:3,r:"15-20",rest:"60s",note:"Deltoides posterior y salud de hombro"},
-{n:"Elev. laterales",s:2,r:"12-15",rest:"45s",note:""},
+{n:"Elev. laterales",s:3,r:"12-15",rest:"45s",note:"Deltoides lateral: el que mas ensancha el hombro"},
 {n:"Curl martillo",s:2,r:"12-15",rest:"45s",note:"Braquial: engrosa el brazo"},
 {n:"Extension cabeza",s:2,r:"12-15",rest:"45s",note:"Cabeza larga del triceps"},
-{n:"Crunch",s:3,r:"15",rest:"30s",note:"Core bloque A. Lento, sin tirar del cuello"},
+{n:"Crunch polea",s:3,r:"12-15",rest:"45s",note:"Core con carga. Progresa sumando peso, no reps"},
 {n:"Curl muneca",s:2,r:"15-20",rest:"45s",note:"Flexores. Antebrazo apoyado, muy liviano"},
 ]},
 ],
@@ -143,6 +144,7 @@ exercises:[
 {n:"Press inclinado (mancuernas)",s:3,r:"8-12",rest:"90s",note:"Pecho superior"},
 {n:"Jalon al pecho",s:3,r:"8-12",rest:"90s",note:"O dominadas asistidas"},
 {n:"Elev. laterales",s:3,r:"12-15",rest:"60s",note:"Deltoides lateral"},
+{n:"Pajaros",s:3,r:"12-15",rest:"60s",note:"Deltoides posterior. La cabeza mas olvidada del hombro"},
 {n:"Extension polea",s:3,r:"10-12",rest:"60s",note:"Cabezas lateral y medial"},
 {n:"Curl inclinado",s:3,r:"10-12",rest:"60s",note:"Cabeza larga del biceps"},
 {n:"Pallof press",s:3,r:"10-12",rest:"60s",note:"Core bloque B. Cada lado"},
@@ -188,6 +190,7 @@ exercises:[
 {n:"Press inclinado (mancuernas)",s:3,r:"8-12",rest:"90s",note:"Pecho superior"},
 {n:"Jalon al pecho",s:3,r:"8-12",rest:"90s",note:"Anchura dorsal"},
 {n:"Elev. laterales",s:4,r:"12-15",rest:"60s",note:""},
+{n:"Pajaros",s:3,r:"15",rest:"60s",note:"Deltoides posterior"},
 {n:"Extension polea",s:3,r:"10-12",rest:"60s",note:""},
 {n:"Curl inclinado",s:3,r:"10-12",rest:"60s",note:"Cabeza larga"},
 {n:"Pallof press",s:3,r:"10-12",rest:"60s",note:"Core bloque B"},
@@ -244,6 +247,7 @@ exercises:[
 {n:"Press inclinado (mancuernas)",s:4,r:"8-12",rest:"90s",note:""},
 {n:"Jalon agarre neutro",s:3,r:"10-12",rest:"90s",note:""},
 {n:"Elev. laterales",s:4,r:"12-15",rest:"60s",note:""},
+{n:"Pajaros",s:3,r:"15",rest:"60s",note:"Deltoides posterior"},
 {n:"Extension polea",s:3,r:"10-12",rest:"60s",note:""},
 {n:"Curl inclinado",s:3,r:"10-12",rest:"60s",note:""},
 {n:"Pallof press",s:3,r:"10-12",rest:"60s",note:"Core bloque B"},
@@ -287,6 +291,62 @@ cardio:"Z2 30-40 min martes y viernes. Miercoles suave. Sabado tirada larga 45-5
 goals:["Frecuencia 2 para todos los grupos","RIR 0-1 en aislamientos, RIR 1 en compuestos","Deload cada 4-5 semanas","Tercera antropometria ISAK"]
 },
 ];
+
+// ─── PORCIONES QUE TRABAJA CADA EJERCICIO ───
+const EXP={
+"Press banca":"Pecho medio","Press inclinado (mancuernas)":"Pecho superior","Fondos":"Pecho inferior + triceps",
+"Fondos paralelas":"Pecho inferior + triceps","Press cerrado":"Triceps (integral)",
+"Remo con apoyo en banco":"Espalda: espesor","Remo polea baja":"Espalda: espesor","Remo mancuerna":"Espalda: espesor",
+"Jalon al pecho":"Espalda: anchura","Jalon agarre neutro":"Espalda: anchura","Dominadas":"Espalda: anchura",
+"Dominadas asistidas":"Espalda: anchura","Encogimiento hombros":"Trapecio superior",
+"Press militar":"Deltoides anterior","Elev. laterales":"Deltoides lateral","Elev. laterales polea":"Deltoides lateral",
+"Face pull":"Deltoides posterior","Pajaros":"Deltoides posterior",
+"Curl inclinado":"Biceps: cabeza larga","Curl martillo":"Braquial","Curl barra":"Biceps (integral)","Curl arana":"Biceps: cabeza corta",
+"Extension cabeza":"Triceps: cabeza larga","Extension polea":"Triceps: lateral y medial","Extension polea soga":"Triceps: lateral y medial",
+"Sentadilla":"Cuadriceps: vastos","Prensa":"Cuadriceps: vastos","Sentadilla hack":"Cuadriceps: vastos",
+"Extension cuadriceps":"Recto femoral","Zancadas":"Cuadriceps + gluteo medio","Sentadilla bulgara":"Gluteo medio + cuadriceps",
+"Peso muerto rumano":"Isquios: por cadera","Curl femoral":"Isquios: por rodilla","Curl femoral sentado":"Isquios: por rodilla",
+"Curl femoral tumbado":"Isquios: por rodilla",
+"Hip thrust":"Gluteo mayor","Patada gluteo":"Gluteo mayor (aislado)","Puente gluteo":"Gluteo mayor","Abduccion cadera":"Gluteo medio",
+"Gemelo de pie":"Gastrocnemio","Gemelo sentado":"Soleo","Gemelo en prensa":"Soleo",
+"Crunch polea":"Recto abdominal superior","Crunch":"Recto abdominal superior","Crunch inverso":"Recto abdominal inferior",
+"Elevacion rodillas colgado":"Recto abdominal inferior","Pallof press":"Anti-rotacion","Plancha":"Anti-extension","Plancha lateral":"Oblicuos",
+"Curl reverso":"Extensores de muneca","Curl muneca":"Flexores de muneca","Pronacion/supinacion":"Rotadores de muneca","Dead hang":"Agarre",
+};
+const DAY_CARDIO={
+Lunes:"No corras antes de pierna. Trote muy suave 15-20 min despu\u00e9s, opcional.",
+Martes:"Z2 suave, 30-40 min.",Miercoles:"Z2 suave, 30-40 min. Cuidar piernas para el jueves.",
+Jueves:"A lo sumo 15-20 min muy suave a la ma\u00f1ana. Piernas frescas.",
+Viernes:"Z2 30-40 min. Si hay agujetas del f\u00fatbol, caminata o bici.",
+Sabado:"Tu tirada m\u00e1s larga: hasta 45-50 min.",Domingo:"Descanso o caminata."};
+const CORE_HOME=[{n:"Dead bug",s:3,r:"8-10 por lado",note:"Lumbar pegada al piso todo el tiempo"},
+{n:"Bird dog",s:3,r:"8-10 por lado",note:"Lento, sin que se mueva la cadera"},
+{n:"Plancha lateral",s:3,r:"20-30s por lado",note:"Cadera arriba, cuerpo en linea"},
+{n:"Crunch inverso",s:3,r:"12-15",note:"Enrollar la pelvis, no solo subir las piernas"}];
+const CORE_DAYS=["Miercoles","Sabado"];
+
+// ─── OBJETIVOS NUTRICIONALES SEGUN EL CALENDARIO ───
+// base = dia normal. Los otros dos son ajustes en kcal sobre la base.
+const NUTR_DEF={base:2150,alto:200,bajo:-200,prot:2.3,fat:0.85,fatMin:60};
+const nutrCfg=data=>({...NUTR_DEF,...(data.nutrCfg||{})});
+// Clasifica el dia: "alto" (piernas o futbol), "bajo" (sin pesas ni futbol), "normal" (resto)
+const dayLoad=(data,dayName)=>{
+  const sess=phSched(data,data.phase||0).find(d=>d.day===dayName);
+  if(dayName==="Jueves"&&SPORT_DAYS[dayName])return "alto";
+  if(sess)return sess.muscles.indexOf("legs")>=0?"alto":"normal";
+  if(dayName==="Sabado")return "normal";   // sin pesas pero es la tirada larga de running
+  return "bajo";
+};
+const LOAD_LBL={alto:{l:"Carga alta",c:"#FF6B35",i:"\u{1F525}"},normal:{l:"Normal",c:"#3498DB",i:"\u{1F3CB}\uFE0F"},bajo:{l:"Bajo",c:"#7F8C8D",i:"\u{1F634}"}};
+// Devuelve {kcal,p,c,f,load} para un dia
+const nutrTargets=(data,dayName,pesoKg)=>{
+  const cf=nutrCfg(data), load=dayLoad(data,dayName);
+  const kcal=Math.round(cf.base+(load==="alto"?cf.alto:load==="bajo"?cf.bajo:0));
+  const p=Math.round(pesoKg*cf.prot);
+  const f=Math.max(Math.round(pesoKg*cf.fat),cf.fatMin);
+  const c=Math.max(Math.round((kcal-p*4-f*9)/4),0);
+  return {kcal,p,c,f,load};
+};
 
 // ─── DIAS DE ENTRENAMIENTO CONFIGURABLES ───
 const WEEKDAYS=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"];
@@ -431,7 +491,7 @@ hdr:{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alig
 cnt:{flex:1,overflowY:"auto",paddingBottom:80},
 pg:{padding:"20px 16px"},
 tbar:{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,display:"flex",background:"rgba(15,15,16,0.95)",backdropFilter:"blur(20px)",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"6px 0 env(safe-area-inset-bottom,8px)",zIndex:100},
-tab:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"8px 0",background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:10},
+tab:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"8px 0",background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:9,minWidth:0},
 tabA:{color:"#FF6B35"},
 t1:{fontFamily:"'Oswald',sans-serif",fontSize:18,fontWeight:600,color:"#FFF",margin:"0 0 12px",letterSpacing:0.5},
 hero:{background:"linear-gradient(135deg,rgba(255,107,53,0.12),rgba(214,40,40,0.08))",border:"1px solid rgba(255,107,53,0.2)",borderRadius:16,padding:24,textAlign:"center"},
@@ -458,11 +518,88 @@ stl:{fontSize:11,color:"#888",display:"block",marginTop:4,textTransform:"upperca
 function Logo({size=40}){return <svg width={size} height={size} viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="url(#fg2)"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#D62828"/></linearGradient></defs><path d="M25 65 L75 65 L70 55 L65 45 L35 45 L30 55 Z" fill="#FFF" opacity="0.95"/><rect x="40" y="30" width="20" height="18" rx="3" fill="#FFF" opacity="0.95"/><rect x="20" y="65" width="60" height="6" rx="3" fill="#FFF" opacity="0.7"/><circle cx="72" cy="32" r="3" fill="#FFD166"/><circle cx="78" cy="26" r="2" fill="#FFD166" opacity="0.7"/><circle cx="65" cy="28" r="1.5" fill="#FFD166" opacity="0.5"/></svg>}
 
 function TabBar({active,onChange}){
-  const tabs=[{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
+  const tabs=[{id:"today",l:"Hoy",i:"\u2600\uFE0F"},{id:"plan",l:"Plan",i:"\u{1F4C5}"},{id:"workout",l:"Entreno",i:"\u{1F3CB}\uFE0F"},{id:"cardio",l:"Cardio",i:"\u{1F3C3}"},{id:"nutrition",l:"Comida",i:"\u{1F957}"},{id:"body",l:"Cuerpo",i:"\u{1F4D0}"},{id:"progress",l:"Progreso",i:"\u{1F4CA}"},{id:"settings",l:"Config",i:"\u2699\uFE0F"}];
   return <div style={S.tbar}>{tabs.map(t=><button key={t.id} onClick={()=>onChange(t.id)} style={{...S.tab,...(active===t.id?S.tabA:{})}}><span style={{fontSize:16}}>{t.i}</span><span style={{fontWeight:active===t.id?700:400}}>{t.l}</span></button>)}</div>;
 }
 
 // ─── PLAN TAB ───
+// ─── HOY / CALENDARIO ───
+function TodayTab({data,onGo}){
+  const pi=data.phase||0, ph=PHASES[pi];
+  const sched=phSched(data,pi);
+  const hoyIdx=(new Date().getDay()+6)%7;            // 0 = Lunes
+  const[sel,setSel]=useState(hoyIdx);
+  const dayName=WEEKDAYS[sel];
+  const sess=sched.find(d=>d.day===dayName)||null;
+  const esHoy=sel===hoyIdx;
+  const sport=SPORT_DAYS[dayName];
+  const coreCasa=!sess&&CORE_DAYS.indexOf(dayName)>=0;
+  const porciones=sess?[...new Set(sess.exercises.map(e=>EXP[e.n]).filter(Boolean))]:[];
+  const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx));
+  const tipo=sess?{t:sess.name,c:ph.c,i:"\u{1F3CB}\uFE0F",s:"Gimnasio"}
+    :sport?{t:sport.split(" ").slice(1).join(" "),c:"#F39C12",i:sport.split(" ")[0],s:"Deporte"}
+    :coreCasa?{t:"Core en casa",c:"#3E9A8C",i:"\u{1F3E0}",s:"8-10 min, sin equipo"}
+    :{t:"Descanso",c:"#666",i:"\u{1F634}",s:"Recuperaci\u00f3n"};
+  return <div style={S.pg}>
+    <h2 style={S.t1}>{esHoy?"Hoy":dayName}</h2>
+    <div style={{display:"flex",gap:5,marginBottom:16}}>
+      {WEEKDAYS.map((d,i)=>{
+        const tiene=sched.some(x=>x.day===d);
+        const act=i===sel;
+        return <button key={d} onClick={()=>setSel(i)} style={{flex:1,minWidth:0,padding:"8px 0",borderRadius:8,border:i===hoyIdx?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",
+          background:act?(tiene?ph.c+"33":"rgba(255,255,255,0.08)"):"rgba(255,255,255,0.03)",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+          <span style={{fontSize:10,color:act?"#FFF":"#888",fontWeight:act?700:400}}>{d.slice(0,3)}</span>
+          <span style={{width:6,height:6,borderRadius:3,background:tiene?ph.c:(SPORT_DAYS[d]?"#F39C12":(CORE_DAYS.indexOf(d)>=0?"#3E9A8C":"#333"))}}></span>
+        </button>;
+      })}
+    </div>
+    <div style={{...S.cd,borderLeft:"3px solid "+tipo.c,background:"linear-gradient(135deg,"+tipo.c+"18,"+tipo.c+"05)"}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1.5,fontWeight:600}}>{tipo.s.toUpperCase()}</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6}}>
+        <span style={{fontSize:30}}>{tipo.i}</span>
+        <h3 style={{fontFamily:"'Oswald',sans-serif",fontSize:19,color:tipo.c,margin:0,lineHeight:1.2}}>{tipo.t}</h3>
+      </div>
+      <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"\u00b7"} {ph.ic} {ph.name}</div>
+    </div>
+    {sess&&<div>
+      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>{sess.muscles.map(g=><span key={g} style={{fontSize:10,padding:"3px 9px",borderRadius:10,background:MG[g]?.c+"22",color:MG[g]?.c,fontWeight:600}}>{MG[g]?.i} {MG[g]?.l}</span>)}</div>
+      {porciones.length>0&&<div style={{...S.cd,padding:"12px 14px"}}>
+        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:8}}>PORCIONES QUE TOC\u00c1S HOY</div>
+        {porciones.map(x=><div key={x} style={{fontSize:12.5,color:"#CCC",padding:"3px 0"}}>{"\u2022"} {x}</div>)}
+      </div>}
+      <button onClick={()=>onGo("workout")} style={{...S.btn,marginTop:4,width:"100%"}}>Empezar entreno {"\u2192"}</button>
+      <h3 style={{...S.t1,fontSize:14,marginTop:18}}>Los {sess.exercises.length} ejercicios</h3>
+      {sess.exercises.map((e,i)=><div key={i} style={{...S.cd,padding:"9px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+          <div style={{minWidth:0}}><div style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>{i+1}. {e.n}</div>
+          {EXP[e.n]&&<div style={{fontSize:10.5,color:"#7A7A7A",marginTop:2}}>{EXP[e.n]}</div>}</div>
+          <span style={{fontSize:12,color:"#FF6B35",fontWeight:700,whiteSpace:"nowrap"}}>{e.s} x {e.r}</span>
+        </div>
+        {e.note&&<div style={{fontSize:11,color:"#999",marginTop:5,fontStyle:"italic"}}>{e.note}</div>}
+      </div>)}
+    </div>}
+    {coreCasa&&<div>
+      <div style={{...S.cd,borderLeft:"3px solid #3E9A8C",background:"rgba(62,154,140,0.06)"}}>
+        <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>Sin gimnasio hoy. Trabajo anti-extensi\u00f3n: le ense\u00f1a al core a NO dejar arquear la lumbar. Especialmente \u00fatil con hiperlaxitud.</p>
+      </div>
+      {CORE_HOME.map((e,i)=><div key={i} style={{...S.cd,padding:"9px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>{i+1}. {e.n}</span>
+          <span style={{fontSize:12,color:"#3E9A8C",fontWeight:700}}>{e.s} x {e.r}</span></div>
+        <div style={{fontSize:11,color:"#999",marginTop:4,fontStyle:"italic"}}>{e.note}</div>
+      </div>)}
+      {dayName==="Sabado"&&<p style={{fontSize:11,color:"#888",marginTop:6}}>El s\u00e1bado es opcional: hacelo solo si ven\u00eds entero. Ma\u00f1ana ten\u00e9s tenis.</p>}
+    </div>}
+    {sport&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.06)"}}>
+      <p style={{fontSize:12,color:"#CCC",lineHeight:1.6,margin:0}}>{dayName==="Jueves"?"D\u00eda de f\u00fatbol: nada de pesas. Las piernas tienen que llegar frescas al partido. Comida con carbos y prote\u00edna 2-3 h antes.":"D\u00eda de tenis. Recuperaci\u00f3n real: sin pesas."}</p>
+    </div>}
+    <div style={{...S.cd,marginTop:14,padding:"12px 14px"}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:6}}>{"\u{1F3C3}"} CARDIO</div>
+      <p style={{fontSize:12.5,color:"#CCC",margin:0,lineHeight:1.5}}>{DAY_CARDIO[dayName]}</p>
+    </div>
+  </div>;
+}
+
 function PlanTab({data,setData}){
   const pi=data.phase||0;
   const ph=PHASES[pi];
@@ -698,6 +835,7 @@ function WorkoutTab({data,setData,apiKey}){
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{if(ex.id!==eid)return ex;const l=ex.sets.at(-1)||{};const nx={weight:l.weight??"",reps:l.reps??"",done:false};if(ex.uni)nx.repsR=l.repsR??"";return{...ex,sets:[...ex.sets,nx]}})}));
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
   const rmEx=eid=>setSes(s=>({...s,exercises:s.exercises.filter(ex=>ex.id!==eid)}));
+  const togEx=eid=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,closed:!ex.closed}:ex)}));
   const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns};
     if(apiKey){try{const txt=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
     else{setAiRes("Sin API key. Sesion guardada. Anda a Config.")}
@@ -714,6 +852,16 @@ function WorkoutTab({data,setData,apiKey}){
       const uni=!!ex.uni;
       const gt=uni?"24px 1fr 1fr 1fr 34px 26px":"40px 1fr 1fr 40px 40px";
       const sl=ex.sets.reduce((a2,st)=>a2+(Number(st.reps)||0),0),sr=ex.sets.reduce((a2,st)=>a2+(Number(st.repsR)||0),0);
+      const vol=ex.sets.reduce((a2,st)=>a2+(Number(st.weight)||0)*setReps(st),0);
+      const todas=ex.sets.length>0&&ex.sets.every(st=>st.done);
+      if(ex.closed)return <div key={ex.id} style={{...S.cd,padding:"10px 14px",background:"rgba(46,204,113,0.06)",borderLeft:"3px solid #2ECC71"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:14,color:"#FFF",fontWeight:600}}>{"\u2713"} {ex.name}</div>
+            <div style={{fontSize:11,color:"#888",marginTop:2}}>{ex.sets.length+" series \u00b7 "+(vol>0?Math.round(vol)+" kg de volumen":"sin carga")}</div>
+          </div>
+          <button onClick={()=>togEx(ex.id)} style={{...S.sm,color:"#888",whiteSpace:"nowrap"}}>Reabrir</button>
+        </div></div>;
       return <div key={ex.id} style={S.cd}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><span style={{fontSize:12,color:MG[ex.muscleGroup]?.c,fontWeight:700}}>{MG[ex.muscleGroup]?.i} {MG[ex.muscleGroup]?.l}</span><h3 style={{margin:"4px 0 0",fontSize:16,fontFamily:"'Oswald',sans-serif",color:"#FFF"}}>{ex.name}</h3>{uni&&<div style={{fontSize:10,color:"#F39C12",fontWeight:700,marginTop:3,letterSpacing:0.5}}>{"\u2194 UNILATERAL \u2014 REPS POR LADO"}</div>}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
       {ex.targets&&<div style={S.tbdg}>{"\u{1F3AF}"} {ex.targets.suggestion}</div>}
@@ -727,7 +875,10 @@ function WorkoutTab({data,setData,apiKey}){
           <button onClick={()=>upSet(ex.id,idx,"done",!set.done)} style={{...S.chk,background:set.done?"#2ECC71":"rgba(255,255,255,0.05)",color:set.done?"#FFF":"#666"}}>&#10003;</button>
           <button onClick={()=>rmSet(ex.id,idx)} style={S.sm}>-</button>
         </div>)}
-        <button onClick={()=>addSet(ex.id)} style={S.aset}>+ Serie</button>
+        <div style={{display:"flex",gap:8,marginTop:6}}>
+          <button onClick={()=>addSet(ex.id)} style={{...S.aset,flex:1,marginTop:0}}>+ Serie</button>
+          <button onClick={()=>togEx(ex.id)} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",borderColor:todas?"#2ECC71":"rgba(255,255,255,0.12)",color:todas?"#2ECC71":"#888",fontWeight:todas?700:400}}>{"\u2713 Listo"}</button>
+        </div>
         {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series \u00b7 "+sl+" reps izq / "+sr+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{(sl+sr)+" repeticiones totales"}</span></div>}
       </div></div>;
     })}
@@ -758,10 +909,44 @@ function ProgressTab({data}){
 }
 
 // ─── SETTINGS ───
-function SettingsTab({apiKey,onApiKeyChange}){
+function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
-  return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
+  const cf=nutrCfg(data);
+  const pesoAct=data.anthropometry?.length?(data.anthropometry.slice().sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77.7):77.7;
+  const setCf=(campo,val)=>{const nd={...data,nutrCfg:{...(data.nutrCfg||{}),[campo]:val===""?NUTR_DEF[campo]:Number(val)}};setData(nd);sv(nd)};
+  const resetCf=()=>{const nd={...data};delete nd.nutrCfg;setData(nd);sv(nd)};
+  const fila=(campo,etiqueta,ayuda,sufijo)=><div style={{marginBottom:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+      <span style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>{etiqueta}</span>
+      <span style={{fontSize:10,color:"#666"}}>{sufijo}</span></div>
+    <input type="number" inputMode="decimal" value={cf[campo]} onFocus={e=>e.target.select()} onChange={e=>setCf(campo,e.target.value)} style={{...S.inp,marginTop:4}} step="any"/>
+    <div style={{fontSize:10.5,color:"#777",marginTop:3,lineHeight:1.4}}>{ayuda}</div>
+  </div>;
+  const prev=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d=>({d,...nutrTargets(data,d,pesoAct)}));
+  const prom=Math.round(prev.reduce((a,x)=>a+x.kcal,0)/7);
+  return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}>
+    <h3 style={{fontSize:14,color:"#2ECC71",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Objetivos nutricionales</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:14,lineHeight:1.5}}>Las calor\u00edas se ajustan solas seg\u00fan lo que toca entrenar cada d\u00eda. Ac\u00e1 mov\u00e9s la base cuando cambies de bloque (d\u00e9ficit, mantenimiento, diet break).</p>
+    {fila("base","Calor\u00edas base","D\u00eda normal: sesi\u00f3n de tren superior o s\u00e1bado.","kcal")}
+    {fila("alto","Ajuste d\u00eda de carga alta","Se suma a la base los d\u00edas de piernas y el jueves de f\u00fatbol.","+kcal")}
+    {fila("bajo","Ajuste d\u00eda bajo","Se suma a la base los d\u00edas sin pesas. Us\u00e1 n\u00famero negativo.","-kcal")}
+    {fila("prot","Prote\u00edna","Por kg de peso. No la bajes de 1,8 en d\u00e9ficit.","g/kg")}
+    {fila("fat","Grasas","Por kg de peso, con piso de "+cf.fatMin+" g.","g/kg")}
+    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginTop:4}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1,fontWeight:600,marginBottom:8}}>C\u00d3MO QUEDA TU SEMANA ({pesoAct} kg)</div>
+      {prev.map(x=><div key={x.d} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0"}}>
+        <span style={{fontSize:12,color:"#CCC"}}>{x.d}</span>
+        <span style={{fontSize:11,color:"#777"}}>{x.p}P {"\u00b7"} {x.c}C {"\u00b7"} {x.f}G</span>
+        <span style={{fontSize:12,color:LOAD_LBL[x.load].c,fontWeight:700,minWidth:62,textAlign:"right"}}>{x.kcal} kcal</span>
+      </div>)}
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <span style={{fontSize:12,color:"#FFF",fontWeight:700}}>Promedio semanal</span>
+        <span style={{fontSize:13,color:"#FF6B35",fontWeight:700}}>{prom} kcal</span></div>
+    </div>
+    <button onClick={resetCf} style={{...S.aset,marginTop:10}}>Restaurar valores por defecto</button>
+  </div>
+  <div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
 }
 
 // ─── FOOD DATABASE (proteinas por 100g) ───
@@ -1444,15 +1629,15 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
   const todayP=sumP(todayMeals),todayK=sumK(todayMeals);
   const todayC=Math.round(todayMeals.filter(m=>m.carbs).reduce((s,m)=>s+m.carbs,0));
   const todayF=Math.round(todayMeals.filter(m=>m.fat).reduce((s,m)=>s+m.fat,0));
-  const todaySession=data.sessions?.find(s=>s.date===td());
   const plan=data.weeklyNutrPlan;
-  // Calcular objetivos con la fórmula: P=1.9g/kg, G=0.8g/kg, C=resto de kcal/4
-  const weightKgHome=data.anthropometry?.length?(data.anthropometry.sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77):77;
-  const isTrainingDay=!!todaySession;
-  const targP=Math.round(weightKgHome*(isTrainingDay?2.0:1.8));
-  const targF=Math.round(weightKgHome*(isTrainingDay?0.8:0.7));
-  const totalKcal=Math.round(weightKgHome*(isTrainingDay?36:32));
-  const targC=Math.round((totalKcal - targP*4 - targF*9)/4);
+  const weightKgHome=data.anthropometry?.length?(data.anthropometry.sort((a,b)=>b.date.localeCompare(a.date))[0].weight||77.7):77.7;
+  // Objetivo segun el calendario de entrenamiento, no segun lo que ya registraste
+  const hoyDia=WEEKDAYS[(new Date().getDay()+6)%7];
+  const tg=nutrTargets(data,hoyDia,weightKgHome);
+  const targP=tg.p,targF=tg.f,targC=tg.c,totalKcal=tg.kcal;
+  const LD=LOAD_LBL[tg.load];
+  const sesHoy=phSched(data,data.phase||0).find(d=>d.day===hoyDia);
+  const queToca=sesHoy?sesHoy.name:(SPORT_DAYS[hoyDia]?SPORT_DAYS[hoyDia].split(" ").slice(1).join(" "):"Sin pesas");
   const hasMacros=todayP>0||todayC>0||todayF>0;
   return <div style={S.pg}>
     <h2 style={S.t1}>🥗 Alimentación</h2>
@@ -1474,13 +1659,13 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
     </div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
       <h3 style={{...S.t1,fontSize:14,margin:0}}>Hoy — {fd(td())}</h3>
-      <span style={{fontSize:11,color:isTrainingDay?"#FF6B35":"#666"}}>{isTrainingDay?"🏋️ Entreno":"💤 Descanso"}</span>
+      <span style={{fontSize:11,color:LD.c,fontWeight:600}}>{LD.i} {LD.l}</span>
     </div>
     {hasMacros
       ? <div style={{...S.cd,marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
             <span style={{fontSize:11,color:"#888",fontFamily:"'Oswald',sans-serif",letterSpacing:1}}>MACROS DEL DÍA</span>
-            <span style={{fontSize:10,color:"#555"}}>{weightKgHome}kg · {isTrainingDay?"día de entreno":"día de descanso"}</span>
+            <span style={{fontSize:10,color:"#555"}}>{weightKgHome}kg · {queToca}</span>
           </div>
           <MacroBar label="PROTEÍNA" current={todayP} target={targP} color="#2ECC71"/>
           <MacroBar label="CARBOS" current={todayC} target={targC} color="#3498DB"/>
@@ -1492,7 +1677,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
         </div>
       : <div style={{...S.cd,marginBottom:12,borderLeft:"3px solid rgba(46,204,113,0.3)",background:"rgba(46,204,113,0.03)"}}>
           <p style={{fontSize:11,color:"#888",margin:0,lineHeight:1.5}}>
-            💡 Obj. de hoy ({isTrainingDay?"entreno":"descanso"}): <span style={{color:"#2ECC71",fontWeight:700}}>{targP}g P</span> · <span style={{color:"#3498DB",fontWeight:700}}>{targC}g C</span> · <span style={{color:"#E67E22",fontWeight:700}}>{targF}g G</span> · <span style={{color:"#FF6B35",fontWeight:700}}>~{totalKcal} kcal</span>
+            💡 Obj. de hoy ({LD.l.toLowerCase()} — {queToca}): <span style={{color:"#2ECC71",fontWeight:700}}>{targP}g P</span> · <span style={{color:"#3498DB",fontWeight:700}}>{targC}g C</span> · <span style={{color:"#E67E22",fontWeight:700}}>{targF}g G</span> · <span style={{color:"#FF6B35",fontWeight:700}}>~{totalKcal} kcal</span>
           </p>
         </div>
     }
@@ -1505,20 +1690,21 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 
 // ─── APP ───
 function App(){
-  const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("plan");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
+  const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
   useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
     <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>ENTRENA CON CIENCIA</span></div>
     <div style={S.cnt}>
+      {tab==="today"&&<TodayTab data={data} onGo={setTab}/>}
       {tab==="plan"&&<PlanTab data={data} setData={setData}/>}
       {tab==="workout"&&<WorkoutTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="cardio"&&<CardioTab data={data} setData={setData}/>}
       {tab==="nutrition"&&<NutritionTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="body"&&<BodyTab data={data} setData={setData} apiKey={apiKey}/>}
       {tab==="progress"&&<ProgressTab data={data}/>}
-      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey}/>}
+      {tab==="settings"&&<SettingsTab apiKey={apiKey} onApiKeyChange={handleKey} data={data} setData={setData}/>}
     </div>
     <TabBar active={tab} onChange={setTab}/>
   </div>;
