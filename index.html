@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>FORJA</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -27,7 +28,7 @@ input[type=number]{-moz-appearance:textfield}
 const {useState,useEffect}=React;
 const SK="forja-data",AK="forja-api-key";
 const ld=()=>{try{return JSON.parse(localStorage.getItem(SK))}catch{return null}};
-const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{}};
+const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{};try{if(typeof GD!=="undefined")GD.schedulePush(d)}catch{}};
 const gk=()=>{try{return localStorage.getItem(AK)||""}catch{return""}};
 const stk=k=>{try{localStorage.setItem(AK,k)}catch{}};
 const td=()=>new Date().toISOString().slice(0,10);
@@ -324,6 +325,116 @@ const CORE_HOME=[{n:"Dead bug",s:3,r:"8-10 por lado",note:"Lumbar pegada al piso
 {n:"Plancha lateral",s:3,r:"20-30s por lado",note:"Cadera arriba, cuerpo en linea"},
 {n:"Crunch inverso",s:3,r:"12-15",note:"Enrollar la pelvis, no solo subir las piernas"}];
 const CORE_DAYS=["Miercoles","Sabado"];
+
+// ─── BACKUP: EXPORTAR / IMPORTAR ───
+const BK_VER=1;
+const bkStats=d=>({
+  Sesiones:(d.sessions||[]).length, Cardio:(d.cardioSessions||[]).length,
+  Comidas:(d.meals||[]).length, "Antropometr\u00edas":(d.anthropometry||[]).length,
+  Estudios:(d.healthStudies||[]).length, "Notas del coach":(d.coachNotes||[]).length,
+});
+const bkSize=()=>{try{return Math.round((localStorage.getItem(SK)||"").length/1024)}catch{return 0}};
+const bkExport=d=>{
+  const payload={_forja:BK_VER,_exported:new Date().toISOString(),data:d};
+  const blob=new Blob([JSON.stringify(payload,null,1)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="forja-backup-"+td()+".json";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+// Devuelve el objeto de datos de un backup, o lanza error si no es valido
+const bkParse=txt=>{
+  const j=JSON.parse(txt);
+  const d=j&&j._forja?j.data:j;              // acepta backup con envoltorio o data cruda
+  if(!d||typeof d!=="object"||!Array.isArray(d.sessions))throw new Error("El archivo no parece un backup de FORJA");
+  return {...EMPTY,...d};
+};
+
+// ─── SINCRONIZACION CON GOOGLE DRIVE ───
+const GCID="725154657820-hoonsvl5pubavna62l8ojn60om1dql0m.apps.googleusercontent.com";
+const GSCOPE="https://www.googleapis.com/auth/drive.file";
+const GDFILE="forja-data.json";
+const GDK="forja-gdrive";
+const GD={
+  tok:null, exp:0, _t:null,
+  cfg(){try{return JSON.parse(localStorage.getItem(GDK))||{}}catch{return {}}},
+  setCfg(c){try{localStorage.setItem(GDK,JSON.stringify({...GD.cfg(),...c}))}catch{}},
+  clear(){try{localStorage.removeItem(GDK)}catch{};GD.tok=null;GD.exp=0},
+  ready(){return typeof google!=="undefined"&&google.accounts&&google.accounts.oauth2},
+  getToken(){
+    return new Promise((res,rej)=>{
+      if(GD.tok&&Date.now()<GD.exp-60000)return res(GD.tok);
+      if(!GD.ready())return rej(new Error("Google todav\u00eda no carg\u00f3. Prob\u00e1 de nuevo en unos segundos."));
+      let hecho=false;
+      const tc=google.accounts.oauth2.initTokenClient({client_id:GCID,scope:GSCOPE,
+        callback:r=>{
+          if(hecho)return; hecho=true;
+          if(r.error)return rej(new Error(r.error_description||r.error));
+          GD.tok=r.access_token; GD.exp=Date.now()+(Number(r.expires_in||3600)*1000); res(GD.tok);
+        },
+        error_callback:e=>{if(hecho)return;hecho=true;rej(new Error((e&&e.type)==="popup_closed"?"Cerraste la ventana de Google":"No se pudo autorizar"))}});
+      tc.requestAccessToken({prompt:""});
+    });
+  },
+  async api(url,opts){
+    const t=await GD.getToken();
+    const o=opts||{};
+    const r=await fetch(url,{...o,headers:{...(o.headers||{}),Authorization:"Bearer "+t}});
+    if(!r.ok){
+      if(r.status===401||r.status===403){GD.tok=null;GD.exp=0}
+      throw new Error("Drive respondi\u00f3 "+r.status);
+    }
+    return r;
+  },
+  async findFile(){
+    const c=GD.cfg();
+    if(c.fileId){try{await GD.api("https://www.googleapis.com/drive/v3/files/"+c.fileId+"?fields=id");return c.fileId}catch(e){}}
+    const q=encodeURIComponent("name='"+GDFILE+"' and trashed=false");
+    const r=await GD.api("https://www.googleapis.com/drive/v3/files?q="+q+"&fields=files(id,modifiedTime)&spaces=drive&orderBy=modifiedTime desc");
+    const j=await r.json();
+    const f=j.files&&j.files[0];
+    if(f){GD.setCfg({fileId:f.id});return f.id}
+    return null;
+  },
+  async remoteTime(){
+    const id=await GD.findFile(); if(!id)return null;
+    const r=await GD.api("https://www.googleapis.com/drive/v3/files/"+id+"?fields=modifiedTime");
+    return (await r.json()).modifiedTime||null;
+  },
+  async push(d){
+    const body=JSON.stringify({_forja:BK_VER,_savedAt:new Date().toISOString(),data:d});
+    const id=await GD.findFile();
+    if(id){
+      await GD.api("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media",
+        {method:"PATCH",headers:{"Content-Type":"application/json"},body});
+    }else{
+      const B="forjaBoundary7391";
+      const multi="--"+B+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"
+        +JSON.stringify({name:GDFILE,mimeType:"application/json"})
+        +"\r\n--"+B+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+B+"--";
+      const r=await GD.api("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+        {method:"POST",headers:{"Content-Type":"multipart/related; boundary="+B},body:multi});
+      GD.setCfg({fileId:(await r.json()).id});
+    }
+    GD.setCfg({last:new Date().toISOString(),auto:true});
+    return true;
+  },
+  async pull(){
+    const id=await GD.findFile();
+    if(!id)throw new Error("Todav\u00eda no hay ning\u00fan backup en Drive");
+    const r=await GD.api("https://www.googleapis.com/drive/v3/files/"+id+"?alt=media");
+    const d=bkParse(await r.text());
+    GD.setCfg({last:new Date().toISOString()});
+    return d;
+  },
+  // Empuja 4 segundos despues del ultimo cambio, solo si la sync esta activa
+  schedulePush(d){
+    if(!GD.cfg().auto)return;
+    if(GD._t)clearTimeout(GD._t);
+    GD._t=setTimeout(()=>{GD.push(d).catch(()=>{})},4000);
+  },
+};
 
 // ─── OBJETIVOS NUTRICIONALES SEGUN EL CALENDARIO ───
 // base = dia normal. Los otros dos son ajustes en kcal sobre la base.
@@ -925,6 +1036,44 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   </div>;
   const prev=["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d=>({d,...nutrTargets(data,d,pesoAct)}));
   const prom=Math.round(prev.reduce((a,x)=>a+x.kcal,0)/7);
+  const[impMsg,setImpMsg]=useState(null);
+  const[gd,setGd]=useState(GD.cfg());
+  const[gdMsg,setGdMsg]=useState(null);
+  const[gdBusy,setGdBusy]=useState(false);
+  const gdRun=async(fn,okTxt)=>{
+    setGdBusy(true);setGdMsg(null);
+    try{await fn();setGd(GD.cfg());setGdMsg({ok:true,t:okTxt})}
+    catch(e){setGdMsg({ok:false,t:e.message||"Fall\u00f3 la sincronizaci\u00f3n"})}
+    setGdBusy(false);
+  };
+  const gdConnect=()=>gdRun(async()=>{await GD.getToken();await GD.push(data)},"Conectado. Tus datos ya est\u00e1n en Drive.");
+  const gdPush=()=>gdRun(()=>GD.push(data),"Subido a Drive.");
+  const gdPull=()=>gdRun(async()=>{
+    const nd=await GD.pull();
+    const st=bkStats(nd);
+    const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
+    if(!window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. \u00bfSeguir?"))throw new Error("Cancelado");
+    sv(nd);setData(nd);setTimeout(()=>window.location.reload(),900);
+  },"Datos tra\u00eddos de Drive. Recargando...");
+  const gdOff=()=>{if(window.confirm("Se corta la sincronizaci\u00f3n en este dispositivo. El archivo de Drive queda como est\u00e1. \u00bfSeguir?")){GD.clear();setGd({});setGdMsg(null)}};
+  const stats=bkStats(data);
+  const doImport=ev=>{
+    const f=ev.target.files&&ev.target.files[0];if(!f)return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const nd=bkParse(String(rd.result));
+        const st=bkStats(nd);
+        const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
+        if(window.confirm("El backup contiene: "+resumen+".\n\nEsto REEMPLAZA todos los datos actuales de este dispositivo. \u00bfSeguir?")){
+          sv(nd);setData(nd);setImpMsg({ok:true,t:"Datos restaurados. Recargando..."});
+          setTimeout(()=>window.location.reload(),1200);
+        }
+      }catch(e){setImpMsg({ok:false,t:"No se pudo leer: "+e.message})}
+    };
+    rd.onerror=()=>setImpMsg({ok:false,t:"No se pudo leer el archivo"});
+    rd.readAsText(f);ev.target.value="";
+  };
   return <div style={S.pg}><h2 style={S.t1}>{"\u2699\uFE0F"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div><div style={{...S.cd,marginTop:16}}>
     <h3 style={{fontSize:14,color:"#2ECC71",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Objetivos nutricionales</h3>
     <p style={{fontSize:11,color:"#888",marginBottom:14,lineHeight:1.5}}>Las calor\u00edas se ajustan solas seg\u00fan lo que toca entrenar cada d\u00eda. Ac\u00e1 mov\u00e9s la base cuando cambies de bloque (d\u00e9ficit, mantenimiento, diet break).</p>
@@ -945,6 +1094,48 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
         <span style={{fontSize:13,color:"#FF6B35",fontWeight:700}}>{prom} kcal</span></div>
     </div>
     <button onClick={resetCf} style={{...S.aset,marginTop:10}}>Restaurar valores por defecto</button>
+  </div>
+  <div style={{...S.cd,marginTop:16}}>
+    <h3 style={{fontSize:14,color:"#4285F4",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Sincronizaci\u00f3n con Google Drive</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Guarda un archivo <b>forja-data.json</b> en tu Drive y lo mantiene al d\u00eda. As\u00ed ves los mismos datos en el tel\u00e9fono y en la computadora. FORJA solo puede tocar ese archivo: el resto de tu Drive le queda invisible.</p>
+    {gd.auto
+      ? <div>
+          <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(66,133,244,0.08)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+            <span style={{width:8,height:8,borderRadius:4,background:"#2ECC71",flexShrink:0}}></span>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>Sincronizaci\u00f3n activa</div>
+              <div style={{fontSize:10.5,color:"#888",marginTop:2}}>{gd.last?"\u00daltima vez: "+new Date(gd.last).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Sin sincronizar todav\u00eda"}</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={gdPush} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"\u2191 Subir ahora"}</button>
+            <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"\u2193 Traer de Drive"}</button>
+          </div>
+          <button onClick={gdOff} style={{...S.aset,marginTop:8,color:"#777"}}>Desconectar este dispositivo</button>
+        </div>
+      : <button onClick={gdConnect} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",opacity:gdBusy?0.6:1}}>{gdBusy?"Conectando...":"Conectar con Google Drive"}</button>}
+    {gdMsg&&<p style={{fontSize:11.5,color:gdMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0,lineHeight:1.5}}>{gdMsg.t}</p>}
+    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Con la sync activa, cada cambio se sube solo unos segundos despu\u00e9s. Si edit\u00e1s en dos dispositivos sin sincronizar en el medio, gana el \u00faltimo que guarda.</p>
+  </div>
+  <div style={{...S.cd,marginTop:16}}>
+    <h3 style={{fontSize:14,color:"#3498DB",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Copia de seguridad</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Tus datos viven solo en este dispositivo: no se sincronizan con la computadora ni con otro navegador. Export\u00e1 cada tanto y guard\u00e1 el archivo donde quieras.</p>
+    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1,fontWeight:600,marginBottom:8}}>LO QUE HAY GUARDADO</div>
+      {Object.keys(stats).map(k=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"2px 0"}}>
+        <span style={{fontSize:12,color:"#CCC"}}>{k}</span>
+        <span style={{fontSize:12,color:stats[k]>0?"#FFF":"#555",fontWeight:600}}>{stats[k]}</span></div>)}
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <span style={{fontSize:11,color:"#666"}}>Tama\u00f1o</span>
+        <span style={{fontSize:11,color:"#666"}}>{bkSize()} KB de ~5.000 disponibles</span></div>
+    </div>
+    <button onClick={()=>bkExport(data)} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#3498DB,#2471A3)"}}>{"\u2193"} Exportar backup</button>
+    <label style={{...S.aset,marginTop:10,display:"block",textAlign:"center",lineHeight:"20px"}}>
+      {"\u2191 Importar backup"}
+      <input type="file" accept="application/json,.json" onChange={doImport} style={{display:"none"}}/>
+    </label>
+    {impMsg&&<p style={{fontSize:11.5,color:impMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0}}>{impMsg.t}</p>}
+    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Importar <b>reemplaza</b> todo lo que tengas en este dispositivo. Si ten\u00e9s algo que no quer\u00e9s perder, export\u00e1 primero.</p>
   </div>
   <div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
 }
@@ -1692,9 +1883,40 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
   useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  // Si la sync esta activa, avisa cuando Drive tiene algo mas nuevo que este dispositivo
+  const[gdNuevo,setGdNuevo]=useState(false);
+  useEffect(()=>{
+    if(loading||!GD.cfg().auto)return;
+    let vivo=true;
+    const t=setTimeout(async()=>{
+      try{
+        const rt=await GD.remoteTime();
+        const local=GD.cfg().last;
+        if(vivo&&rt&&local&&new Date(rt).getTime()>new Date(local).getTime()+5000)setGdNuevo(true);
+      }catch(e){}
+    },2500);
+    return ()=>{vivo=false;clearTimeout(t)};
+  },[loading]);
+  const traerDeDrive=async()=>{
+    try{
+      const nd=await GD.pull();
+      const st=bkStats(nd);
+      const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
+      if(window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. \u00bfSeguir?")){
+        sv(nd);setData(nd);window.location.reload();
+      }else setGdNuevo(false);
+    }catch(e){window.alert("No se pudo traer de Drive: "+(e.message||""));setGdNuevo(false)}
+  };
   const handleKey=k=>{setAK(k);stk(k)};
   if(loading)return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0A0A0B"}}><Logo size={64}/><h1 style={{fontFamily:"'Oswald',sans-serif",fontSize:28,color:"#FFF",margin:"16px 0 0"}}>FORJA</h1></div>;
   return <div style={S.app}>
+    {gdNuevo&&<div style={{position:"sticky",top:0,zIndex:90,background:"linear-gradient(135deg,#4285F4,#2B62C7)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+      <span style={{fontSize:12,color:"#FFF",lineHeight:1.4}}>Hay datos m\u00e1s nuevos en Drive</span>
+      <span style={{display:"flex",gap:6,flexShrink:0}}>
+        <button onClick={traerDeDrive} style={{background:"rgba(255,255,255,0.9)",color:"#2B62C7",border:"none",borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Traer</button>
+        <button onClick={()=>setGdNuevo(false)} style={{background:"none",color:"rgba(255,255,255,0.85)",border:"none",fontSize:16,cursor:"pointer",padding:"0 4px"}}>{"\u00d7"}</button>
+      </span>
+    </div>}
     <div style={S.hdr}><div style={{display:"flex",alignItems:"center",gap:10}}><Logo size={32}/><span style={{fontFamily:"'Oswald',sans-serif",fontSize:22,fontWeight:700,letterSpacing:3,color:"#FFF"}}>FORJA</span></div><span style={{fontSize:10,color:"#666",fontFamily:"'Oswald',sans-serif",letterSpacing:2}}>ENTRENA CON CIENCIA</span></div>
     <div style={S.cnt}>
       {tab==="today"&&<TodayTab data={data} onGo={setTab}/>}
