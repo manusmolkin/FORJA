@@ -325,6 +325,130 @@ goals:["Frecuencia 2 para todos los grupos","RIR 0-1 en aislamientos, RIR 1 en c
 
 
 
+
+
+// ─── CATÁLOGO DE ANALITOS DE LABORATORIO ───
+// Cada laboratorio nombra distinto lo mismo. Esto los unifica en una sola bolsa
+// de seguimiento. "ref" solo cuando hay una guía de sociedad científica detrás;
+// si no, se usa el rango que trae el propio estudio.
+const LAB_CANON=[
+// ── Lípidos (ESC/EAS 2019-2025 y ATP III) ──
+{id:"col_total",l:"Colesterol total",u:"mg/dL",g:"Lípidos",a:["colesterol total","colesterol totales","col total","ct","colesterolemia","colesterol"],
+ ref:{bandas:[{h:200,l:"Deseable",c:"#2ECC71"},{h:240,l:"Límite alto",c:"#F39C12"},{h:null,l:"Alto",c:"#E74C3C"}],fuente:"ATP III / general"}},
+{id:"ldl",l:"Colesterol LDL",u:"mg/dL",g:"Lípidos",a:["colesterol ldl","ldl colesterol","ldl","c ldl","ldl c","colesterol de baja densidad","colesterol no hdl ldl"],
+ ref:{bandas:[{h:116,l:"Objetivo en riesgo bajo",c:"#2ECC71"},{h:160,l:"Por encima del objetivo",c:"#F39C12"},{h:null,l:"Alto",c:"#E74C3C"}],fuente:"ESC/EAS (riesgo bajo)"}},
+{id:"hdl",l:"Colesterol HDL",u:"mg/dL",g:"Lípidos",a:["colesterol hdl","hdl colesterol","hdl","c hdl","hdl c","colesterol de alta densidad"],
+ ref:{bandas:[{h:40,l:"Bajo",c:"#E74C3C"},{h:60,l:"Normal",c:"#F1C40F"},{h:null,l:"Óptimo",c:"#2ECC71"}],fuente:"ATP III (hombres)"}},
+{id:"tg",l:"Triglicéridos",u:"mg/dL",g:"Lípidos",a:["trigliceridos","triglicerido","tag","tg"],
+ ref:{bandas:[{h:150,l:"Normal",c:"#2ECC71"},{h:200,l:"Límite alto",c:"#F39C12"},{h:null,l:"Alto",c:"#E74C3C"}],fuente:"ATP III"}},
+{id:"no_hdl",l:"Colesterol no-HDL",u:"mg/dL",g:"Lípidos",a:["colesterol no hdl","no hdl","c no hdl"]},
+// ── Glucemia (ADA) ──
+{id:"glucemia",l:"Glucemia en ayunas",u:"mg/dL",g:"Metabólico",a:["glucemia","glucosa","glucemia en ayunas","glucosa en ayunas","glucemia basal","azucar en sangre","glicemia"],
+ ref:{bandas:[{h:70,l:"Bajo",c:"#3498DB"},{h:100,l:"Normal",c:"#2ECC71"},{h:126,l:"Prediabetes",c:"#F39C12"},{h:null,l:"Rango de diabetes",c:"#E74C3C"}],fuente:"ADA"}},
+{id:"hba1c",l:"Hemoglobina glicosilada",u:"%",g:"Metabólico",a:["hemoglobina glicosilada","hemoglobina glicada","hba1c","a1c","hb a1c","hemoglobina a1c"],
+ ref:{bandas:[{h:5.7,l:"Normal",c:"#2ECC71"},{h:6.5,l:"Prediabetes",c:"#F39C12"},{h:null,l:"Rango de diabetes",c:"#E74C3C"}],fuente:"ADA"}},
+{id:"insulina",l:"Insulina basal",u:"uUI/mL",g:"Metabólico",a:["insulina","insulina basal","insulinemia"]},
+{id:"homa",l:"HOMA-IR",u:"",g:"Metabólico",a:["homa","homa ir","indice homa"]},
+{id:"acido_urico",l:"Ácido úrico",u:"mg/dL",g:"Metabólico",a:["acido urico","uricemia","urato"],
+ ref:{bandas:[{h:7,l:"Normal",c:"#2ECC71"},{h:null,l:"Elevado",c:"#E74C3C"}],fuente:"General (hombres)"}},
+// ── Hemograma ──
+{id:"hb",l:"Hemoglobina",u:"g/dL",g:"Hemograma",a:["hemoglobina","hb","hgb"]},
+{id:"hto",l:"Hematocrito",u:"%",g:"Hemograma",a:["hematocrito","hto","hct"]},
+{id:"gr",l:"Glóbulos rojos",u:"mill/mm3",g:"Hemograma",a:["globulos rojos","hematies","eritrocitos","recuento de globulos rojos","gr"]},
+{id:"gb",l:"Glóbulos blancos",u:"/mm3",g:"Hemograma",a:["globulos blancos","leucocitos","recuento de globulos blancos","gb","wbc","recuento leucocitario"]},
+{id:"plaquetas",l:"Plaquetas",u:"/mm3",g:"Hemograma",a:["plaquetas","recuento de plaquetas","plt","trombocitos"]},
+{id:"vcm",l:"VCM",u:"fL",g:"Hemograma",a:["vcm","volumen corpuscular medio","mcv"]},
+{id:"hcm",l:"HCM",u:"pg",g:"Hemograma",a:["hcm","hemoglobina corpuscular media","mch"]},
+{id:"neutrofilos",l:"Neutrófilos",u:"%",g:"Hemograma",a:["neutrofilos","segmentados","neutrofilos segmentados","polimorfonucleares"]},
+{id:"linfocitos",l:"Linfocitos",u:"%",g:"Hemograma",a:["linfocitos","linfocitos totales"]},
+{id:"monocitos",l:"Monocitos",u:"%",g:"Hemograma",a:["monocitos"]},
+{id:"eosinofilos",l:"Eosinófilos",u:"%",g:"Hemograma",a:["eosinofilos"]},
+{id:"basofilos",l:"Basófilos",u:"%",g:"Hemograma",a:["basofilos"]},
+{id:"vsg",l:"Eritrosedimentación",u:"mm/h",g:"Hemograma",a:["eritrosedimentacion","vsg","velocidad de sedimentacion","ves","eritro"]},
+// ── Hierro ──
+{id:"ferritina",l:"Ferritina",u:"ng/mL",g:"Hierro",a:["ferritina"],
+ ref:{bandas:[{h:30,l:"Déficit de hierro",c:"#E74C3C"},{h:300,l:"Normal",c:"#2ECC71"},{h:null,l:"Elevada",c:"#F39C12"}],fuente:"General (hombres)"}},
+{id:"hierro",l:"Hierro sérico",u:"ug/dL",g:"Hierro",a:["hierro","hierro serico","ferremia","fe"]},
+{id:"transferrina",l:"Transferrina",u:"mg/dL",g:"Hierro",a:["transferrina","saturacion de transferrina","tibc","capacidad de fijacion de hierro"]},
+// ── Hepatograma ──
+{id:"got",l:"GOT / AST",u:"U/L",g:"Hígado",a:["got","ast","transaminasa got","aspartato aminotransferasa","goat"]},
+{id:"gpt",l:"GPT / ALT",u:"U/L",g:"Hígado",a:["gpt","alt","transaminasa gpt","alanina aminotransferasa"]},
+{id:"ggt",l:"GGT",u:"U/L",g:"Hígado",a:["ggt","gamma gt","gamma glutamil transferasa"]},
+{id:"fal",l:"Fosfatasa alcalina",u:"U/L",g:"Hígado",a:["fosfatasa alcalina","fal","alp"]},
+{id:"bili_total",l:"Bilirrubina total",u:"mg/dL",g:"Hígado",a:["bilirrubina total","bilirrubina"]},
+{id:"bili_directa",l:"Bilirrubina directa",u:"mg/dL",g:"Hígado",a:["bilirrubina directa","bilirrubina conjugada"]},
+{id:"albumina",l:"Albúmina",u:"g/dL",g:"Hígado",a:["albumina","albumina serica"]},
+{id:"prot_total",l:"Proteínas totales",u:"g/dL",g:"Hígado",a:["proteinas totales","proteinograma total","proteina total"]},
+// ── Riñón e iones ──
+{id:"creatinina",l:"Creatinina",u:"mg/dL",g:"Riñón",a:["creatinina","creatininemia","creat"]},
+{id:"urea",l:"Urea",u:"mg/dL",g:"Riñón",a:["urea","uremia","nitrogeno ureico","bun"]},
+{id:"egfr",l:"Filtrado glomerular",u:"mL/min",g:"Riñón",a:["filtrado glomerular","tfg","egfr","clearance de creatinina","vfg","tasa de filtracion glomerular"],
+ ref:{bandas:[{h:60,l:"Reducido",c:"#E74C3C"},{h:90,l:"Levemente reducido",c:"#F39C12"},{h:null,l:"Normal",c:"#2ECC71"}],fuente:"KDIGO"}},
+{id:"sodio",l:"Sodio",u:"mEq/L",g:"Riñón",a:["sodio","natremia","na"]},
+{id:"potasio",l:"Potasio",u:"mEq/L",g:"Riñón",a:["potasio","kalemia","k"]},
+{id:"calcio",l:"Calcio",u:"mg/dL",g:"Riñón",a:["calcio","calcemia","ca"]},
+{id:"magnesio",l:"Magnesio",u:"mg/dL",g:"Riñón",a:["magnesio","magnesemia","mg"]},
+// ── Tiroides ──
+{id:"tsh",l:"TSH",u:"uUI/mL",g:"Tiroides",a:["tsh","tirotrofina","hormona tiroestimulante"],
+ ref:{bandas:[{h:0.4,l:"Baja",c:"#3498DB"},{h:4.0,l:"Normal",c:"#2ECC71"},{h:null,l:"Elevada",c:"#E74C3C"}],fuente:"General"}},
+{id:"t4l",l:"T4 libre",u:"ng/dL",g:"Tiroides",a:["t4 libre","tiroxina libre","ft4","t4l"]},
+{id:"t3",l:"T3",u:"ng/dL",g:"Tiroides",a:["t3","triiodotironina","t3 total","t3 libre"]},
+// ── Vitaminas ──
+{id:"vit_d",l:"Vitamina D (25-OH)",u:"ng/mL",g:"Vitaminas",a:["vitamina d","25 oh vitamina d","25 hidroxivitamina d","vitamina d3","calcidiol","25 oh d"],
+ ref:{bandas:[{h:20,l:"Deficiencia",c:"#E74C3C"},{h:30,l:"Insuficiencia",c:"#F39C12"},{h:null,l:"Suficiencia",c:"#2ECC71"}],fuente:"Endocrine Society"}},
+{id:"vit_b12",l:"Vitamina B12",u:"pg/mL",g:"Vitaminas",a:["vitamina b12","b12","cobalamina","cianocobalamina"]},
+{id:"folato",l:"Ácido fólico",u:"ng/mL",g:"Vitaminas",a:["acido folico","folato","folatos"]},
+// ── Inflamación y hormonas ──
+{id:"pcr",l:"Proteína C reactiva",u:"mg/L",g:"Otros",a:["proteina c reactiva","pcr","pcr ultrasensible","crp"]},
+{id:"testosterona",l:"Testosterona total",u:"ng/dL",g:"Otros",a:["testosterona","testosterona total","testo"]},
+{id:"cpk",l:"CPK",u:"U/L",g:"Otros",a:["cpk","ck","creatinquinasa","creatin fosfoquinasa"]},
+];
+const LAB_PARES=(()=>{const o=[];LAB_CANON.forEach(x=>x.a.forEach(al=>o.push([" "+al+" ",x.id])));return o.sort((a,b)=>b[0].length-a[0].length)})();
+// Devuelve el analito canónico para una etiqueta de laboratorio
+const canonLab=label=>{
+  const l=normLbl(label);
+  for(const [al,id] of LAB_PARES){if(l.indexOf(al)>=0)return LAB_CANON.find(x=>x.id===id)}
+  return null;
+};
+const clasificarLab=(canon,valor)=>{
+  if(!canon||!canon.ref)return null;
+  const v=Number(String(valor).replace(",","."));
+  if(isNaN(v))return null;
+  for(const b of canon.ref.bandas){if(b.h===null||v<b.h)return {l:b.l,c:b.c,fuente:canon.ref.fuente}}
+  return null;
+};
+
+// ─── EVOLUCIÓN DE ANALITOS ENTRE ESTUDIOS ───
+// Agrupa el mismo parámetro medido en estudios distintos, para ver la tendencia.
+const serieEstudios=studies=>{
+  const mapa={};
+  [...(studies||[])].sort((a,b)=>a.date.localeCompare(b.date)).forEach(st=>{
+    (st.values||[]).forEach(v=>{
+      if(!v||!v.label)return;
+      const num=Number(String(v.value).replace(",","."));
+      if(isNaN(num))return;
+      const canon=canonLab(v.label);
+      const k=canon?canon.id:normLbl(v.label).trim();
+      if(!k)return;
+      if(!mapa[k])mapa[k]={label:canon?canon.l:v.label,canon:canon,grupo:canon?canon.g:"Otros",unit:(canon&&canon.u)||v.unit||"",ref:v.ref||"",puntos:[]};
+      if(v.unit&&!mapa[k].unit)mapa[k].unit=v.unit;
+      if(v.ref&&!mapa[k].ref)mapa[k].ref=v.ref;
+      mapa[k].puntos.push({date:st.date,valor:num,flag:v.flag||""});
+    });
+  });
+  return Object.keys(mapa).map(k=>mapa[k])
+    .filter(x=>x.puntos.length>0)
+    .sort((a,b)=>b.puntos.length-a.puntos.length||a.label.localeCompare(b.label));
+};
+const tendencia=p=>{
+  if(p.puntos.length<2)return null;
+  const a=p.puntos[0].valor, b=p.puntos[p.puntos.length-1].valor;
+  if(a===0)return null;
+  const d=(b-a)/Math.abs(a)*100;
+  if(Math.abs(d)<5)return {t:"estable",i:"\u2192",c:"#888",pct:d};
+  return d>0?{t:"sube",i:"\u2197",c:"#E67E22",pct:d}:{t:"baja",i:"\u2198",c:"#3498DB",pct:d};
+};
+
 // ─── RANGOS DE REFERENCIA ───
 // Poblacionales, no diagnósticos. Las bandas de suma de pliegues, IMO e IAM son
 // las del propio informe ISAK; IMC de OMS; % graso de ACE (hombres); cintura de OMS.
@@ -1097,6 +1221,39 @@ function BodyTab({data,setData,apiKey}){
   const[derIds,setDerIds]=useState([]);
   const[interp,setInterp]=useState("");
   const[selA,setSelA]=useState(null);
+  const[glLoad,setGlLoad]=useState(false);
+  const[glErr,setGlErr]=useState("");
+
+  // Análisis longitudinal: mira TODOS los estudios juntos, no uno por uno
+  const analizarEvolucion=async()=>{
+    if(!apiKey){alert("Necesitás cargar tu API key en Config.");return}
+    const sts=[...(data.healthStudies||[])].sort((a,b)=>a.date.localeCompare(b.date));
+    if(sts.length<2){alert("Hacen falta al menos 2 estudios para ver evolución.");return}
+    setGlLoad(true);setGlErr("");
+    try{
+      const series=serieEstudios(sts);
+      const conSerie=series.filter(x=>x.puntos.length>=2);
+      const unaVez=series.filter(x=>x.puntos.length===1);
+      const linea=x=>x.label+(x.unit?" ("+x.unit+")":"")+(x.canon&&x.canon.ref?" [guia "+x.canon.ref.fuente+"]":(x.ref?" [ref lab "+x.ref+"]":""))+": "+x.puntos.map(pt=>pt.date.slice(0,7)+"="+pt.valor+(pt.flag==="alto"||pt.flag==="bajo"?"("+pt.flag+")":"")).join(", ");
+      const antro=[...(data.anthropometry||[])].sort((a,b)=>a.date.localeCompare(b.date))
+        .map(m=>m.date+": "+ANTHRO.filter(f=>m[f.id]&&!f.t).map(f=>f.l+" "+m[f.id]+f.u).join(", ")).join("\n");
+      const prompt="Sos un asistente que ORGANIZA el historial de estudios de una persona para que llegue mejor preparada a la consulta médica. NO sos médico. NO diagnostiques, NO nombres enfermedades como conclusión, NO recomiendes medicación ni suplementos, NO digas si algo es grave o no. Tu trabajo es ordenar datos y señalar qué conviene preguntar.\n\n"
+      +"HISTORIAL DE LABORATORIO ("+sts.length+" estudios entre "+sts[0].date+" y "+sts[sts.length-1].date+"). Cada línea es un parámetro con sus mediciones en el tiempo (AAAA-MM=valor):\n"
+      +conSerie.slice(0,120).map(linea).join("\n")
+      +(unaVez.length?"\n\nMEDIDOS UNA SOLA VEZ:\n"+unaVez.slice(0,60).map(linea).join("\n"):"")
+      +(antro?"\n\nCOMPOSICIÓN CORPORAL:\n"+antro:"")
+      +"\n\nDevolvé texto plano en español rioplatense, sin markdown, con estas 4 secciones y nada más:\n"
+      +"1. TENDENCIAS: parámetros con 3 o más mediciones donde se vea un movimiento sostenido. Decí el valor inicial, el final y las fechas. Solo lo que se mueve de verdad, no listes todo.\n"
+      +"2. FUERA DE RANGO HOY: qué está marcado alto o bajo en el estudio MÁS RECIENTE, con el valor y el rango de referencia del propio estudio. Aclarás si venía así de antes o es nuevo.\n"
+      +"3. SIN CONTROL RECIENTE: parámetros medidos alguna vez y no repetidos en más de 2 años.\n"
+      +"4. PREGUNTAS PARA EL MÉDICO: 4 a 6 preguntas concretas, basadas en lo de arriba.\n\n"
+      +"Reglas: los parámetros ya vienen unificados aunque cada laboratorio los llame distinto. Donde figura [guia ...] usá ese criterio de la sociedad científica; donde solo hay [ref lab ...] usá el rango del propio estudio y aclaralo. Usá solo los números que te di, no inventes ni completes. Si un rango de referencia no está, decilo en vez de suponerlo. Los rangos cambian entre laboratorios: no compares valores de distintos labs como si fueran idénticos, aclaralo. Cerrá recordando que esto no reemplaza la lectura de un profesional.";
+      const txt=await callAI(prompt,apiKey,4000);
+      const nd={...data,healthAnalysis:{date:td(),text:txt,nStudies:sts.length}};
+      setData(nd);sv(nd);
+    }catch(e){setGlErr("No se pudo analizar: "+(e.message||""))}
+    setGlLoad(false);
+  };
   const anthroRef=React.useRef(null);
   // estudios
   const[stView,setStView]=useState("list");
@@ -1327,6 +1484,43 @@ function BodyTab({data,setData,apiKey}){
       <input ref={studyRef} type="file" accept="image/*,application/pdf" onChange={onStudyFile} style={{display:"none"}}/>
       <button onClick={()=>studyRef.current&&studyRef.current.click()} style={{...S.btn,width:"100%",marginBottom:20}}>{"\u{1F4CE}"} Adjuntar estudio de salud</button>
       {studies.length===0&&<div style={S.cd}><p style={{fontSize:13,color:"#888",textAlign:"center"}}>Adjuntá análisis de sangre, radiografías, ecografías, ECG, etc. La app extrae los valores y arma un resumen.</p></div>}
+      {studies.length>=2&&(()=>{
+        const series=serieEstudios(studies), rep2=series.filter(x=>x.puntos.length>=2);
+        const an=data.healthAnalysis;
+        return <div style={{marginBottom:20}}>
+          <div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.06)"}}>
+            <h3 style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:"#9B59B6",margin:"0 0 6px"}}>{"\u{1F4C8}"} Evolución entre estudios</h3>
+            <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,margin:"0 0 10px"}}>{studies.length} estudios cargados {"\u00b7"} {rep2.length} parámetros medidos más de una vez. El análisis mira todo el historial junto, no estudio por estudio.</p>
+            <button onClick={analizarEvolucion} disabled={glLoad} style={{...S.btn,width:"100%",padding:"12px 16px",fontSize:14,background:glLoad?"#444":"linear-gradient(135deg,#9B59B6,#6C3483)",opacity:glLoad?0.7:1}}>{glLoad?"Analizando historial...":(an?"Volver a analizar":"Analizar evolución con IA")}</button>
+            {glErr&&<p style={{fontSize:11.5,color:"#E74C3C",marginTop:8,marginBottom:0}}>{glErr}</p>}
+          </div>
+          {an&&<div style={S.aicd}>
+            <p style={{fontSize:13,lineHeight:1.6,color:"#CCC",whiteSpace:"pre-wrap",margin:0}}>{an.text}</p>
+            <p style={{fontSize:11,color:"#888",marginTop:10,marginBottom:0}}>{fd(an.date)} {"\u00b7"} sobre {an.nStudies} estudios</p>
+          </div>}
+          {rep2.length>0&&<div style={{marginTop:12}}>
+            <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:8}}>PARÁMETROS CON SEGUIMIENTO</div>
+            {[...new Set(rep2.map(x=>x.grupo||"Otros"))].map(gr=><div key={gr} style={{marginBottom:10}}>
+              <div style={{fontSize:10.5,color:"#9B59B6",letterSpacing:1,fontWeight:700,marginBottom:5}}>{String(gr).toUpperCase()}</div>
+              {rep2.filter(x=>(x.grupo||"Otros")===gr).map((x,i)=>{const t=tendencia(x),ult=x.puntos[x.puntos.length-1],pri=x.puntos[0],cl=clasificarLab(x.canon,ult.valor);
+                return <div key={i} style={{...S.cd,padding:"9px 14px",marginBottom:6,borderLeft:cl?"3px solid "+cl.c:undefined}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:12.5,color:"#FFF",fontWeight:600}}>{x.label}</div>
+                      <div style={{fontSize:10.5,color:"#777",marginTop:2}}>{x.puntos.length} mediciones {"\u00b7"} {pri.date.slice(0,7)} a {ult.date.slice(0,7)}</div>
+                      {cl&&<div style={{fontSize:10.5,color:cl.c,fontWeight:600,marginTop:2}}>{cl.l}<span style={{color:"#666",fontWeight:400}}> {"\u00b7"} {cl.fuente}</span></div>}
+                    </div>
+                    <div style={{textAlign:"right",whiteSpace:"nowrap"}}>
+                      <div style={{fontSize:13,fontWeight:700,color:ult.flag==="alto"||ult.flag==="bajo"?"#E74C3C":"#FFF"}}>{ult.valor}<span style={{fontSize:10,color:"#888"}}> {x.unit}</span></div>
+                      {t&&<div style={{fontSize:10.5,color:t.c,fontWeight:600}}>{t.i} {pri.valor} {"\u2192"} {ult.valor}</div>}
+                    </div>
+                  </div>
+                </div>})}
+            </div>)}
+          </div>}
+          <p style={{fontSize:11,color:"#888",lineHeight:1.5,marginTop:12,fontStyle:"italic"}}>{"\u26A0\uFE0F"} Esto ordena tus datos, no diagnostica. Los rangos de referencia cambian entre laboratorios. Llevá el historial a tu médico.</p>
+        </div>;
+      })()}
       {studies.map(s=>{const ti=STUDY_TYPES.find(t=>t.id===s.type);const ab=(s.values||[]).filter(v=>v.flag==="alto"||v.flag==="bajo").length;
         return <button key={s.id} onClick={()=>{setStSel(s.id);setStView("detail")}} style={{...S.cd,width:"100%",textAlign:"left",cursor:"pointer",display:"block"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{ti?.i}</span><div><div style={{fontSize:14,color:"#FFF",fontFamily:"'Oswald',sans-serif"}}>{s.title}</div><div style={{fontSize:11,color:"#888"}}>{ti?.l} · {fd(s.date)}</div></div></div>{ab>0&&<span style={{fontSize:11,color:"#E74C3C",fontWeight:700}}>{ab} fuera de rango</span>}{ab===0&&(s.values||[]).length>0&&<span style={{fontSize:11,color:"#2ECC71"}}>{"✓"} {s.values.length}</span>}</div></button>})}
     </div>}
@@ -1471,6 +1665,8 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
   const[impMsg,setImpMsg]=useState(null);
+  const[wipeOn,setWipeOn]=useState(false);
+  const[wipeTxt,setWipeTxt]=useState("");
   const[gd,setGd]=useState(GD.cfg());
   const[gdMsg,setGdMsg]=useState(null);
   const[gdBusy,setGdBusy]=useState(false);
@@ -1584,7 +1780,29 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     {impMsg&&<p style={{fontSize:11.5,color:impMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0}}>{impMsg.t}</p>}
     <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Importar <b>reemplaza</b> todo lo que tengas en este dispositivo. Si tenés algo que no querés perder, exportá primero.</p>
   </div>
-  <div style={{...S.cd,marginTop:16}}><h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Borrar datos</h3><button onClick={()=>{if(window.confirm("Seguro? Se borran TODOS los datos.")){localStorage.removeItem(SK);window.location.reload()}}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Borrar todo</button></div></div>;
+  <div style={{...S.cd,marginTop:16,borderLeft:"3px solid #E74C3C"}}>
+    <h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Borrar todo</h3>
+    <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>Reinicia la app de cero en este dispositivo. No hay forma de deshacerlo.</p>
+    {!wipeOn
+      ? <button onClick={()=>setWipeOn(true)} style={{...S.aset,borderStyle:"solid",borderColor:"rgba(231,76,60,0.4)",color:"#E74C3C"}}>Quiero borrar todo</button>
+      : <div>
+          <div style={{background:"rgba(231,76,60,0.08)",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+            <div style={{fontSize:11.5,color:"#E74C3C",fontWeight:700,marginBottom:6}}>Vas a perder:</div>
+            {Object.keys(stats).filter(k=>stats[k]>0).map(k=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"2px 0"}}>
+              <span style={{fontSize:12,color:"#CCC"}}>{k}</span><span style={{fontSize:12,color:"#FFF",fontWeight:600}}>{stats[k]}</span></div>)}
+            {Object.keys(stats).every(k=>stats[k]===0)&&<p style={{fontSize:12,color:"#888",margin:0}}>No hay nada guardado todavía.</p>}
+          </div>
+          <p style={{fontSize:11.5,color:"#CCC",marginBottom:8,lineHeight:1.5}}>Antes de borrar se descarga un backup automático. Además se corta la sincronización, para que el Drive <b>no</b> se pise con datos vacíos.</p>
+          <label style={{fontSize:11.5,color:"#888",display:"block",marginBottom:4}}>Escribí BORRAR para confirmar</label>
+          <input value={wipeTxt} onChange={e=>setWipeTxt(e.target.value)} placeholder="BORRAR" style={{...S.inp,marginBottom:10}}/>
+          <button disabled={wipeTxt.trim().toUpperCase()!=="BORRAR"} onClick={()=>{
+            try{bkExport(data)}catch(e){}
+            GD.clear();
+            setTimeout(()=>{try{localStorage.removeItem(SK)}catch(e){};window.location.reload()},1200);
+          }} style={{...S.btn,width:"100%",background:wipeTxt.trim().toUpperCase()==="BORRAR"?"linear-gradient(135deg,#E74C3C,#C0392B)":"#3a3a3a",opacity:wipeTxt.trim().toUpperCase()==="BORRAR"?1:0.5}}>Borrar todo definitivamente</button>
+          <button onClick={()=>{setWipeOn(false);setWipeTxt("")}} style={{...S.aset,marginTop:8,color:"#888"}}>Cancelar</button>
+        </div>}
+  </div></div>;
 }
 
 // ─── FOOD DATABASE (proteinas por 100g) ───
