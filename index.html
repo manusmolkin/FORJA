@@ -96,8 +96,12 @@ const ANTHRO=[
 // Diámetros
 {id:"humerus_d",l:"Diámetro húmero",u:"cm",g:"Diámetros"},{id:"femur_d",l:"Diámetro fémur",u:"cm",g:"Diámetros"},
 {id:"wrist_d",l:"Diámetro muñeca",u:"cm",g:"Diámetros"},{id:"biacromial_d",l:"Diámetro biacromial",u:"cm",g:"Diámetros"},
+// Valoración cualitativa del profesional (texto, no números)
+{id:"val_fat",l:"Tejido graso",u:"",g:"Valoración",t:1},
+{id:"val_muscle",l:"Tejido muscular",u:"",g:"Valoración",t:1},
+{id:"val_bone",l:"Estructura ósea",u:"",g:"Valoración",t:1},
 ];
-const ANTHRO_G=["Básico","Composición","Índices","Perímetros","Pliegues","Diámetros"];
+const ANTHRO_G=["Básico","Composición","Índices","Perímetros","Pliegues","Diámetros","Valoración"];
 
 // Phases for someone returning after months off
 const PHASES=[
@@ -373,11 +377,14 @@ skin_mass:["masa de la piel","masa piel","masa cutanea","tejido cutaneo"],
 skin_pct:["porcentaje cutaneo","porcentaje de la piel","porcentaje piel"],
 body_water:["agua corporal","agua total","agua corporal total","porcentaje de agua","act"],
 visceral_fat:["grasa visceral","nivel de grasa visceral"],
-sum6:["suma 6 pliegues","suma de 6 pliegues","sumatoria 6 pliegues","sumatoria de 6 pliegues","sumatoria de seis pliegues","z6"],
+sum6:["suma 6 pliegues","suma de pliegues","suma de 6 pliegues","sumatoria 6 pliegues","sumatoria de 6 pliegues","sumatoria de seis pliegues","z6"],
 sum8:["suma 8 pliegues","suma de 8 pliegues","sumatoria 8 pliegues","sumatoria de 8 pliegues"],
 imo:["imo","indice musculo oseo","indice musculo hueso"],
 iam:["iam","indice adiposo muscular","indice adipo muscular","indice adiposo sobre muscular"],
 somatotype:["somatotipo"],
+val_fat:["tejido graso","tejido adiposo valoracion","valoracion tejido graso","componente adiposo valoracion"],
+val_muscle:["tejido muscular","valoracion tejido muscular","desarrollo muscular"],
+val_bone:["estructura osea","valoracion estructura osea","componente oseo valoracion"],
 neck_p:["perimetro cuello","perimetro de cuello","circunferencia cuello","cuello"],
 chest_p:["perimetro pecho","perimetro toracico","perimetro de torax","circunferencia pecho","torax","pecho"],
 waist_p:["perimetro cintura","perimetro de cintura","circunferencia cintura","cintura"],
@@ -420,6 +427,7 @@ const TOK_STOP=["de","del","la","el","los","las","en","por","y","a","tabla","tex
 const toks=t=>normLbl(t).split(" ").filter(w=>w&&TOK_STOP.indexOf(w)<0);
 // ¿la unidad es compatible con el campo?
 const unidadOk=(f,unit)=>{
+  if(f.t)return true;
   const u=String(unit||"").trim();
   const esPct=u.indexOf("%")>=0;
   if(esPct)return f.u==="%";
@@ -449,6 +457,14 @@ const idPorSimilitud=(label,unit)=>{
   });
   return puntaje>=0.55?mejor:null;
 };
+const idTexto=label=>{
+  const l=normLbl(label);
+  for(const [a,id] of ALIAS_PARES){
+    const f=ANTHRO.find(x=>x.id===id);
+    if(f&&f.t&&l.indexOf(a)>=0)return id;
+  }
+  return null;
+};
 const idPorEtiqueta=(label,unit)=>{
   const l=normLbl(label);
   for(const [a,id] of ALIAS_PARES){
@@ -465,8 +481,17 @@ const repartirExtras=(vals,extras)=>{
     const num0=Number(String(x.value).replace(",","."));
     // filas de tabla de referencia ("Suma de pliegues - rango Alto: 71-90"): la app ya las tiene
     if(isNaN(num0)&&normLbl(x.label).indexOf(" rango ")>=0)return;
-    const id=idPorEtiqueta(x.label,x.unit);
-    const num=Number(String(x.value).replace(",","."));
+    let id=idPorEtiqueta(x.label,x.unit);
+    let f=id?ANTHRO.find(y=>y.id===id):null;
+    // valor de texto que cayó en un campo numérico: reintentar entre los cualitativos
+    if(isNaN(num0)&&(!f||!f.t)){const it=idTexto(x.label);if(it){id=it;f=ANTHRO.find(y=>y.id===it)}}
+    // "Clasificación IMO: Bajo" y similares: la app ya las calcula sola
+    if(isNaN(num0)&&normLbl(x.label).indexOf(" clasificacion ")>=0&&id&&ANTHRO_REF[id])return;
+    if(f&&f.t){                                   // campo de texto
+      if(v[id]===undefined||v[id]===""){v[id]=String(x.value).trim();movidos++;return}
+      sobran.push(x);return;
+    }
+    const num=num0;
     if(id&&!isNaN(num)&&String(x.value).trim()!==""){
       if(v[id]===undefined||v[id]===""){v[id]=String(num);movidos++;return}
       const prev=Number(String(v[id]).replace(",","."));
@@ -480,7 +505,8 @@ const repartirExtras=(vals,extras)=>{
 const derivarAnthro=v=>{
   const n=k=>{const x=Number(String(v[k]).replace(",","."));return isNaN(x)?null:x};
   const o={...v}; let calc=0;
-  const set=(k,val)=>{if((o[k]===undefined||o[k]==="")&&val!=null&&isFinite(val)){o[k]=String(Math.round(val*10)/10);calc++}};
+  const TXT=ANTHRO.filter(f=>f.t).map(f=>f.id);
+  const set=(k,val)=>{if(TXT.indexOf(k)>=0)return;if((o[k]===undefined||o[k]==="")&&val!=null&&isFinite(val)){o[k]=String(Math.round(val*10)/10);calc++}};
   const P=n("weight"), H=n("height");
   if(P&&H)set("bmi",P/Math.pow(H/100,2));
   // masa <-> porcentaje, en los dos sentidos, para cada componente
@@ -1069,6 +1095,7 @@ function BodyTab({data,setData,apiKey}){
   const[exNote,setExNote]=useState("");
   const[extras,setExtras]=useState([]);
   const[derIds,setDerIds]=useState([]);
+  const[interp,setInterp]=useState("");
   const anthroRef=React.useRef(null);
   // estudios
   const[stView,setStView]=useState("list");
@@ -1091,7 +1118,7 @@ function BodyTab({data,setData,apiKey}){
     setVals(d.vals);
     setDerIds(Object.keys(d.vals).filter(k=>base[k]===undefined));
   };
-  const doSave=()=>{const reg={id:gi(),date,...vals};if(extras.length)reg._extras=extras;const nd={...data,anthropometry:[...(data.anthropometry||[]),reg]};setData(nd);sv(nd);setAdding(false);setVals({});setExtras([]);setDerIds([]);setExNote("")};
+  const doSave=()=>{const reg={id:gi(),date,...vals};if(extras.length)reg._extras=extras;if(interp.trim())reg._interp=interp.trim();const nd={...data,anthropometry:[...(data.anthropometry||[]),reg]};setData(nd);sv(nd);setAdding(false);setVals({});setExtras([]);setDerIds([]);setInterp("");setExNote("")};
 
   const onAnthroFile=async(e)=>{
     const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;
@@ -1100,7 +1127,7 @@ function BodyTab({data,setData,apiKey}){
     try{
       const block=await fileToBlock(file);
       const fields=ANTHRO.map(f=>'"'+f.id+'": '+f.l+(f.u?" ("+f.u+")":"")).join(", ");
-      const txt="Analizá este estudio de composición corporal (antropometría ISAK, InBody, DEXA, balanza) y extraé TODOS los valores numéricos. No omitas ninguno.\n\nMUY IMPORTANTE: si el informe trae una tabla de MEDICIONES INDIVIDUALES —pliegues cutáneos uno por uno, perímetros, diámetros óseos— extraé CADA FILA por separado. Esa tabla suele estar en una página distinta de la del resumen de composición: buscala. No te quedes solo con las sumatorias ni con la tabla de porcentajes.\n\nCampos conocidos (usá exactamente estos ids): "+fields+"\n\nDevolvé SOLO JSON válido, sin markdown:\n{\"date\":\"YYYY-MM-DD o null\",\"values\":{\"weight\":77.5,\"triceps_f\":12.4},\"extras\":[{\"label\":\"nombre tal como figura\",\"value\":\"valor\",\"unit\":\"unidad o vacío\"}]}\n\nReglas:\n- En \"values\" van los que correspondan a un id conocido, aunque el informe los llame distinto (masa adiposa = fat_mass, pliegue tricipital = triceps_f, sumatoria de 6 pliegues = sum6).\n- En \"extras\" va todo lo demás. NO incluyas las tablas de rangos de referencia (Excelente/Bueno/Alto con sus cortes): esas no son mediciones tuyas.\n- Si el mismo dato figura en kg y en %, incluí los dos.\n- Recorré el documento entero, todas las páginas.";
+      const txt="Analizá este estudio de composición corporal (antropometría ISAK, InBody, DEXA, balanza) y extraé TODOS los valores numéricos. No omitas ninguno.\n\nMUY IMPORTANTE: si el informe trae una tabla de MEDICIONES INDIVIDUALES —pliegues cutáneos uno por uno, perímetros, diámetros óseos— extraé CADA FILA por separado. Esa tabla suele estar en una página distinta de la del resumen de composición: buscala. No te quedes solo con las sumatorias ni con la tabla de porcentajes.\n\nCampos conocidos (usá exactamente estos ids): "+fields+"\n\nDevolvé SOLO JSON válido, sin markdown:\n{\"date\":\"YYYY-MM-DD o null\",\"values\":{\"weight\":77.5,\"triceps_f\":12.4},\"extras\":[{\"label\":\"nombre tal como figura\",\"value\":\"valor\",\"unit\":\"unidad o vacío\"}],\"interp\":\"texto de interpretación/conclusión o vacío\"}\n\nReglas:\n- En \"values\" van los que correspondan a un id conocido, aunque el informe los llame distinto (masa adiposa = fat_mass, pliegue tricipital = triceps_f, sumatoria de 6 pliegues = sum6).\n- En \"extras\" va todo lo demás. NO incluyas las tablas de rangos de referencia (Excelente/Bueno/Alto con sus cortes): esas no son mediciones tuyas.\n- Si el mismo dato figura en kg y en %, incluí los dos.\n- Recorré el documento entero, todas las páginas.\n- Si el informe trae secciones de INTERPRETACIÓN, CONCLUSIÓN o comentarios del profesional, copiálas en \"interp\" (texto plano, tal como están).\n- Las valoraciones cualitativas (Tejido graso: Alto, Tejido muscular: Intermedio, Estructura ósea: Proporcional) van en \"extras\" con ese nombre.";
 
       const resp=await callAIVision([block,{type:"text",text:txt}],apiKey,6000);
       const parsed=pj(resp);
@@ -1112,6 +1139,7 @@ function BodyTab({data,setData,apiKey}){
       const rp=repartirExtras(nv,ex0);
       const dv=derivarAnthro(rp.vals);
       const ex=rp.extras;
+      if(typeof parsed.interp==="string"&&parsed.interp.trim())setInterp(parsed.interp.trim());
       setVals(dv.vals);setExtras(ex);setDerIds(Object.keys(dv.vals).filter(k=>rp.vals[k]===undefined));
       if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setDate(parsed.date);
       setExNote("Se cargaron "+Object.keys(dv.vals).length+" valores"+(rp.movidos?" ("+rp.movidos+" reconocidos por nombre equivalente)":"")+(dv.calc?", "+dv.calc+" calculados":"")+(ex.length?" y quedaron "+ex.length+" adicionales":"")+". Revisalos y guardá.");
@@ -1169,7 +1197,9 @@ function BodyTab({data,setData,apiKey}){
       <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
       {ANTHRO.filter(f=>f.g===g).map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
         <label style={{fontSize:12.5,color:vals[f.id]?"#FFF":"#999",flex:1}}>{f.l}{derIds.indexOf(f.id)>=0&&<span style={{fontSize:9.5,color:"#3E9A8C",marginLeft:6,fontWeight:700,letterSpacing:0.4}}>CALC</span>}</label>
-        <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>cambiarVal(f.id,e.target.value)} style={{...S.inp,width:78,textAlign:"right",color:derIds.indexOf(f.id)>=0?"#3E9A8C":"#FFF",borderColor:derIds.indexOf(f.id)>=0?"rgba(62,154,140,0.4)":undefined}} step="any" placeholder="-"/>
+        {f.t
+          ? <input value={vals[f.id]||""} onChange={e=>cambiarVal(f.id,e.target.value)} style={{...S.inp,width:150,fontSize:12}} placeholder="-"/>
+          : <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>cambiarVal(f.id,e.target.value)} style={{...S.inp,width:78,textAlign:"right",color:derIds.indexOf(f.id)>=0?"#3E9A8C":"#FFF",borderColor:derIds.indexOf(f.id)>=0?"rgba(62,154,140,0.4)":undefined}} step="any" placeholder="-"/>}
         <span style={{fontSize:11,color:"#888",width:30}}>{f.u}</span>
       </div>)}
       {ANTHRO.filter(f=>f.g===g&&vals[f.id]&&clasificar(f.id,vals[f.id])).map(f=>{const cl=clasificar(f.id,vals[f.id]);
@@ -1178,6 +1208,10 @@ function BodyTab({data,setData,apiKey}){
           <span style={{fontSize:10,fontWeight:700,color:"#0A0A0B",background:cl.c,borderRadius:5,padding:"2px 7px"}}>{cl.l}</span>
         </div>})}
     </div>)}
+    <div style={{marginBottom:14}}>
+      <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>INTERPRETACIÓN Y CONCLUSIÓN</div>
+      <textarea value={interp} onChange={e=>setInterp(e.target.value)} placeholder="Lo que escribió el profesional al final del informe" style={{...S.ta,fontSize:12}} rows={4}/>
+    </div>
     <div style={{marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
         <span style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700}}>OTROS VALORES DEL INFORME</span>
@@ -1238,19 +1272,27 @@ function BodyTab({data,setData,apiKey}){
     {sub==="anthro"&&<div>
       <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
       <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:8,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio (autocompleta)"}</button>
-      <button onClick={()=>{setVals({});setExtras([]);setDerIds([]);setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
+      <button onClick={()=>{setVals({});setExtras([]);setDerIds([]);setInterp("");setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
       {latest&&<div style={{marginBottom:16}}>
         <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
         {ANTHRO_G.filter(g=>ANTHRO.some(f=>f.g===g&&latest[f.id])).map(g=><div key={g} style={{marginBottom:14}}>
           <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {ANTHRO.filter(f=>f.g===g&&latest[f.id]).map(f=>{const cl=clasificar(f.id,latest[f.id]);
+            {ANTHRO.filter(f=>f.g===g&&latest[f.id]&&f.t).map(f=><div key={f.id} style={{...S.cd,padding:"10px 12px",marginBottom:0,gridColumn:"span 2"}}>
+              <span style={{fontSize:11,color:"#888"}}>{f.l}</span>
+              <span style={{display:"block",fontSize:15,color:"#FFF",fontWeight:600,marginTop:3}}>{latest[f.id]}</span>
+            </div>)}
+            {ANTHRO.filter(f=>f.g===g&&latest[f.id]&&!f.t).map(f=>{const cl=clasificar(f.id,latest[f.id]);
               return <button key={f.id} onClick={()=>setSelM(f.id)} style={{...S.cd,padding:"10px 12px",cursor:"pointer",marginBottom:0,borderLeft:cl?"3px solid "+cl.c:undefined}}>
                 <span style={{fontSize:11,color:"#888"}}>{f.l}</span>
                 <span style={{...S.stv,fontSize:20,marginTop:4}}>{latest[f.id]}<span style={S.stu}> {f.u}</span></span>
                 {cl&&<span style={{display:"block",fontSize:10,fontWeight:700,color:cl.c,marginTop:3}}>{cl.l}<span style={{color:"#666",fontWeight:400}}> · {cl.fuente}</span></span>}
               </button>})}
           </div></div>)}
+        {latest._interp&&<div style={{marginBottom:14}}>
+          <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>INTERPRETACIÓN DEL PROFESIONAL</div>
+          <div style={{...S.cd,padding:"12px 14px"}}><p style={{fontSize:12.5,color:"#CCC",lineHeight:1.6,margin:0,whiteSpace:"pre-wrap"}}>{latest._interp}</p></div>
+        </div>}
         {(latest._extras||[]).length>0&&<div>
           <div style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>OTROS VALORES DEL INFORME</div>
           <div style={{...S.cd,padding:"10px 14px"}}>
