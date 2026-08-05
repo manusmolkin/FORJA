@@ -331,7 +331,7 @@ bmr:["metabolismo basal","tmb","bmr","gasto energetico basal","metabolismo basal
 age:["edad"],
 body_fat:["porcentaje adiposo","porcentaje graso","porcentaje de grasa","porcentaje de masa grasa","porcentaje tejido adiposo","porcentaje de tejido adiposo","grasa corporal","adiposidad relativa","masa adiposa relativa","porcentaje grasa","grasa"],
 fat_mass:["masa adiposa","masa grasa","masa de grasa","tejido adiposo","masa de tejido adiposo"],
-muscle_mass:["masa muscular","tejido muscular","masa de tejido muscular","masa musculo esqueletica","masa muscular esqueletica"],
+muscle_mass:["masa muscular","componente muscular","tejido muscular","masa de tejido muscular","masa musculo esqueletica","masa muscular esqueletica"],
 muscle_pct:["porcentaje muscular","porcentaje de masa muscular","porcentaje tejido muscular","porcentaje de tejido muscular"],
 lean_mass:["masa magra","masa libre de grasa","mlg","masa corporal magra","ffm","peso libre de grasa"],
 bone_mass:["masa osea","tejido oseo","masa de hueso","masa de tejido oseo"],
@@ -340,7 +340,7 @@ residual_mass:["masa residual","tejido residual"],
 residual_pct:["porcentaje residual","porcentaje de masa residual"],
 skin_mass:["masa de la piel","masa piel","masa cutanea","tejido cutaneo"],
 skin_pct:["porcentaje cutaneo","porcentaje de la piel","porcentaje piel"],
-body_water:["agua corporal","agua corporal total","porcentaje de agua","act"],
+body_water:["agua corporal","agua total","agua corporal total","porcentaje de agua","act"],
 visceral_fat:["grasa visceral","nivel de grasa visceral"],
 sum6:["suma 6 pliegues","suma de 6 pliegues","sumatoria 6 pliegues","sumatoria de 6 pliegues","sumatoria de seis pliegues","z6"],
 sum8:["suma 8 pliegues","suma de 8 pliegues","sumatoria 8 pliegues","sumatoria de 8 pliegues"],
@@ -384,19 +384,48 @@ const normLbl=t=>{
 };
 // Pares [alias, id] ordenados de mas largo a mas corto, para que gane el mas especifico
 const ALIAS_PARES=(()=>{const out=[];Object.keys(ANTHRO_ALIAS).forEach(id=>ANTHRO_ALIAS[id].forEach(a=>out.push([" "+a+" ",id])));return out.sort((x,y)=>y[0].length-x[0].length)})();
+// palabras que no aportan a la identificacion
+const TOK_STOP=["de","del","la","el","los","las","en","por","y","a","tabla","texto","valor","valores","medida","medido","total","estimado","estimada","seccion","individual","promedio"];
+const toks=t=>normLbl(t).split(" ").filter(w=>w&&TOK_STOP.indexOf(w)<0);
+// ¿la unidad es compatible con el campo?
+const unidadOk=(f,unit)=>{
+  const u=String(unit||"").trim();
+  const esPct=u.indexOf("%")>=0;
+  if(esPct)return f.u==="%";
+  if(f.u==="%"&&u!=="")return false;
+  if(!u)return true;
+  const eq={kg:"kg",g:"kg",kgs:"kg",cm:"cm",mm:"mm",kcal:"kcal"};
+  const nu=eq[u.toLowerCase()]||u.toLowerCase();
+  if(f.u&&["kg","cm","mm","kcal"].indexOf(f.u)>=0&&["kg","cm","mm","kcal"].indexOf(nu)>=0)return f.u===nu;
+  return true;
+};
+// 2do intento: parecido por palabras clave, cuando no hay frase exacta
+const idPorSimilitud=(label,unit)=>{
+  const L=toks(label); if(!L.length)return null;
+  let mejor=null, puntaje=0;
+  ANTHRO.forEach(f=>{
+    if(!unidadOk(f,unit))return;
+    [f.l].concat(ANTHRO_ALIAS[f.id]||[]).forEach(c=>{
+      const C=toks(c); if(!C.length)return;
+      let hit=0; C.forEach(w=>{if(L.indexOf(w)>=0)hit++});
+      if(!hit)return;
+      const cobertura=hit/C.length;                    // cuanto del alias aparece
+      const precision=hit/L.length;                    // cuanto de la etiqueta se usa
+      if(cobertura<0.75)return;                        // exigimos casi todas las palabras del alias
+      const sc=cobertura*0.7+precision*0.3;
+      if(sc>puntaje){puntaje=sc;mejor=f.id}
+    });
+  });
+  return puntaje>=0.55?mejor:null;
+};
 const idPorEtiqueta=(label,unit)=>{
-  const l=normLbl(label), u=normLbl(unit);
-  const esPct=u.indexOf(" ")>=0&&String(unit||"").indexOf("%")>=0;
+  const l=normLbl(label);
   for(const [a,id] of ALIAS_PARES){
     if(l.indexOf(a)<0)continue;
     const f=ANTHRO.find(x=>x.id===id);
-    if(!f)continue;
-    // no meter un porcentaje en un campo de kg ni al reves
-    if(esPct&&f.u&&f.u!=="%")continue;
-    if(!esPct&&f.u==="%"&&String(unit||"")!=="")continue;
-    return id;
+    if(f&&unidadOk(f,unit))return id;
   }
-  return null;
+  return idPorSimilitud(label,unit);
 };
 // Reparte los extras en los campos conocidos. Devuelve {vals, extras, movidos}
 const repartirExtras=(vals,extras)=>{
@@ -418,13 +447,19 @@ const derivarAnthro=v=>{
   const n=k=>{const x=Number(String(v[k]).replace(",","."));return isNaN(x)?null:x};
   const o={...v}; let calc=0;
   const set=(k,val)=>{if((o[k]===undefined||o[k]==="")&&val!=null&&isFinite(val)){o[k]=String(Math.round(val*10)/10);calc++}};
-  const P=n("weight"), H=n("height"), GP=n("body_fat"), GM=n("fat_mass"), MM=n("muscle_mass");
+  const P=n("weight"), H=n("height");
   if(P&&H)set("bmi",P/Math.pow(H/100,2));
-  if(P&&GP!=null&&GM==null)set("fat_mass",P*GP/100);
-  if(P&&GM!=null&&GP==null)set("body_fat",GM/P*100);
-  const GM2=n("fat_mass");
-  if(P&&GM2!=null)set("lean_mass",P-GM2);
-  if(P&&MM!=null)set("muscle_pct",MM/P*100);
+  // masa <-> porcentaje, en los dos sentidos, para cada componente
+  [["fat_mass","body_fat"],["muscle_mass","muscle_pct"],["bone_mass","bone_pct"],["residual_mass","residual_pct"],["skin_mass","skin_pct"]].forEach(par=>{
+    const kg=n(par[0]), pc=n(par[1]);
+    if(P&&pc!=null&&kg==null)set(par[0],P*pc/100);
+    if(P&&kg!=null&&pc==null)set(par[1],kg/P*100);
+  });
+  const GM=Number(String(o.fat_mass).replace(",","."));
+  if(P&&!isNaN(GM))set("lean_mass",P-GM);
+  // metabolismo basal por Katch-McArdle, que usa masa magra
+  const ML=Number(String(o.lean_mass).replace(",","."));
+  if(!isNaN(ML)&&ML>0)set("bmr",370+21.6*ML);
   return {vals:o,calc};
 };
 
@@ -999,6 +1034,7 @@ function BodyTab({data,setData,apiKey}){
   const[exLoad,setExLoad]=useState(false);
   const[exNote,setExNote]=useState("");
   const[extras,setExtras]=useState([]);
+  const[derIds,setDerIds]=useState([]);
   const anthroRef=React.useRef(null);
   // estudios
   const[stView,setStView]=useState("list");
@@ -1011,7 +1047,17 @@ function BodyTab({data,setData,apiKey}){
   const[stErr,setStErr]=useState("");
   const studyRef=React.useRef(null);
 
-  const doSave=()=>{const reg={id:gi(),date,...vals};if(extras.length)reg._extras=extras;const nd={...data,anthropometry:[...(data.anthropometry||[]),reg]};setData(nd);sv(nd);setAdding(false);setVals({});setExtras([]);setExNote("")};
+  // Recalcula los deducibles cada vez que cambia un campo. Si escribís sobre uno
+  // calculado, pasa a ser tuyo y deja de recalcularse.
+  const cambiarVal=(id,valor)=>{
+    const der=derIds.filter(k=>k!==id);
+    const base={...vals}; der.forEach(k=>delete base[k]);
+    if(valor!=="")base[id]=valor; else delete base[id];
+    const d=derivarAnthro(base);
+    setVals(d.vals);
+    setDerIds(Object.keys(d.vals).filter(k=>base[k]===undefined));
+  };
+  const doSave=()=>{const reg={id:gi(),date,...vals};if(extras.length)reg._extras=extras;const nd={...data,anthropometry:[...(data.anthropometry||[]),reg]};setData(nd);sv(nd);setAdding(false);setVals({});setExtras([]);setDerIds([]);setExNote("")};
 
   const onAnthroFile=async(e)=>{
     const file=e.target.files&&e.target.files[0];if(e.target)e.target.value="";if(!file)return;
@@ -1031,7 +1077,7 @@ function BodyTab({data,setData,apiKey}){
       const rp=repartirExtras(nv,ex0);
       const dv=derivarAnthro(rp.vals);
       const ex=rp.extras;
-      setVals(dv.vals);setExtras(ex);
+      setVals(dv.vals);setExtras(ex);setDerIds(Object.keys(dv.vals).filter(k=>rp.vals[k]===undefined));
       if(parsed.date&&typeof parsed.date==="string"&&parsed.date.length===10&&parsed.date[4]==="-")setDate(parsed.date);
       setExNote("Se cargaron "+Object.keys(dv.vals).length+" valores"+(rp.movidos?" ("+rp.movidos+" reconocidos por nombre equivalente)":"")+(dv.calc?", "+dv.calc+" calculados":"")+(ex.length?" y quedaron "+ex.length+" adicionales":"")+". Revisalos y guardá.");
       setAdding(true);
@@ -1087,8 +1133,8 @@ function BodyTab({data,setData,apiKey}){
     {ANTHRO_G.map(g=><div key={g} style={{marginBottom:14}}>
       <div style={{fontSize:11,color:"#FF6B35",letterSpacing:1.2,fontWeight:700,marginBottom:6}}>{g.toUpperCase()}</div>
       {ANTHRO.filter(f=>f.g===g).map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-        <label style={{fontSize:12.5,color:vals[f.id]?"#FFF":"#999",flex:1}}>{f.l}</label>
-        <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>{const nv={...vals};if(e.target.value)nv[f.id]=e.target.value;else delete nv[f.id];setVals(nv)}} style={{...S.inp,width:78,textAlign:"right"}} step="any" placeholder="-"/>
+        <label style={{fontSize:12.5,color:vals[f.id]?"#FFF":"#999",flex:1}}>{f.l}{derIds.indexOf(f.id)>=0&&<span style={{fontSize:9.5,color:"#3E9A8C",marginLeft:6,fontWeight:700,letterSpacing:0.4}}>CALC</span>}</label>
+        <input type="number" inputMode="decimal" value={vals[f.id]||""} onFocus={e=>e.target.select()} onChange={e=>cambiarVal(f.id,e.target.value)} style={{...S.inp,width:78,textAlign:"right",color:derIds.indexOf(f.id)>=0?"#3E9A8C":"#FFF",borderColor:derIds.indexOf(f.id)>=0?"rgba(62,154,140,0.4)":undefined}} step="any" placeholder="-"/>
         <span style={{fontSize:11,color:"#888",width:30}}>{f.u}</span>
       </div>)}
     </div>)}
@@ -1096,11 +1142,12 @@ function BodyTab({data,setData,apiKey}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
         <span style={{fontSize:11,color:"#3E9A8C",letterSpacing:1.2,fontWeight:700}}>OTROS VALORES DEL INFORME</span>
         <span style={{display:"flex",gap:6}}>
-          {extras.length>0&&<button onClick={()=>{const rp=repartirExtras(vals,extras);const dv=derivarAnthro(rp.vals);setVals(dv.vals);setExtras(rp.extras);setExNote(rp.movidos||dv.calc?"Se reubicaron "+rp.movidos+" y se calcularon "+dv.calc+".":"No se pudo reubicar ninguno.")}} style={{...S.sm,fontSize:11}}>Reubicar</button>}
+          {extras.length>0&&<button onClick={()=>{const rp=repartirExtras(vals,extras);const dv=derivarAnthro(rp.vals);setVals(dv.vals);setExtras(rp.extras);setDerIds(Object.keys(dv.vals).filter(k=>rp.vals[k]===undefined));setExNote(rp.movidos||dv.calc?"Se reubicaron "+rp.movidos+" y se calcularon "+dv.calc+".":"No se pudo reubicar ninguno.")}} style={{...S.sm,fontSize:11}}>Reubicar</button>}
           <button onClick={()=>setExtras([...extras,{label:"",value:"",unit:""}])} style={{...S.sm,fontSize:11}}>+ Agregar</button>
         </span>
       </div>
       {extras.length===0&&<p style={{fontSize:11,color:"#777",margin:0}}>Todo lo que el estudio traiga y no entre en las categorías de arriba aparece acá.</p>}
+      {extras.filter(x=>isNaN(Number(String(x.value).replace(",",".")))).length>0&&<p style={{fontSize:10.5,color:"#777",margin:"0 0 8px",lineHeight:1.4}}>Las valoraciones en texto (Alto, Elevado, etc.) se guardan tal cual: no son números y no entran en ningún campo.</p>}
       {extras.map((x,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
         <input value={x.label} placeholder="Parámetro" onChange={e=>{const n=[...extras];n[i]={...n[i],label:e.target.value};setExtras(n)}} style={{...S.inp,flex:1,fontSize:12}}/>
         <input value={x.value} placeholder="Valor" onChange={e=>{const n=[...extras];n[i]={...n[i],value:e.target.value};setExtras(n)}} style={{...S.inp,width:70,textAlign:"right",fontSize:12}}/>
@@ -1151,7 +1198,7 @@ function BodyTab({data,setData,apiKey}){
     {sub==="anthro"&&<div>
       <input ref={anthroRef} type="file" accept="image/*,application/pdf" onChange={onAnthroFile} style={{display:"none"}}/>
       <button onClick={()=>anthroRef.current&&anthroRef.current.click()} disabled={exLoad} style={{...S.btn,width:"100%",marginBottom:8,background:exLoad?"#444":"linear-gradient(135deg,#3498DB,#2C7BB6)",opacity:exLoad?0.7:1}}>{exLoad?"Analizando estudio...":"\u{1F4CE} Adjuntar estudio (autocompleta)"}</button>
-      <button onClick={()=>{setVals({});setExtras([]);setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
+      <button onClick={()=>{setVals({});setExtras([]);setDerIds([]);setExNote("");setDate(td());setAdding(true)}} style={{...S.aset,marginBottom:20,marginTop:0}}>+ Cargar manualmente</button>
       {latest&&<div style={{marginBottom:16}}>
         <h3 style={{...S.t1,fontSize:14}}>Última medición — {fd(latest.date)}</h3>
         {ANTHRO_G.filter(g=>ANTHRO.some(f=>f.g===g&&latest[f.id])).map(g=><div key={g} style={{marginBottom:14}}>
