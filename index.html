@@ -26,11 +26,11 @@ input[type=number]{-moz-appearance:textfield}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
 <script type="text/babel">
 const {useState,useEffect}=React;
-const SK="forja-data",AK="forja-api-key";
+const SK="forja-data",AK="forja-api-key",TSK="forja-saved-at";
 // Modelo de la API de Anthropic. Si algun dia devuelve error de modelo, se cambia solo aca.
 const AI_MODEL="claude-sonnet-5";
 const ld=()=>{try{return JSON.parse(localStorage.getItem(SK))}catch{return null}};
-const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{};try{if(typeof GD!=="undefined")GD.schedulePush(d)}catch{}};
+const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d));localStorage.setItem(TSK,new Date().toISOString())}catch{};try{if(typeof GD!=="undefined")GD.schedulePush(d)}catch{}};
 const gk=()=>{try{return localStorage.getItem(AK)||""}catch{return""}};
 const stk=k=>{try{localStorage.setItem(AK,k)}catch{}};
 const td=()=>new Date().toISOString().slice(0,10);
@@ -705,6 +705,39 @@ const bkParse=txt=>{
   return {...EMPTY,...d};
 };
 
+// ─── UNIR DOS COPIAS DE LOS DATOS ───
+// Las listas se unen por id (nada se pierde). Los ajustes sueltos (fase, bloque
+// nutricional, config) se toman de la copia guardada más recientemente.
+const LISTAS=["sessions","cardioSessions","meals","anthropometry","healthStudies","coachNotes","planNotes"];
+const localSavedAt=()=>{try{return localStorage.getItem(TSK)||""}catch{return ""}};
+const unirDatos=(local,remoto,remotoTs)=>{
+  const l=local||{}, r=remoto||{};
+  const remotoGana=String(remotoTs||"")>String(localSavedAt()||"");
+  const out={...EMPTY,...(remotoGana?l:r),...(remotoGana?r:l)};   // escalares: gana el más nuevo
+  const info={nuevas:{},total:{}};
+  LISTAS.forEach(k=>{
+    const a=Array.isArray(l[k])?l[k]:[], b=Array.isArray(r[k])?r[k]:[];
+    const vistos={}, res=[];
+    a.concat(b).forEach(x=>{
+      if(!x)return;
+      const id=x.id!=null?String(x.id):JSON.stringify(x).slice(0,120);
+      if(vistos[id])return;
+      vistos[id]=1; res.push(x);
+    });
+    res.sort((x,y)=>String(x.date||"").localeCompare(String(y.date||"")));
+    out[k]=res;
+    info.nuevas[k]=res.length-a.length;
+    info.total[k]=res.length;
+  });
+  out.activeSession=l.activeSession||r.activeSession||null;
+  return {datos:out,info};
+};
+const resumenUnion=info=>{
+  const nom={sessions:"sesiones",cardioSessions:"cardio",meals:"comidas",anthropometry:"antropometrías",healthStudies:"estudios",coachNotes:"notas del coach",planNotes:"notas del plan"};
+  const partes=LISTAS.filter(k=>info.nuevas[k]>0).map(k=>"+"+info.nuevas[k]+" "+nom[k]);
+  return partes.length?partes.join(", "):"nada nuevo";
+};
+
 // ─── SINCRONIZACION CON GOOGLE DRIVE ───
 const GCID="725154657820-hoonsvl5pubavna62l8ojn60om1dql0m.apps.googleusercontent.com";
 const GSCOPE="https://www.googleapis.com/auth/drive.file";
@@ -785,8 +818,11 @@ const GD={
     const id=await GD.findFile();
     if(!id)throw new Error("Todavía no hay ningún backup en Drive");
     const r=await GD.api("https://www.googleapis.com/drive/v3/files/"+id+"?alt=media");
-    const d=bkParse(await r.text());
+    const txt=await r.text();
+    const d=bkParse(txt);
+    let ts=""; try{ts=(JSON.parse(txt)||{})._savedAt||""}catch(e){}
     GD.setCfg({last:new Date().toISOString()});
+    d._ts=ts;
     return d;
   },
   // Empuja 4 segundos despues del ultimo cambio, solo si la sync esta activa
@@ -876,7 +912,7 @@ const resetDayOv=(data,setData,pi)=>{
   const nd={...data,dayOverrides:ov};setData(nd);sv(nd);
 };
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],phase:0,dayOverrides:{},anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],activeSession:null,phase:0,dayOverrides:{},anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
 
 const STUDY_TYPES=[
   {id:"laboratorio",l:"Laboratorio / Sangre",i:"\u{1FA78}"},
@@ -1139,24 +1175,45 @@ function TodayTab({data,onGo}){
   const sched=phSched(data,pi);
   const hoyIdx=(new Date().getDay()+6)%7;            // 0 = Lunes
   const[sel,setSel]=useState(hoyIdx);
+  const[semOff,setSemOff]=useState(0);
   const dayName=WEEKDAYS[sel];
   const sess=sched.find(d=>d.day===dayName)||null;
-  const esHoy=sel===hoyIdx;
+  const esHoy=sel===hoyIdx&&semOff===0;
   const sport=SPORT_DAYS[dayName];
   const coreCasa=!sess&&CORE_DAYS.indexOf(dayName)>=0;
   const porciones=sess?[...new Set(sess.exercises.map(e=>EXP[e.n]).filter(Boolean))]:[];
-  const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx));
+  // Lo que te toca hoy, con el peso sugerido según tus sesiones registradas
+  const sugerido=nombre=>{
+    const aj=ajusteDe(data,nombre);
+    const todos=(data.sessions||[]).flatMap(x=>(x.exercises||[]).map(e=>({...e,_d:x.date}))).sort((a,b)=>String(a._d).localeCompare(String(b._d)));
+    const clave=normLbl(nombre);
+    const base=clave.split("(")[0].trim();
+    let hist=todos.filter(e=>normLbl(e.name)===clave);
+    if(!hist.length)hist=todos.filter(e=>normLbl(e.name).split("(")[0].trim()===base);   // "Press inclinado" ≈ "Press inclinado (mancuernas)"
+    const t=tgt(hist);
+    if(aj)return {txt:(aj.peso!=null?aj.peso+" kg":"")+(aj.series!=null?" · "+aj.series+" series":"")+(aj.reps!=null?" · "+aj.reps+" reps":""),motivo:aj.motivo,coach:true};
+    if(t)return {txt:t.tiempo?(t.targetReps+" seg"):(t.targetWeight+" kg · "+t.targetReps+" reps"),motivo:t.suggestion,coach:false};
+    return {txt:"Sin registro previo",motivo:"Primera vez que hacés este ejercicio: elegí un peso que te deje 3-4 repeticiones en reserva y quedará como referencia.",nuevo:true};
+  };
+  const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx)+semOff*7);
   const tipo=sess?{t:sess.name,c:ph.c,i:"\u{1F3CB}️",s:"Gimnasio"}
     :sport?{t:sport.split(" ").slice(1).join(" "),c:"#F39C12",i:sport.split(" ")[0],s:"Deporte"}
     :coreCasa?{t:"Core en casa",c:"#3E9A8C",i:"\u{1F3E0}",s:"8-10 min, sin equipo"}
     :{t:"Descanso",c:"#666",i:"\u{1F634}",s:"Recuperación"};
   return <div style={S.pg}>
-    <h2 style={S.t1}>{esHoy?"Hoy":dayName}</h2>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <h2 style={{...S.t1,margin:0}}>{esHoy?"Hoy":dayName}</h2>
+      <div style={{display:"flex",alignItems:"center",gap:4}}>
+        <button onClick={()=>setSemOff(semOff-1)} style={S.sm}>&#8592;</button>
+        <span style={{fontSize:11,color:semOff===0?"#666":"#FF6B35",minWidth:80,textAlign:"center",fontWeight:semOff?700:400}}>{semOff===0?"Esta semana":(semOff===1?"Próxima":(semOff===-1?"Anterior":(semOff>0?"En "+semOff+" sem":"Hace "+(-semOff)+" sem")))}</span>
+        <button onClick={()=>setSemOff(semOff+1)} style={S.sm}>&#8594;</button>
+      </div>
+    </div>
     <div style={{display:"flex",gap:5,marginBottom:16}}>
       {WEEKDAYS.map((d,i)=>{
         const tiene=sched.some(x=>x.day===d);
         const act=i===sel;
-        return <button key={d} onClick={()=>setSel(i)} style={{flex:1,minWidth:0,padding:"8px 0",borderRadius:8,border:i===hoyIdx?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",
+        return <button key={d} onClick={()=>setSel(i)} style={{flex:1,minWidth:0,padding:"8px 0",borderRadius:8,border:(i===hoyIdx&&semOff===0)?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",
           background:act?(tiene?ph.c+"33":"rgba(255,255,255,0.08)"):"rgba(255,255,255,0.03)",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
           <span style={{fontSize:10,color:act?"#FFF":"#888",fontWeight:act?700:400}}>{d.slice(0,3)}</span>
           <span style={{width:6,height:6,borderRadius:3,background:tiene?ph.c:(SPORT_DAYS[d]?"#F39C12":(CORE_DAYS.indexOf(d)>=0?"#3E9A8C":"#333"))}}></span>
@@ -1171,6 +1228,14 @@ function TodayTab({data,onGo}){
       </div>
       <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"·"} {ph.ic} {ph.name}</div>
     </div>
+    {data.activeSession&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.08)"}}>
+      <div style={{fontSize:12.5,color:"#2ECC71",fontWeight:700}}>Tenés una sesión en curso</div>
+      <p style={{fontSize:11.5,color:"#CCC",margin:"4px 0 8px",lineHeight:1.5}}>{(data.activeSession.exercises||[]).length} ejercicios cargados del {fd(data.activeSession.date)}. No se pierde si salís de la pestaña.</p>
+      <button onClick={()=>onGo("train","pesas")} style={{...S.btn,width:"100%",padding:"10px 14px",fontSize:13,background:"linear-gradient(135deg,#2ECC71,#27AE60)"}}>Seguir la sesión {"\u2192"}</button>
+    </div>}
+    {sess&&(data.sessions||[]).length===0&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.07)"}}>
+      <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>Este dispositivo no tiene ninguna sesión registrada, así que todavía no hay pesos de referencia. Si las cargaste en otro lado, andá a Config y tocá <b>Traer de Drive</b>.</p>
+    </div>}
     {sess&&<div>
       <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>{sess.muscles.map(g=><span key={g} style={{fontSize:10,padding:"3px 9px",borderRadius:10,background:MG[g]?.c+"22",color:MG[g]?.c,fontWeight:600}}>{MG[g]?.i} {MG[g]?.l}</span>)}</div>
       {porciones.length>0&&<div style={{...S.cd,padding:"12px 14px"}}>
@@ -1179,14 +1244,19 @@ function TodayTab({data,onGo}){
       </div>}
       <button onClick={()=>onGo("train","pesas")} style={{...S.btn,marginTop:4,width:"100%"}}>Empezar entreno {"→"}</button>
       <h3 style={{...S.t1,fontSize:14,marginTop:18}}>Los {sess.exercises.length} ejercicios</h3>
-      {sess.exercises.map((e,i)=><div key={i} style={{...S.cd,padding:"9px 14px"}}>
+      {sess.exercises.map((e,i)=>{const sg2=sugerido(e.n);
+        return <div key={i} style={{...S.cd,padding:"9px 14px",borderLeft:sg2&&!sg2.nuevo?"3px solid "+(sg2.coach?"#9B59B6":"#2ECC71"):undefined}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
           <div style={{minWidth:0}}><div style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>{i+1}. {e.n}</div>
           {EXP[e.n]&&<div style={{fontSize:10.5,color:"#7A7A7A",marginTop:2}}>{EXP[e.n]}</div>}</div>
           <span style={{fontSize:12,color:"#FF6B35",fontWeight:700,whiteSpace:"nowrap"}}>{e.s} x {e.r}</span>
         </div>
-        {e.note&&<div style={{fontSize:11,color:"#999",marginTop:5,fontStyle:"italic"}}>{e.note}</div>}
-      </div>)}
+        {sg2&&<div style={{marginTop:6,padding:"6px 9px",borderRadius:8,background:sg2.coach?"rgba(155,89,182,0.10)":(sg2.nuevo?"rgba(255,255,255,0.04)":"rgba(46,204,113,0.08)")}}>
+          <div style={{fontSize:11.5,color:sg2.coach?"#C39BD3":(sg2.nuevo?"#888":"#2ECC71"),fontWeight:700}}>{sg2.coach?"🧠 Coach: ":(sg2.nuevo?"":"📈 Hoy: ")}{sg2.txt}</div>
+          {sg2.motivo&&<div style={{fontSize:10.5,color:"#999",marginTop:2}}>{sg2.motivo}</div>}
+        </div>}
+        {!sg2&&e.note&&<div style={{fontSize:11,color:"#999",marginTop:5,fontStyle:"italic"}}>{e.note}</div>}
+      </div>})}
     </div>}
     {coreCasa&&<div>
       <div style={{...S.cd,borderLeft:"3px solid #3E9A8C",background:"rgba(62,154,140,0.06)"}}>
@@ -1681,7 +1751,9 @@ function TrainTab({data,setData,apiKey,modo,setModo}){
 }
 
 function WorkoutTab({data,setData,apiKey}){
-  const[ses,setSes]=useState(null);const[sg,setSg]=useState(null);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
+  const[ses,setSes]=useState(data.activeSession||null);const[sg,setSg]=useState(null);
+  // La sesión en curso se guarda en cada cambio: podés salir a mirar el plan y volver
+  useEffect(()=>{setData(d=>{const nd={...d,activeSession:ses};sv(nd);return nd})},[ses]);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
   const start=(f)=>{setSes({id:gi(),date:f||td(),exercises:[]});setSg(null);setExQ("")};
   const setFecha=f=>setSes(x=>({...x,date:f}));
   const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const aj=ajusteDe(data,name);const t0=tgt(hist);const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" \u2192 "+aj.peso+"kg":"")+(aj.series!=null?" \u00b7 "+aj.series+" series":"")+(aj.reps!=null?" \u00b7 "+aj.reps+" reps":""),coach:true}:t0;const modo=exModo(name);const uni=MODO_INFO[modo].lados;const tiempo=esTiempo(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,modo,tiempo,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));if(aj)marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
@@ -1697,7 +1769,7 @@ function WorkoutTab({data,setData,apiKey}){
     const sets=ex.sets.map(st=>{const o={...st};if(lados&&o.repsR===undefined)o.repsR=o.reps;if(!lados)delete o.repsR;return o});
     return {...ex,modo:m2,uni:lados,sets};
   })}));
-  const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns};
+  const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns,activeSession:null};
     if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);
       const corte=raw.indexOf("---AJUSTES---");
       const txt=(corte>=0?raw.slice(0,corte):raw).trim();
@@ -2012,6 +2084,12 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     }
     await GD.push(data);
   },"Conectado. Tus datos ya están en Drive.");
+  const gdUnir=()=>gdRun(async()=>{
+    const u=unirDatos(data,gdElegir.remoto,gdElegir.remoto._ts);
+    sv(u.datos);setData(u.datos);GD.setCfg({auto:true,last:new Date().toISOString()});
+    await GD.push(u.datos);
+    setGdElegir(null);setTimeout(()=>window.location.reload(),900);
+  },"Listo. Datos unidos.");
   const gdUsarDrive=()=>gdRun(async()=>{
     const nd=gdElegir.remoto;
     sv(nd);setData(nd);GD.setCfg({auto:true,last:new Date().toISOString()});
@@ -2020,12 +2098,22 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const gdUsarLocal=()=>gdRun(async()=>{await GD.push(data);setGdElegir(null)},"Listo. Se subieron los datos de este dispositivo.");
   const gdPush=()=>gdRun(()=>GD.push(data),"Subido a Drive.");
   const gdPull=()=>gdRun(async()=>{
-    const nd=await GD.pull();
-    const st=bkStats(nd);
-    const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
-    if(!window.confirm("En Drive hay: "+resumen+".\n\nEsto REEMPLAZA los datos de este dispositivo. ¿Seguir?"))throw new Error("Cancelado");
-    sv(nd);setData(nd);setTimeout(()=>window.location.reload(),900);
-  },"Datos traídos de Drive. Recargando...");
+    const rem=await GD.pull();
+    const u=unirDatos(data,rem,rem._ts);
+    const res=resumenUnion(u.info);
+    if(res==="nada nuevo"){throw new Error("Drive no tiene nada que este dispositivo no tenga ya.")}
+    if(!window.confirm("Se van a UNIR los datos de Drive con los de este dispositivo.\n\nSe suman: "+res+".\n\nNo se borra nada de lo que ya tenés. ¿Seguir?"))throw new Error("Cancelado");
+    sv(u.datos);setData(u.datos);
+    await GD.push(u.datos);
+    setTimeout(()=>window.location.reload(),900);
+  },"Datos unidos y sincronizados. Recargando...");
+  const gdReemplazar=()=>gdRun(async()=>{
+    const rem=await GD.pull();
+    const st=bkStats(rem);
+    const resumen=Object.keys(st).filter(k=>st[k]>0).map(k=>st[k]+" "+k.toLowerCase()).join(", ")||"nada";
+    if(!window.confirm("REEMPLAZAR todo lo de este dispositivo por lo que hay en Drive ("+resumen+").\n\nLo que tengas acá y no esté en Drive se pierde. ¿Seguir?"))throw new Error("Cancelado");
+    sv(rem);setData(rem);setTimeout(()=>window.location.reload(),900);
+  },"Datos reemplazados por los de Drive. Recargando...");
   const gdOff=()=>{if(window.confirm("Se corta la sincronización en este dispositivo. El archivo de Drive queda como está. ¿Seguir?")){GD.clear();setGd({});setGdMsg(null)}};
   const stats=bkStats(data);
   const doImport=ev=>{
@@ -2034,10 +2122,15 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     rd.onload=()=>{
       try{
         const nd=bkParse(String(rd.result));
+        let ts=""; try{ts=(JSON.parse(String(rd.result))||{})._exported||""}catch(e){}
+        const u=unirDatos(data,nd,ts);
+        const res=resumenUnion(u.info);
         const st=bkStats(nd);
-        const resumen=Object.keys(st).map(k=>st[k]+" "+k.toLowerCase()).join(", ");
-        if(window.confirm("El backup contiene: "+resumen+".\n\nEsto REEMPLAZA todos los datos actuales de este dispositivo. ¿Seguir?")){
-          sv(nd);setData(nd);setImpMsg({ok:true,t:"Datos restaurados. Recargando..."});
+        const resumen=Object.keys(st).filter(k=>st[k]>0).map(k=>st[k]+" "+k.toLowerCase()).join(", ")||"nada";
+        const unir=window.confirm("El backup contiene: "+resumen+".\n\nACEPTAR: unir con lo que ya tenés (se suman "+res+", no se pierde nada).\nCANCELAR: elegir reemplazar todo.");
+        if(unir){sv(u.datos);setData(u.datos);setImpMsg({ok:true,t:"Datos unidos. Recargando..."});setTimeout(()=>window.location.reload(),1200);}
+        else if(window.confirm("¿Reemplazar TODO lo de este dispositivo por el backup? Lo que no esté en el archivo se pierde.")){
+          sv(nd);setData(nd);setImpMsg({ok:true,t:"Datos reemplazados. Recargando..."});
           setTimeout(()=>window.location.reload(),1200);
         }
       }catch(e){setImpMsg({ok:false,t:"No se pudo leer: "+e.message})}
@@ -2060,14 +2153,15 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
           </div>
           <div style={{display:"flex",gap:8}}>
             <button onClick={gdPush} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"↑ Subir ahora"}</button>
-            <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"↓ Traer de Drive"}</button>
+            <button onClick={gdPull} disabled={gdBusy} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",opacity:gdBusy?0.5:1}}>{"⇅ Unir con Drive"}</button>
           </div>
+          <button onClick={gdReemplazar} disabled={gdBusy} style={{...S.aset,marginTop:8,color:"#888",fontSize:11}}>Reemplazar todo por lo de Drive (avanzado)</button>
           <button onClick={gdOff} style={{...S.aset,marginTop:8,color:"#777"}}>Desconectar este dispositivo</button>
         </div>
       : gdElegir
       ? <div style={{border:"1px solid rgba(66,133,244,0.4)",borderRadius:12,padding:"14px",background:"rgba(66,133,244,0.06)"}}>
           <div style={{fontSize:13,color:"#FFF",fontWeight:700,marginBottom:4}}>Ya hay datos en Drive</div>
-          <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,marginTop:0,marginBottom:12}}>Elegí con cuál te quedás. Lo otro se pierde.</p>
+          <p style={{fontSize:11.5,color:"#AAA",lineHeight:1.5,marginTop:0,marginBottom:12}}>Lo recomendado es unir: se juntan las dos y no se pierde nada.</p>
           <div style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
             <div style={{fontSize:11,color:"#4285F4",fontWeight:700,letterSpacing:0.5}}>EN DRIVE</div>
             <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rRemoto}</div>
@@ -2076,8 +2170,9 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
             <div style={{fontSize:11,color:"#FF6B35",fontWeight:700,letterSpacing:0.5}}>EN ESTE DISPOSITIVO</div>
             <div style={{fontSize:12,color:"#CCC",marginTop:3,lineHeight:1.4}}>{gdElegir.rLocal}</div>
           </div>
-          <button onClick={gdUsarDrive} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",fontSize:13,padding:"12px 16px",opacity:gdBusy?0.6:1}}>{"↓ Traer lo de Drive"}</button>
-          <button onClick={gdUsarLocal} disabled={gdBusy} style={{...S.aset,marginTop:8,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"↑ Subir lo de este dispositivo (pisa Drive)"}</button>
+          <button onClick={gdUnir} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#2ECC71,#27AE60)",fontSize:13,padding:"12px 16px",opacity:gdBusy?0.6:1}}>{"⇅ Unir las dos (recomendado)"}</button>
+          <button onClick={gdUsarDrive} disabled={gdBusy} style={{...S.aset,marginTop:8,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"↓ Quedarme solo con lo de Drive"}</button>
+          <button onClick={gdUsarLocal} disabled={gdBusy} style={{...S.aset,marginTop:6,borderStyle:"solid",opacity:gdBusy?0.6:1}}>{"↑ Quedarme solo con lo de este dispositivo"}</button>
           <button onClick={()=>{setGdElegir(null);setGdMsg(null)}} style={{...S.aset,marginTop:6,color:"#777"}}>Cancelar</button>
         </div>
       : <button onClick={gdConnect} disabled={gdBusy} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#4285F4,#2B62C7)",opacity:gdBusy?0.6:1}}>{gdBusy?"Conectando...":"Conectar con Google Drive"}</button>}
@@ -2102,7 +2197,7 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
       <input type="file" accept="application/json,.json" onChange={doImport} style={{display:"none"}}/>
     </label>
     {impMsg&&<p style={{fontSize:11.5,color:impMsg.ok?"#2ECC71":"#E74C3C",marginTop:10,marginBottom:0}}>{impMsg.t}</p>}
-    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Importar <b>reemplaza</b> todo lo que tengas en este dispositivo. Si tenés algo que no querés perder, exportá primero.</p>
+    <p style={{fontSize:10.5,color:"#777",marginTop:10,marginBottom:0,lineHeight:1.5}}>Al importar podés <b>unir</b> con lo que ya tenés (no se pierde nada) o reemplazar todo. La app te pregunta cuál.</p>
   </div>
   <div style={{...S.cd,marginTop:16,borderLeft:"3px solid #E74C3C"}}>
     <h3 style={{fontSize:14,color:"#E74C3C",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Borrar todo</h3>
