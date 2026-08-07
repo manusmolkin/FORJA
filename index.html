@@ -1031,35 +1031,174 @@ const ajustesPendientes=data=>{
   return a.items.filter(x=>(a.usados||[]).indexOf(x.ejercicio)<0);
 };
 
-function tgt(hist){
+// ─── IMPLEMENTO Y SALTO MÍNIMO REAL ───
+// El incremento posible no es continuo: depende de los discos y placas del gimnasio.
+// Si tu gimnasio tiene otros, cambiá estos números y todo se recalcula.
+const IMPL_STEP={barra:2.5,mancuerna:2,polea:5,maquina:5,corporal:0};
+const IMPL_L={barra:"barra",mancuerna:"mancuernas",polea:"polea",maquina:"máquina",corporal:"peso corporal"};
+const EX_IMPL={
+"Sentadilla":"barra","Sentadilla frontal":"barra","Sentadilla goblet":"mancuerna","Sentadilla hack":"maquina",
+"Prensa":"maquina","Extension cuadriceps":"maquina","Curl femoral":"maquina","Curl femoral sentado":"maquina",
+"Curl femoral tumbado":"maquina","Peso muerto rumano":"barra","Peso muerto convencional":"barra","Peso muerto sumo":"barra",
+"Buenos dias":"barra","Zancadas":"mancuerna","Zancadas caminando":"mancuerna","Sentadilla bulgara":"mancuerna",
+"Step up":"mancuerna","Hip thrust":"barra","Hip thrust unilateral":"mancuerna","Peso muerto rumano unilateral":"mancuerna",
+"Patada gluteo":"polea","Abduccion cadera":"maquina","Puente gluteo":"corporal","Frog pump":"corporal",
+"Gemelo de pie":"maquina","Gemelo sentado":"maquina","Gemelo en prensa":"maquina","Gemelo burro":"maquina","Gemelo unilateral":"mancuerna",
+"Press banca":"barra","Press banca plano (mancuernas)":"mancuerna","Press inclinado":"barra","Press inclinado (mancuernas)":"mancuerna",
+"Press declinado":"barra","Press mancuernas":"mancuerna","Press maquina":"maquina","Aperturas":"mancuerna",
+"Cruces polea":"polea","Peck deck":"maquina","Fondos":"corporal","Pull-over mancuerna":"mancuerna",
+"Dominadas":"corporal","Dominadas asistidas":"maquina","Jalon al pecho":"polea","Jalon agarre neutro":"polea","Jalon agarre supino":"polea",
+"Remo barra":"barra","Remo mancuerna":"mancuerna","Remo con apoyo en banco":"mancuerna","Remo en T":"barra",
+"Remo polea baja":"polea","Remo maquina":"maquina","Pull-over":"polea","Encogimiento hombros":"mancuerna",
+"Hiperextension 45":"corporal","Superman":"corporal",
+"Press militar":"barra","Press militar (mancuernas)":"mancuerna","Press Arnold":"mancuerna","Press maquina hombro":"maquina",
+"Elev. laterales":"mancuerna","Elev. laterales polea":"polea","Elev. frontales":"mancuerna","Pajaros":"mancuerna",
+"Face pull":"polea","Remo al menton":"barra",
+"Curl barra":"barra","Curl mancuernas":"mancuerna","Curl inclinado":"mancuerna","Curl martillo":"mancuerna",
+"Curl concentrado":"mancuerna","Curl polea":"polea","Curl predicador":"mancuerna","Curl arana":"mancuerna",
+"Extension polea":"polea","Extension polea soga":"polea","Extension cabeza":"mancuerna","Press frances":"barra",
+"Patada triceps":"mancuerna","Press cerrado":"barra","Fondos banco":"corporal","Fondos paralelas":"corporal",
+"Crunch":"corporal","Crunch polea":"polea","Crunch maquina":"maquina","Crunch inverso":"corporal","Plancha":"corporal",
+"Plancha lateral":"corporal","Ab wheel":"corporal","Elevacion piernas":"corporal","Elevacion piernas colgado":"corporal",
+"Elevacion rodillas colgado":"corporal","Russian twist":"mancuerna","Pallof press":"polea","Dead bug":"corporal","Bird dog":"corporal",
+"Curl muneca":"mancuerna","Curl reverso":"mancuerna","Pronacion/supinacion":"mancuerna","Extension muneca isometrica":"corporal",
+"Farmer walk":"mancuerna","Dead hang":"corporal",
+};
+const exImpl=n=>{
+  if(EX_IMPL[n])return EX_IMPL[n];
+  const t=normLbl(n);
+  if(t.indexOf("mancuerna")>=0)return "mancuerna";
+  if(t.indexOf("polea")>=0||t.indexOf("cable")>=0)return "polea";
+  if(t.indexOf("maquina")>=0||t.indexOf("prensa")>=0)return "maquina";
+  if(t.indexOf("barra")>=0)return "barra";
+  return "maquina";
+};
+// Rango de repeticiones que pide TU plan para ese ejercicio (no un 8-12 genérico)
+const rangoPlan=(data,nombre)=>{
+  const ph=PHASES[data.phase||0];
+  if(!ph)return null;
+  const clave=normLbl(nombre);
+  for(const d of ph.schedule){
+    for(const e of d.exercises){
+      if(normLbl(e.n)!==clave)continue;
+      const t=String(e.r).replace("s","").split("-");
+      const a=Number(t[0]), b=Number(t[1]!==undefined?t[1]:t[0]);
+      if(!isNaN(a)&&!isNaN(b))return [a,b];
+    }
+  }
+  return null;
+};
+// Junta implemento, salto y rango antes de calcular la sugerencia
+const tgtFor=(data,nombre,hist)=>{
+  const impl=exImpl(nombre);
+  return tgt(hist,{impl,step:IMPL_STEP[impl],rango:rangoPlan(data,nombre)||[8,12]});
+};
+
+function tgt(hist,opts){
   if(!hist?.length)return null;
   const last=hist.at(-1),sets=last.sets||[];
   if(!sets.length)return null;
+  const o=opts||{}, step=o.step!==undefined?o.step:2.5, impl=o.impl||"maquina";
+  const rango=o.rango||[8,12], rMin=rango[0], rMax=rango[1];
+
+  // Ejercicios por tiempo: se progresa en segundos
   if(last.tiempo||esTiempo(last.name)){
     const avgS=sets.reduce((a,x)=>a+(Number(x.reps)||0),0)/sets.length;
     const objetivo=Math.round(avgS)+5;
     return {targetWeight:Math.max(...sets.map(x=>Number(x.weight)||0)),targetReps:objetivo,targetSets:sets.length,
       suggestion:"Sumar 5 segundos: apuntar a "+objetivo+"s por serie.",tiempo:true};
   }
-  const avg=sets.reduce((s,x)=>s+x.reps,0)/sets.length,mw=Math.max(...sets.map(s=>s.weight));
-  let tw=mw,tr=Math.round(avg),ts=sets.length,sug="";
-  if(avg>=12){tw=Math.ceil((mw*1.025)/0.5)*0.5;tr=8;sug="Subir peso a "+tw+"kg. Apuntar a 8 reps."}
-  else if(avg>=8){tr=Math.round(avg)+1;sug="Mantener "+mw+"kg. Apuntar a "+tr+" reps."}
-  else if(avg>=6){if(sets.length<5){ts=sets.length+1;sug="Mantener "+mw+"kg x "+Math.round(avg)+" reps. +1 serie ("+ts+")."}else{tr=Math.round(avg)+1;sug="Mantener "+mw+"kg. Intentar "+tr+" reps."}}
-  else{tw=Math.floor((mw*0.95)/0.5)*0.5;tr=8;sug="Reducir a "+tw+"kg para 8 reps con tecnica."}
-  return{targetWeight:tw,targetReps:tr,targetSets:ts,suggestion:sug};
+
+  const avg=sets.reduce((s,x)=>s+(Number(x.reps)||0),0)/sets.length;
+  const mw=Math.max(...sets.map(x=>Number(x.weight)||0));
+  const rir=last.rir!==undefined&&last.rir!==""?Number(last.rir):null;   // repeticiones en reserva
+  let tw=mw,tr=Math.round(avg),ts=sets.length,sug="",nota="";
+
+  // ¿Cuánto pesa el salto más chico posible, en porcentaje?
+  const pctSalto=(mw>0&&step>0)?(step/mw*100):null;
+  const saltoGrande=pctSalto!==null&&pctSalto>10;
+
+  if(step===0||mw===0){                                  // peso corporal: solo reps
+    tr=Math.round(avg)+1;
+    sug="Peso corporal: apuntar a "+tr+" reps.";
+  }else if(avg>=rMax&&(rir===null||rir>=2)){             // techo del rango y con margen: subir
+    if(saltoGrande){
+      tw=mw; tr=Math.round(avg)+2;
+      sug="Sostener "+mw+"kg y llegar a "+tr+" reps.";
+      nota="El salto más chico de "+IMPL_L[impl]+" es "+step+"kg, un "+Math.round(pctSalto)+"% sobre "+mw+"kg. Demasiado de golpe: conviene acumular más reps antes.";
+    }else{
+      tw=Math.round((mw+step)*2)/2; tr=rMin;
+      sug="Subir a "+tw+"kg y volver a "+rMin+" reps.";
+      nota="Salto de "+step+"kg ("+Math.round(pctSalto)+"%), el mínimo posible en "+IMPL_L[impl]+".";
+    }
+  }else if(avg>=rMax&&rir!==null&&rir<=1){               // llegó al techo pero al límite
+    tw=mw; tr=Math.round(avg);
+    sug="Repetir "+mw+"kg x "+tr+" reps.";
+    nota="Llegaste al techo del rango pero con RIR "+rir+". Consolidá una sesión más antes de subir.";
+  }else if(avg>=rMin){                                   // dentro del rango: sumar reps
+    tr=Math.min(Math.round(avg)+1,rMax);
+    sug="Mantener "+mw+"kg. Apuntar a "+tr+" reps.";
+    nota="Rango objetivo "+rMin+"-"+rMax+" reps"+(rir!==null?" · último RIR "+rir:"")+".";
+  }else if(rir!==null&&rir===0){                         // no llegó al piso y sin margen: bajar
+    tw=Math.max(0,Math.round((mw-step)*2)/2); tr=rMin;
+    sug="Bajar a "+tw+"kg para llegar a "+rMin+" reps.";
+    nota="Quedaste debajo del rango y sin reps en reserva.";
+  }else{                                                 // no llegó al piso: sumar serie o bajar
+    if(sets.length<5){ts=sets.length+1;tw=mw;tr=Math.round(avg);
+      sug="Mantener "+mw+"kg x "+tr+" reps. Sumar 1 serie ("+ts+").";
+      nota="Antes de bajar peso, probá con una serie más.";
+    }else{tw=Math.max(0,Math.round((mw-step)*2)/2);tr=rMin;
+      sug="Bajar a "+tw+"kg para llegar a "+rMin+" reps.";
+      nota="Con 5 series ya y sin llegar al rango, conviene bajar la carga.";
+    }
+  }
+  return {targetWeight:tw,targetReps:tr,targetSets:ts,suggestion:sug,nota:nota,impl:impl,rango:rango};
 }
 
-function buildPrompt(ses,all,fb,meals){
-  const exd=ses.exercises.map(ex=>{const tm=ex.tiempo!==undefined?ex.tiempo:esTiempo(ex.name);const ss=ex.sets.map((s,i)=>"  S"+(i+1)+": "+s.weight+"kg x "+(ex.uni?(s.reps+(tm?"s":"")+" izq / "+(s.repsR||0)+(tm?"s":"")+" der"):(s.reps+(tm?" segundos":" reps")))).join("\n");return ex.name+" ("+MG[ex.muscleGroup]?.l+")"+(tm?" [POR TIEMPO: son segundos, no repeticiones]":"")+(ex.uni?" [POR LADO: no sumadas]":"")+":\n"+ss}).join("\n\n");
+
+function buildPrompt(ses,all,fb,meals,notas,ajustePrevio){
+  const exd=ses.exercises.map(ex=>{const tm=ex.tiempo!==undefined?ex.tiempo:esTiempo(ex.name);const ss=ex.sets.map((s,i)=>"  S"+(i+1)+": "+s.weight+"kg x "+(ex.uni?(s.reps+(tm?"s":"")+" izq / "+(s.repsR||0)+(tm?"s":"")+" der"):(s.reps+(tm?" segundos":" reps")))).join("\n");return ex.name+" ("+MG[ex.muscleGroup]?.l+", "+exImpl(ex.name)+")"+(tm?" [POR TIEMPO: son segundos, no repeticiones]":"")+(ex.uni?" [POR LADO: no sumadas]":"")+(ex.rir!==undefined&&ex.rir!==""?" [RIR "+ex.rir+"]":"")+":\n"+ss}).join("\n\n");
   const recent=all.slice(-5).map(s=>fd(s.date)+": "+[...new Set(s.exercises.map(e=>MG[e.muscleGroup]?.l))].join(", ")).join("\n");
+  // Continuidad: qué le venís diciendo vos y qué te viene respondiendo él
+  const unaLinea=t=>String(t||"").split("\n").join(" ").trim();
+  const previas=[...(notas||[])].filter(n=>n.sessionId!==ses.id).slice(-4);
+  const histCtx=previas.length?"\nHISTORIAL DE SEGUIMIENTO (de lo mas viejo a lo mas nuevo):\n"+previas.map(n=>
+    fd(n.date)+"\n  El usuario dijo: "+(n.feedback||"(sin comentario)")+"\n  Vos respondiste: "+unaLinea(n.note).slice(0,320)
+  ).join("\n")+"\n":"";
+  const ajCtx=(ajustePrevio&&Array.isArray(ajustePrevio.items)&&ajustePrevio.items.length)
+    ?"\nAJUSTES QUE INDICASTE LA VEZ ANTERIOR ("+fd(ajustePrevio.date)+"):\n"+ajustePrevio.items.map(x=>
+      "  "+x.ejercicio+": "+[x.peso!=null?x.peso+"kg":null,x.series!=null?x.series+" series":null,x.reps!=null?x.reps+" reps":null].filter(Boolean).join(", ")+(x.motivo?" ("+x.motivo+")":"")
+      +((ajustePrevio.usados||[]).indexOf(x.ejercicio)>=0?" [SE APLICO]":" [NO LLEGO A APLICARSE]")
+    ).join("\n")+"\n":"";
   const todayMeals=(meals||[]).filter(m=>m.date===ses.date);
   const nutCtx=todayMeals.length>0?"Alimentacion del dia:\n"+todayMeals.map(m=>{let txt=MEAL_TYPES.find(t=>t.id===m.type)?.l+": "+m.food;if(m.kcal)txt+=" ("+m.kcal+"kcal";if(m.protein)txt+=", "+m.protein+"g prot";if(m.carbs)txt+=", "+m.carbs+"g carb";if(m.fat)txt+=", "+m.fat+"g grasa";if(m.kcal||m.protein)txt+=")";return txt}).join("\n"):"";
   const cat=[...new Set(ses.exercises.map(e=>e.name))].join(", ");
-  return "Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).\nSesion completada:\nFecha: "+fd(ses.date)+"\nEjercicios:\n"+exd+"\nRecientes:\n"+recent+"\n"+(nutCtx?nutCtx+"\n":"")+"\nComentario: \""+fb+"\"\n\nEl usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.\nResponde en espanol, conciso (max 220 palabras). Evalua:\n1. Volumen e intensidad (son adecuados para su nivel actual?)\n2. Recomendaciones concretas para la proxima sesion\n3. Si deberia mantenerse en la fase actual o avanzar a la siguiente\n4. Frecuencia y recuperacion\n"+(nutCtx?"5. Comentario breve sobre la alimentacion del dia en relacion al entreno\n":"")+"Se directo y practico. No uses markdown ni asteriscos: texto plano.\n\n"
-  +"DESPUES del texto, agrega una linea con exactamente ---AJUSTES--- y debajo SOLO un JSON con los cambios concretos para la proxima vez que haga cada ejercicio:\n"
-  +"{\"ajustes\":[{\"ejercicio\":\"nombre exacto de la lista\",\"peso\":numero o null,\"series\":numero o null,\"reps\":\"8-10\" o null,\"motivo\":\"una frase corta\"}],\"avanzarFase\":true o false,\"motivoFase\":\"una frase\"}\n"
-  +"Reglas del JSON: usa los nombres de ejercicio TAL CUAL aparecen en esta lista: "+cat+". Incluí SOLO los ejercicios que realmente cambian (si algo se mantiene igual, no lo pongas). Los campos que no cambian van en null. Si no hay ningun cambio, devolve \"ajustes\":[].";
+  const P=[];
+  P.push("Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).");
+  P.push("Sesion completada:");
+  P.push("Fecha: "+fd(ses.date));
+  P.push("Ejercicios:");
+  P.push(exd);
+  P.push("Recientes:");
+  P.push(recent);
+  if(nutCtx)P.push(nutCtx);
+  P.push("Comentario del usuario sobre esta sesion: "+fb);
+  if(histCtx)P.push(histCtx);
+  if(ajCtx)P.push(ajCtx);
+  P.push("El usuario viene de varios meses sin entrenar y esta en fase de readaptacion/retorno.");
+  P.push("Responde en espanol, conciso (max 220 palabras). Evalua:");
+  P.push("1. Volumen e intensidad (son adecuados para su nivel actual?)");
+  P.push("2. Recomendaciones concretas para la proxima sesion");
+  P.push("3. Si deberia mantenerse en la fase actual o avanzar a la siguiente");
+  P.push("4. Frecuencia y recuperacion");
+  if(nutCtx)P.push("5. Comentario breve sobre la alimentacion del dia en relacion al entreno");
+  P.push("Si en el historial hay algo que se repite (una molestia, un ejercicio que siempre cuesta, un ajuste que ya indicaste y no funciono), mencionalo y cambia de estrategia en vez de repetir la misma sugerencia.");
+  P.push("Se directo y practico. No uses markdown ni asteriscos: texto plano.");
+  P.push("");
+  P.push("DESPUES del texto, agrega una linea con exactamente ---AJUSTES--- y debajo SOLO un JSON con los cambios concretos para la proxima vez que haga cada ejercicio:");
+  P.push(JSON.stringify({ajustes:[{ejercicio:"nombre exacto de la lista",peso:"numero o null",series:"numero o null",reps:"8-10 o null",motivo:"una frase corta"}],avanzarFase:"true o false",motivoFase:"una frase"}));
+  P.push("Reglas del JSON: usa los nombres de ejercicio TAL CUAL aparecen en esta lista: "+cat+". Inclui SOLO los ejercicios que realmente cambian; si algo se mantiene igual, no lo pongas. Los campos que no cambian van en null. Si no hay ningun cambio, el array ajustes va vacio.");
+  return P.join("\n");
 
 }
 
@@ -1190,9 +1329,9 @@ function TodayTab({data,onGo}){
     const base=clave.split("(")[0].trim();
     let hist=todos.filter(e=>normLbl(e.name)===clave);
     if(!hist.length)hist=todos.filter(e=>normLbl(e.name).split("(")[0].trim()===base);   // "Press inclinado" ≈ "Press inclinado (mancuernas)"
-    const t=tgt(hist);
+    const t=tgtFor(data,nombre,hist);
     if(aj)return {txt:(aj.peso!=null?aj.peso+" kg":"")+(aj.series!=null?" · "+aj.series+" series":"")+(aj.reps!=null?" · "+aj.reps+" reps":""),motivo:aj.motivo,coach:true};
-    if(t)return {txt:t.tiempo?(t.targetReps+" seg"):(t.targetWeight+" kg · "+t.targetReps+" reps"),motivo:t.suggestion,coach:false};
+    if(t)return {txt:t.tiempo?(t.targetReps+" seg"):(t.targetWeight+" kg · "+t.targetReps+" reps"),motivo:t.suggestion+(t.nota?" "+t.nota:""),coach:false};
     return {txt:"Sin registro previo",motivo:"Primera vez que hacés este ejercicio: elegí un peso que te deje 3-4 repeticiones en reserva y quedará como referencia.",nuevo:true};
   };
   const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx)+semOff*7);
@@ -1756,7 +1895,8 @@ function WorkoutTab({data,setData,apiKey}){
   useEffect(()=>{setData(d=>{const nd={...d,activeSession:ses};sv(nd);return nd})},[ses]);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
   const start=(f)=>{setSes({id:gi(),date:f||td(),exercises:[]});setSg(null);setExQ("")};
   const setFecha=f=>setSes(x=>({...x,date:f}));
-  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const aj=ajusteDe(data,name);const t0=tgt(hist);const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" \u2192 "+aj.peso+"kg":"")+(aj.series!=null?" \u00b7 "+aj.series+" series":"")+(aj.reps!=null?" \u00b7 "+aj.reps+" reps":""),coach:true}:t0;const modo=exModo(name);const uni=MODO_INFO[modo].lados;const tiempo=esTiempo(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,modo,tiempo,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));if(aj)marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
+  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const aj=ajusteDe(data,name);const t0=tgtFor(data,name,hist);const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),nota:(t0&&t0.nota)||"",targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" \u2192 "+aj.peso+"kg":"")+(aj.series!=null?" \u00b7 "+aj.series+" series":"")+(aj.reps!=null?" \u00b7 "+aj.reps+" reps":""),coach:true}:t0;const modo=exModo(name);const uni=MODO_INFO[modo].lados;const tiempo=esTiempo(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,modo,tiempo,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));if(aj)marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
+  const setRir=(eid,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,rir:v}:ex)}));
   const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:f==="done"?v:(v===""?"":Number(v))}:st)}:ex)}));
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{if(ex.id!==eid)return ex;const l=ex.sets.at(-1)||{};const nx={weight:l.weight??"",reps:l.reps??"",done:false};if(ex.uni)nx.repsR=l.repsR??"";return{...ex,sets:[...ex.sets,nx]}})}));
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
@@ -1770,7 +1910,7 @@ function WorkoutTab({data,setData,apiKey}){
     return {...ex,modo:m2,uni:lados,sets};
   })}));
   const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns,activeSession:null};
-    if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals),apiKey);
+    if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals,data.coachNotes,data.coachAdjust),apiKey);
       const corte=raw.indexOf("---AJUSTES---");
       const txt=(corte>=0?raw.slice(0,corte):raw).trim();
       let aj=null;
@@ -1824,7 +1964,7 @@ function WorkoutTab({data,setData,apiKey}){
           <span style={{fontSize:10,color:mi.c,fontWeight:700,letterSpacing:0.5}}>{(mi.lados?"↔ ":"")+mi.l.toUpperCase()}{tmp?" · POR TIEMPO":""}</span>
           <span style={{fontSize:10,color:"#666",marginLeft:6}}>{mi.d} · tocá para cambiar</span>
         </button>})()}</div><button onClick={()=>rmEx(ex.id)} style={S.sm}>x</button></div>
-      {ex.targets&&<div style={{...S.tbdg,...(ex.targets.coach?{background:"rgba(155,89,182,0.12)",border:"1px solid rgba(155,89,182,0.35)",color:"#C39BD3"}:{})}}>{ex.targets.coach?"\u{1F9E0}":"\u{1F3AF}"} {ex.targets.suggestion}</div>}
+      {ex.targets&&<div style={{...S.tbdg,...(ex.targets.coach?{background:"rgba(155,89,182,0.12)",border:"1px solid rgba(155,89,182,0.35)",color:"#C39BD3"}:{})}}>{ex.targets.coach?"\u{1F9E0}":"\u{1F3AF}"} {ex.targets.suggestion}{ex.targets.nota&&<span style={{display:"block",fontSize:10,color:"#888",fontWeight:400,marginTop:3,lineHeight:1.4}}>{ex.targets.nota}</span>}</div>}
       <div style={{marginTop:12}}>
         <div style={{display:"grid",gridTemplateColumns:gt,gap:6,marginBottom:6}}><span style={S.colh}>#</span><span style={S.colh}>Kg</span><span style={S.colh}>{tmp?(uni?"Seg izq":"Seg"):(uni?"Izq":"Reps")}</span>{uni&&<span style={S.colh}>{tmp?"Seg der":"Der"}</span>}<span style={S.colh}>Ok</span><span></span></div>
         {ex.sets.map((set,idx)=><div key={idx} style={{display:"grid",gridTemplateColumns:gt,gap:6,alignItems:"center",marginBottom:4,opacity:set.done?0.6:1}}>
@@ -1835,7 +1975,15 @@ function WorkoutTab({data,setData,apiKey}){
           <button onClick={()=>upSet(ex.id,idx,"done",!set.done)} style={{...S.chk,background:set.done?"#2ECC71":"rgba(255,255,255,0.05)",color:set.done?"#FFF":"#666"}}>&#10003;</button>
           <button onClick={()=>rmSet(ex.id,idx)} style={S.sm}>-</button>
         </div>)}
-        <div style={{display:"flex",gap:8,marginTop:6}}>
+        {!tmp&&<div style={{display:"flex",alignItems:"center",gap:6,marginTop:10,flexWrap:"wrap"}}>
+          <span style={{fontSize:11,color:"#888",whiteSpace:"nowrap"}}>RIR</span>
+          {[0,1,2,3,4].map(r=><button key={r} onClick={()=>setRir(ex.id,ex.rir===r?"":r)} style={{flex:1,minWidth:34,padding:"5px 0",borderRadius:7,fontSize:12,cursor:"pointer",
+            border:ex.rir===r?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.10)",
+            background:ex.rir===r?"rgba(255,107,53,0.18)":"rgba(255,255,255,0.03)",
+            color:ex.rir===r?"#FF6B35":"#888",fontWeight:ex.rir===r?700:400}}>{r===4?"4+":r}</button>)}
+        </div>}
+        {!tmp&&<div style={{fontSize:10,color:"#666",marginTop:4,lineHeight:1.4}}>Repeticiones que te quedaban al terminar la última serie. Define si la próxima vez subís o sostenés.</div>}
+        <div style={{display:"flex",gap:8,marginTop:10}}>
           <button onClick={()=>addSet(ex.id)} style={{...S.aset,flex:1,marginTop:0}}>+ Serie</button>
           <button onClick={()=>togEx(ex.id)} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid",borderColor:todas?"#2ECC71":"rgba(255,255,255,0.12)",color:todas?"#2ECC71":"#888",fontWeight:todas?700:400}}>{"✓ Listo"}</button>
         </div>
