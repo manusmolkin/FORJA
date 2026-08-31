@@ -36,6 +36,10 @@ const stk=k=>{try{localStorage.setItem(AK,k)}catch{}};
 const td=()=>new Date().toISOString().slice(0,10);
 const fd=d=>new Date(d+"T12:00:00").toLocaleDateString("es-AR",{day:"numeric",month:"short",year:"numeric"});
 const gi=()=>Math.random().toString(36).substr(2,9);
+// El teclado de iOS en es-AR escribe coma: aceptamos coma o punto en todos lados.
+const nm=v=>{const x=Number(String(v===undefined||v===null?"":v).replace(",","."));return isNaN(x)?0:x};
+const limpiaNum=s=>{let t=String(s===undefined||s===null?"":s).replace(/[^0-9.,]/g,"").replace(/,/g,".");const i=t.indexOf(".");if(i>=0)t=t.slice(0,i+1)+t.slice(i+1).replace(/\./g,"");return t};
+const r1=x=>Math.round(x*10)/10;
 
 const MG={
 chest:{l:"Pecho",i:"\u{1FAC1}",c:"#E74C3C"},back:{l:"Espalda",i:"\u{1F519}",c:"#3498DB"},
@@ -686,6 +690,7 @@ const bkStats=d=>({
   Sesiones:(d.sessions||[]).length, Cardio:(d.cardioSessions||[]).length,
   Comidas:(d.meals||[]).length, "Antropometrías":(d.anthropometry||[]).length,
   Estudios:(d.healthStudies||[]).length, "Notas del coach":(d.coachNotes||[]).length,
+  "Check-ins":(d.checkins||[]).length,
 });
 const bkSize=()=>{try{return Math.round((localStorage.getItem(SK)||"").length/1024)}catch{return 0}};
 const bkExport=d=>{
@@ -708,7 +713,7 @@ const bkParse=txt=>{
 // ─── UNIR DOS COPIAS DE LOS DATOS ───
 // Las listas se unen por id (nada se pierde). Los ajustes sueltos (fase, bloque
 // nutricional, config) se toman de la copia guardada más recientemente.
-const LISTAS=["sessions","cardioSessions","meals","anthropometry","healthStudies","coachNotes","planNotes"];
+const LISTAS=["sessions","cardioSessions","meals","anthropometry","healthStudies","coachNotes","planNotes","checkins"];
 const localSavedAt=()=>{try{return localStorage.getItem(TSK)||""}catch{return ""}};
 const unirDatos=(local,remoto,remotoTs)=>{
   const l=local||{}, r=remoto||{};
@@ -733,7 +738,7 @@ const unirDatos=(local,remoto,remotoTs)=>{
   return {datos:out,info};
 };
 const resumenUnion=info=>{
-  const nom={sessions:"sesiones",cardioSessions:"cardio",meals:"comidas",anthropometry:"antropometrías",healthStudies:"estudios",coachNotes:"notas del coach",planNotes:"notas del plan"};
+  const nom={sessions:"sesiones",cardioSessions:"cardio",meals:"comidas",anthropometry:"antropometrías",healthStudies:"estudios",coachNotes:"notas del coach",planNotes:"notas del plan",checkins:"check-ins"};
   const partes=LISTAS.filter(k=>info.nuevas[k]>0).map(k=>"+"+info.nuevas[k]+" "+nom[k]);
   return partes.length?partes.join(", "):"nada nuevo";
 };
@@ -861,11 +866,35 @@ const avisoBloque=data=>{
 // Semanas que dura cada fase, leídas del campo wk ("1-3", "13+")
 const phaseWeeks=()=>{const out=[];let acc=0;PHASES.forEach((p,i)=>{const t=String(p.wk).split("-");const fin=p.wk.indexOf("+")>=0?null:Number(t[1]||t[0]);out.push({i,desde:acc+1,hasta:fin});acc=fin||acc});return out};
 // Fase que corresponde por calendario, según la fecha de inicio del plan
+// Semanas de entrenamiento REALMENTE hechas: sesiones registradas / sesiones por semana de la fase
+const semanasEfectivas=data=>{
+  const dias=(PHASES[data.phase||0]||{}).days||3;
+  const n=(data.sessions||[]).filter(x=>(x.exercises||[]).length>0).length;
+  return n/dias;
+};
+// La fase avanza por entrenamientos hechos, no por días en el calendario
 const faseSugerida=data=>{
-  const sem=semanasDesde(data.planStart);
-  if(!sem)return null;
+  const n=(data.sessions||[]).filter(x=>(x.exercises||[]).length>0).length;
+  if(!n)return null;
+  const ef=semanasEfectivas(data);
+  const sem=Math.floor(ef)+1;
   const r=phaseWeeks().filter(x=>sem>=x.desde&&(x.hasta===null||sem<=x.hasta));
-  return r.length?{fase:r[r.length-1].i,semana:sem}:null;
+  return r.length?{fase:r[r.length-1].i,semana:sem,semCal:semanasDesde(data.planStart),efectivas:Math.round(ef*10)/10,sesiones:n}:null;
+};
+// Lo que hiciste de verdad en los últimos N días
+const adherencia=(data,dias)=>{
+  const iso=d=>d.toISOString().slice(0,10);
+  const lim=new Date();lim.setDate(lim.getDate()-(dias-1));
+  const desde=iso(lim);
+  const todas=(data.sessions||[]).filter(s=>(s.exercises||[]).length>0);
+  const hechas=todas.filter(s=>s.date>=desde);
+  const porSemana=(PHASES[data.phase||0]||{}).days||3;
+  const previstas=Math.round(porSemana*dias/7);
+  const fechas=todas.map(s=>s.date).sort();
+  const ultima=fechas.length?fechas[fechas.length-1]:null;
+  const sinEntrenar=ultima?Math.round((new Date(td()+"T12:00:00")-new Date(ultima+"T12:00:00"))/86400000):null;
+  const conEstado=hechas.filter(s=>s.estado&&s.estado!=="bien").length;
+  return {hechas:hechas.length,previstas,ultima,sinEntrenar,conEstado};
 };
 
 // ─── OBJETIVOS NUTRICIONALES SEGUN EL CALENDARIO ───
@@ -912,7 +941,7 @@ const resetDayOv=(data,setData,pi)=>{
   const nd={...data,dayOverrides:ov};setData(nd);sv(nd);
 };
 
-const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],activeSession:null,phase:0,dayOverrides:{},anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[]};
+const EMPTY={sessions:[],cardioSessions:[],coachNotes:[],activeSession:null,phase:0,dayOverrides:{},anthropometry:[],planNotes:[],meals:[],weeklyNutrPlan:null,healthStudies:[],checkins:[]};
 
 const STUDY_TYPES=[
   {id:"laboratorio",l:"Laboratorio / Sangre",i:"\u{1FA78}"},
@@ -1034,8 +1063,173 @@ const ajustesPendientes=data=>{
 // ─── IMPLEMENTO Y SALTO MÍNIMO REAL ───
 // El incremento posible no es continuo: depende de los discos y placas del gimnasio.
 // Si tu gimnasio tiene otros, cambiá estos números y todo se recalcula.
-const IMPL_STEP={barra:2.5,mancuerna:2,polea:5,maquina:5,corporal:0};
-const IMPL_L={barra:"barra",mancuerna:"mancuernas",polea:"polea",maquina:"máquina",corporal:"peso corporal"};
+const IMPL_L={barra:"barra",mancuerna:"mancuernas",kettlebell:"pesas sueltas",polea:"polea",maquina:"máquina",corporal:"peso corporal"};
+// Inventario REAL del gimnasio. Editable en Config -> "Cargas disponibles".
+const CARGAS_DEF={
+  barra:20,
+  discos:[0.5,1.25,2,2.5,5,10,15,20],
+  mancuernas:[1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,22.5,25,27.5,30],
+  pesas:[1,2,3,4,5,6,8,10,12,14,16,18,20,24,28,32],
+  stack:5,
+  extra:[2.5]
+};
+const cargasCfg=data=>({...CARGAS_DEF,...((data&&data.cargas)||{})});
+const _lad={};
+// Todos los pesos que REALMENTE podés armar con ese implemento, de menor a mayor
+const escaleraDe=(impl,cfg)=>{
+  const key=impl+"|"+JSON.stringify(cfg);
+  if(_lad[key])return _lad[key];
+  let out=[];
+  if(impl==="corporal")out=[0];
+  else if(impl==="mancuerna")out=(cfg.mancuernas||[]).slice();
+  else if(impl==="kettlebell")out=(cfg.pesas||[]).slice();
+  else if(impl==="barra"){
+    const d=(cfg.discos||[]).slice().sort((a,b)=>a-b), s={};
+    const rec=(i,acc,n)=>{s[acc]=true;if(n>=4)return;for(let k=i;k<d.length;k++)rec(k,acc+d[k],n+1)};
+    rec(0,0,0);
+    out=Object.keys(s).map(Number).map(x=>(cfg.barra||20)+2*x);
+  }else{
+    const st=cfg.stack||5;
+    for(let i=1;i<=40;i++){out.push(i*st);(cfg.extra||[]).forEach(e=>out.push(i*st+e))}
+  }
+  out=[...new Set(out.map(x=>Math.round(x*100)/100))].filter(x=>impl==="corporal"||x>0).sort((a,b)=>a-b);
+  _lad[key]=out;return out;
+};
+// Si el peso anotado es menor que la barra sola, no estás levantando una barra: es una pesa que sostenés.
+const implReal=(impl,peso,cfg)=>(impl==="barra"&&peso>0&&peso<(cfg.barra||20))?"kettlebell":impl;
+const cargaSiguiente=(impl,cfg,actual)=>{const e=escaleraDe(impl,cfg);const n=e.find(x=>x>actual+0.01);return n===undefined?actual:n};
+// El salto util: el proximo peso que sea al menos 2.5% mas. Subir 0.5kg en un press de 40kg es ruido, no progreso.
+const cargaSiguienteUtil=(impl,cfg,actual)=>{const e=escaleraDe(impl,cfg);const min=actual*1.025;const n=e.find(x=>x>actual+0.01&&x>=min-0.001);return n===undefined?cargaSiguiente(impl,cfg,actual):n};
+const cargaAnterior=(impl,cfg,actual)=>{const e=escaleraDe(impl,cfg).filter(x=>x<actual-0.01);return e.length?e[e.length-1]:actual};
+const cargaMasCerca=(impl,cfg,obj)=>{const e=escaleraDe(impl,cfg);if(!e.length)return obj;let b=e[0];e.forEach(x=>{if(Math.abs(x-obj)<Math.abs(b-obj))b=x});return b};
+// 1RM estimado (Epley) y carga necesaria para caer en N reps
+const e1rm=(w,r)=>w*(1+r/30);
+const cargaPara=(rm,r)=>rm/(1+r/30);
+// Ejercicios donde tu propio peso pesa más que la carga externa
+const BW_DOM=["sentadilla","sentadilla bulgara","zancadas","zancadas caminando","fondos","dominadas","dominadas asistidas","elevacion rodillas colgado","elevacion piernas colgado"];
+const esBWdom=n=>BW_DOM.indexOf(normLbl(String(n||"").split("(")[0].trim()))>=0;
+// Cómo te sentiste en la sesión: define si se progresa o se sostiene
+// ─── CHECK-IN PREVIO: cómo llegás hoy ───
+// Cuatro ítems tipo índice de Hooper (sueño, fatiga, dolor muscular, estrés), 1 = muy mal, 5 = muy bien.
+// Se usa contra TU propia línea de base, nunca como puntaje absoluto, y nunca se muestra como score.
+const WELL_ITEMS=[
+ {id:"sueno",l:"Sueño",i:"\u{1F634}",lo:"Dormí muy mal",hi:"Dormí muy bien"},
+ {id:"energia",l:"Energía",i:"\u{1F50B}",lo:"Fundido",hi:"Con pila"},
+ {id:"muscular",l:"Músculos",i:"\u{1F9B5}",lo:"Muy dolorido",hi:"Sin dolor"},
+ {id:"estres",l:"Cabeza",i:"\u{1F9E0}",lo:"Muy estresado",hi:"Tranquilo"},
+];
+const ZONAS=[
+ {id:"hombro",l:"Hombro"},{id:"codo",l:"Codo"},{id:"muneca",l:"Muñeca"},{id:"cuello",l:"Cuello"},
+ {id:"lumbar",l:"Zona lumbar"},{id:"cadera",l:"Cadera"},{id:"rodilla",l:"Rodilla"},{id:"tobillo",l:"Tobillo o pie"},
+];
+// Qué articulación carga cada ejercicio: define qué sale de la sesión cuando duele algo puntual.
+const EX_ZONAS={
+"Sentadilla":["rodilla","cadera","lumbar"],"Sentadilla hack":["rodilla","cadera"],"Prensa":["rodilla","cadera"],
+"Sentadilla bulgara":["rodilla","cadera"],"Zancadas":["rodilla","cadera"],"Sentadilla goblet":["rodilla","cadera","muneca"],
+"Hip thrust":["cadera","lumbar"],"Puente gluteo":["cadera"],"Patada gluteo":["cadera"],"Abduccion cadera":["cadera"],
+"Peso muerto rumano":["lumbar","cadera"],"Peso muerto convencional":["lumbar","cadera"],"Peso muerto sumo":["lumbar","cadera"],
+"Curl femoral":["rodilla"],"Curl femoral sentado":["rodilla"],"Curl femoral tumbado":["rodilla"],"Extension cuadriceps":["rodilla"],
+"Gemelo de pie":["tobillo"],"Gemelo sentado":["tobillo"],"Gemelo en prensa":["tobillo","rodilla"],
+"Press banca":["hombro","codo","muneca"],"Press inclinado (mancuernas)":["hombro","codo","muneca"],
+"Press militar":["hombro","codo","muneca","lumbar"],"Press cerrado":["codo","muneca","hombro"],
+"Fondos":["hombro","codo","muneca"],"Fondos paralelas":["hombro","codo","muneca"],"Fondos banco":["hombro","codo","muneca"],
+"Dominadas":["hombro","codo","muneca"],"Dominadas asistidas":["hombro","codo","muneca"],
+"Jalon al pecho":["hombro","codo"],"Jalon agarre neutro":["hombro","codo"],
+"Remo con apoyo en banco":["hombro","codo"],"Remo polea baja":["lumbar","codo","hombro"],"Remo con barra":["lumbar","codo","hombro"],
+"Elev. laterales":["hombro"],"Elev. laterales polea":["hombro"],"Pajaros":["hombro"],"Face pull":["hombro","cuello"],
+"Encogimiento hombros":["cuello","hombro"],
+"Extension polea":["codo"],"Extension polea soga":["codo"],"Extension cabeza":["codo","hombro"],"Press frances":["codo","muneca"],
+"Curl barra":["codo","muneca"],"Curl inclinado":["codo","hombro"],"Curl martillo":["codo"],"Curl arana":["codo"],
+"Curl reverso":["codo","muneca"],"Curl muneca":["muneca"],"Farmer walk":["muneca","hombro"],"Dead hang":["hombro","muneca"],
+"Elevacion rodillas colgado":["hombro","muneca"],"Elevacion piernas colgado":["hombro","muneca"],
+"Crunch polea":["cuello"],"Crunch":["cuello"],"Ab wheel":["lumbar","hombro"],"Plancha":["hombro"],"Plancha lateral":["hombro"],
+"Crunch inverso":[],"Pallof press":[],"Dead bug":[],"Bird dog":[],
+};
+// Cambios que conservan el estímulo cuando duele una zona puntual.
+const EX_SUST={
+"Press militar":{muneca:"Press inclinado (mancuernas)"},
+"Press banca":{muneca:"Press inclinado (mancuernas)"},
+"Fondos":{hombro:"Press inclinado (mancuernas)",muneca:"Press inclinado (mancuernas)",codo:"Press inclinado (mancuernas)"},
+"Fondos paralelas":{hombro:"Press inclinado (mancuernas)",muneca:"Press inclinado (mancuernas)"},
+"Dominadas":{hombro:"Jalon agarre neutro",codo:"Jalon agarre neutro",muneca:"Jalon agarre neutro"},
+"Dominadas asistidas":{hombro:"Jalon agarre neutro",codo:"Jalon agarre neutro",muneca:"Jalon agarre neutro"},
+"Jalon al pecho":{hombro:"Jalon agarre neutro"},
+"Curl barra":{muneca:"Curl martillo",codo:"Curl martillo"},
+"Curl reverso":{muneca:"Curl martillo"},
+"Curl inclinado":{hombro:"Curl martillo"},
+"Sentadilla":{rodilla:"Hip thrust",lumbar:"Prensa"},
+"Prensa":{lumbar:"Extension cuadriceps"},
+"Sentadilla bulgara":{rodilla:"Hip thrust"},
+"Zancadas":{rodilla:"Hip thrust"},
+"Peso muerto rumano":{lumbar:"Curl femoral"},
+"Remo polea baja":{lumbar:"Remo con apoyo en banco"},
+"Press cerrado":{muneca:"Extension polea",codo:"Extension polea"},
+"Elevacion rodillas colgado":{hombro:"Crunch polea",muneca:"Crunch polea"},
+"Elevacion piernas colgado":{hombro:"Crunch polea",muneca:"Crunch polea"},
+};
+const zonasDe=n=>EX_ZONAS[n]||[];
+const wellScore=c=>WELL_ITEMS.reduce((a,x)=>a+(Number(c&&c[x.id])||3),0);   // 4 a 20
+// Tu propia línea de base: media y desvío de los últimos 28 check-ins.
+// Piso de 0.8 en el DE para que una racha muy pareja no convierta cualquier ruido en "día malo".
+const wellBase=(data,hastaIso)=>{
+  const cs=(data.checkins||[]).filter(c=>!hastaIso||c.date<hastaIso).slice(-28);
+  if(cs.length<5)return {n:cs.length,listo:false};
+  const v=cs.map(wellScore), m=v.reduce((a,b)=>a+b,0)/v.length;
+  const sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)*(b-m),0)/v.length);
+  return {n:v.length,listo:true,media:m,sd:Math.max(sd,0.8)};
+};
+const NIVEL={
+ completo:{c:"#2ECC71",t:"Sesión completa"},
+ registro:{c:"#3498DB",t:"Sesión completa"},
+ sueno:{c:"#F39C12",t:"Mismas cargas, menos volumen"},
+ volumen:{c:"#F39C12",t:"Mismas cargas, menos volumen"},
+ tecnica:{c:"#E67E22",t:"Sesión técnica"},
+ descanso:{c:"#E74C3C",t:"Hoy conviene no entrenar"},
+};
+// Devuelve una ACCIÓN y el motivo. Nunca un puntaje: un número de "readiness" se vuelve profecía autocumplida.
+const decisionDelDia=(data,c)=>{
+  if(!c)return null;
+  if(c.enfermo)return {nivel:"descanso",motivo:"Marcaste síntomas generales. Con fiebre o cuerpo cortado el entrenamiento de fuerza no suma adaptación, suma riesgo: hoy descanso o caminata suave."};
+  const b=wellBase(data,c.date);
+  if(!b.listo)return {nivel:"registro",motivo:"Todavía estoy armando tu línea de base: llevo "+b.n+" de 5 check-ins. Hasta tenerla no toco la sesión, sólo registro cómo llegás."};
+  const z=(wellScore(c)-b.media)/b.sd;
+  if(z<=-1.5)return {nivel:"tecnica",z:z,motivo:"Hoy llegás bastante por debajo de tu promedio. Cargas al 70% y una serie menos en los accesorios: la sesión sirve para moverte y sostener el hábito, no para progresar."};
+  if(z<=-1)return {nivel:"volumen",z:z,motivo:"Llegás algo por debajo de tu promedio. Sostengo las cargas y saco una serie de los accesorios: el volumen es lo barato de recortar, bajar el peso te desentrena."};
+  if(Number(c.sueno)<=2)return {nivel:"sueno",z:z,motivo:"Dormiste mal. Dormir poco te sube la percepción de esfuerzo más de lo que te baja la fuerza: mantengo las cargas, saco una serie de accesorios y hoy no busques nada explosivo."};
+  return {nivel:"completo",z:z,motivo:"Llegás igual o mejor que tu promedio. Sesión completa, sin recortes."};
+};
+const recorteDe=nivel=>nivel==="tecnica"?{menosSeries:1,pesoFactor:0.7}:((nivel==="volumen"||nivel==="sueno")?{menosSeries:1}:null);
+// Molestias: se toca sólo el patrón implicado, nunca la sesión entera.
+// Umbral 5/10 por el modelo de monitoreo del dolor (Silbernagel 2007): hasta 5 se puede entrenar si el dolor
+// no crece semana a semana y a la mañana siguiente volvió a la línea de base.
+const afectadosPor=(nombres,molestias)=>{
+  const out={};
+  const enElDia=(nombres||[]).map(normLbl);
+  (molestias||[]).forEach(m=>{
+    if(!m.zona)return;
+    (nombres||[]).forEach(n=>{
+      if(zonasDe(n).indexOf(m.zona)<0)return;
+      const nivel=Number(m.nivel)||0;
+      let alt=(EX_SUST[n]||{})[m.zona]||null;
+      // Un sustituto no sirve si carga la misma articulación, ni si ya está en la sesión de hoy.
+      if(alt&&(zonasDe(alt).indexOf(m.zona)>=0||enElDia.indexOf(normLbl(alt))>=0))alt=null;
+      if(!out[n]||nivel>out[n].nivel)out[n]={zona:m.zona,nivel:nivel,alt:alt};
+    });
+  });
+  return out;
+};
+// Grupo muscular al que pertenece un ejercicio del catálogo
+const grupoDe=(n,fallback)=>{
+  const k=normLbl(n);
+  for(const g of Object.keys(EC)){if((EC[g]||[]).some(x=>normLbl(x)===k))return g}
+  return fallback||"legs";
+};
+// La sesión programada para una fecha
+const sesionProgramada=(data,iso)=>{
+  const dia=WEEKDAYS[(new Date(iso+"T12:00:00").getDay()+6)%7];
+  return phSched(data,data.phase||0).find(x=>x.day===dia)||null;
+};
+const ESTADOS=[{id:"bien",l:"Bien",i:"\u{1F44D}",c:"#2ECC71"},{id:"cansado",l:"Cansado",i:"\u{1F634}",c:"#F39C12"},{id:"enfermo",l:"Enfermo / resfriado",i:"\u{1F912}",c:"#E74C3C"},{id:"molestia",l:"Con molestia",i:"\u{1FA79}",c:"#E67E22"}];
 const EX_IMPL={
 "Sentadilla":"barra","Sentadilla frontal":"barra","Sentadilla goblet":"mancuerna","Sentadilla hack":"maquina",
 "Prensa":"maquina","Extension cuadriceps":"maquina","Curl femoral":"maquina","Curl femoral sentado":"maquina",
@@ -1089,76 +1283,157 @@ const rangoPlan=(data,nombre)=>{
   return null;
 };
 // Junta implemento, salto y rango antes de calcular la sugerencia
-const tgtFor=(data,nombre,hist)=>{
-  const impl=exImpl(nombre);
-  return tgt(hist,{impl,step:IMPL_STEP[impl],rango:rangoPlan(data,nombre)||[8,12]});
+// Arma un ejercicio listo para entrenar: objetivo del motor, ajuste del coach y recorte del día.
+const construirEjercicio=(data,name,group,opts)=>{
+  const o=opts||{};
+  const hist=(data.sessions||[]).flatMap(s=>(s.exercises||[]).map(e=>({...e,_d:s.date,_estado:s.estado||"",_molestia:s.molestiaZona||""}))).filter(e=>e.name===name);
+  const aj=ajusteDe(data,name);
+  const t0=tgtFor(data,name,hist);
+  const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),nota:(t0&&t0.nota)||"",targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" → "+aj.peso+"kg":"")+(aj.series!=null?" · "+aj.series+" series":"")+(aj.reps!=null?" · "+aj.reps+" reps":""),coach:true}:t0;
+  const modo=exModo(name), uni=MODO_INFO[modo].lados, tiempo=esTiempo(name);
+  let base=t2;
+  if(!base&&o.plan){
+    const rr=String(o.plan.r||"").replace("s","").split("-");
+    base={targetWeight:"",targetReps:Number(rr[0])||10,targetSets:Number(o.plan.s)||3,
+      suggestion:"Primera vez que lo registro: elegí un peso que te deje 3-4 reps en reserva y queda de referencia.",
+      nota:"El plan pide "+o.plan.s+" x "+o.plan.r+".",nuevo:true};
+  }
+  const orig=base?{...base}:null;
+  let T=base?{...base}:null;
+  if(T&&o.recorte){
+    const cfg=cargasCfg(data);
+    if(o.recorte.pesoFactor&&nm(T.targetWeight)>0){
+      const impl=implReal(exImplOv(data,name),nm(T.targetWeight),cfg);
+      T.targetWeight=cargaMasCerca(impl,cfg,nm(T.targetWeight)*o.recorte.pesoFactor);
+    }
+    if(o.recorte.menosSeries&&Number(T.targetSets)>2)T.targetSets=Math.max(2,Number(T.targetSets)-o.recorte.menosSeries);
+  }
+  const mk=()=>{const b={weight:T?T.targetWeight:"",reps:T?T.targetReps:"",done:false};return uni?{...b,repsR:T?T.targetReps:""}:b};
+  const recortado=!!(orig&&T&&(orig.targetSets!==T.targetSets||orig.targetWeight!==T.targetWeight));
+  return {id:gi(),name:name,muscleGroup:group,uni:uni,modo:modo,tiempo:tiempo,
+    sets:Array.from({length:T?Number(T.targetSets)||1:1},mk),targets:T,targetsOrig:orig,recortado:recortado,
+    molestia:o.molestia||null,coachAjuste:!!aj};
 };
+const exImplOv=(data,n)=>(((data&&data.exImpl)||{})[n])||exImpl(n);
+const tgtFor=(data,nombre,hist)=>tgt(hist,{impl:exImplOv(data,nombre),cfg:cargasCfg(data),rango:rangoPlan(data,nombre)||[8,12],hoy:td()});
 
 function tgt(hist,opts){
-  if(!hist?.length)return null;
-  const last=hist.at(-1),sets=last.sets||[];
+  if(!hist||!hist.length)return null;
+  const last=hist[hist.length-1],sets=last.sets||[];
   if(!sets.length)return null;
-  const o=opts||{}, step=o.step!==undefined?o.step:2.5, impl=o.impl||"maquina";
+  const o=opts||{}, cfg=o.cfg||CARGAS_DEF;
   const rango=o.rango||[8,12], rMin=rango[0], rMax=rango[1];
+  const TOL=2;                       // cuánto tolero pasarme del techo antes de recalibrar la carga
+  const hoy=o.hoy||td();
+  const dias=last._d?Math.round((new Date(hoy+"T12:00:00")-new Date(last._d+"T12:00:00"))/86400000):null;
+  const estado=last._estado||"", zona=last._molestia||"";
 
   // Ejercicios por tiempo: se progresa en segundos
   if(last.tiempo||esTiempo(last.name)){
-    const avgS=sets.reduce((a,x)=>a+(Number(x.reps)||0),0)/sets.length;
+    const avgS=sets.reduce((a,x)=>a+nm(x.reps),0)/sets.length;
     const objetivo=Math.round(avgS)+5;
-    return {targetWeight:Math.max(...sets.map(x=>Number(x.weight)||0)),targetReps:objetivo,targetSets:sets.length,
-      suggestion:"Sumar 5 segundos: apuntar a "+objetivo+"s por serie.",tiempo:true};
+    return {targetWeight:Math.max(...sets.map(x=>nm(x.weight))),targetReps:objetivo,targetSets:sets.length,
+      suggestion:"Sumar 5 segundos: apuntar a "+objetivo+"s por serie.",tiempo:true,dias:dias};
   }
 
-  const avg=sets.reduce((s,x)=>s+(Number(x.reps)||0),0)/sets.length;
-  const mw=Math.max(...sets.map(x=>Number(x.weight)||0));
-  const rir=last.rir!==undefined&&last.rir!==""?Number(last.rir):null;   // repeticiones en reserva
-  let tw=mw,tr=Math.round(avg),ts=sets.length,sug="",nota="";
+  const avg=sets.reduce((s,x)=>s+nm(x.reps),0)/sets.length;
+  const mw=Math.max(...sets.map(x=>nm(x.weight)));
+  const impl=implReal(o.impl||"maquina",mw,cfg);
+  const rir=last.rir!==undefined&&last.rir!==""?Number(last.rir):null;
+  let ts=sets.length, sug="", nota="", fuera=false;
+  const R=(w,r)=>({targetWeight:w,targetReps:r,targetSets:ts,suggestion:sug,nota:nota,impl:impl,rango:rango,dias:dias,fuera:fuera,estado:estado});
 
-  // ¿Cuánto pesa el salto más chico posible, en porcentaje?
-  const pctSalto=(mw>0&&step>0)?(step/mw*100):null;
-  const saltoGrande=pctSalto!==null&&pctSalto>10;
-
-  if(step===0||mw===0){                                  // peso corporal: solo reps
-    tr=Math.round(avg)+1;
-    sug="Peso corporal: apuntar a "+tr+" reps.";
-  }else if(avg>=rMax&&(rir===null||rir>=2)){             // techo del rango y con margen: subir
-    if(saltoGrande){
-      tw=mw; tr=Math.round(avg)+2;
-      sug="Sostener "+mw+"kg y llegar a "+tr+" reps.";
-      nota="El salto más chico de "+IMPL_L[impl]+" es "+step+"kg, un "+Math.round(pctSalto)+"% sobre "+mw+"kg. Demasiado de golpe: conviene acumular más reps antes.";
-    }else{
-      tw=Math.round((mw+step)*2)/2; tr=rMin;
-      sug="Subir a "+tw+"kg y volver a "+rMin+" reps.";
-      nota="Salto de "+step+"kg ("+Math.round(pctSalto)+"%), el mínimo posible en "+IMPL_L[impl]+".";
-    }
-  }else if(avg>=rMax&&rir!==null&&rir<=1){               // llegó al techo pero al límite
-    tw=mw; tr=Math.round(avg);
+  // 1) Volvés después de un parate: se retoma, no se progresa
+  if(dias!==null&&dias>=14){
+    const back=mw>0?cargaAnterior(impl,cfg,mw):0;
+    sug=(back<mw?"Bajar a "+back+"kg":"Repetir "+mw+"kg")+" x "+rMin+" reps.";
+    nota="Hace "+dias+" días que no hacés este ejercicio. Primera vuelta: reconectar el patrón, no buscar récord. Si sale fácil, la próxima subimos.";
+    return R(back,rMin);
+  }
+  // 2) La última vez estabas enfermo o con molestia: se sostiene
+  if(estado==="enfermo"||estado==="molestia"){
+    const tr=Math.max(rMin,Math.min(Math.round(avg),rMax));
     sug="Repetir "+mw+"kg x "+tr+" reps.";
-    nota="Llegaste al techo del rango pero con RIR "+rir+". Consolidá una sesión más antes de subir.";
-  }else if(avg>=rMin){                                   // dentro del rango: sumar reps
-    tr=Math.min(Math.round(avg)+1,rMax);
+    nota="La última sesión la registraste "+(estado==="enfermo"?"enfermo":"con molestia"+(zona?" en "+zona:""))+". Sostenemos la carga: se progresa desde una sesión sana, no desde una a medias.";
+    return R(mw,tr);
+  }
+  // 3) Peso corporal puro
+  if(mw===0||impl==="corporal"){
+    if(avg>=rMax+TOL){
+      sug="Sumar carga (chaleco, mancuerna, lastre) y volver a "+rMax+" reps.";
+      nota="Ya hacés "+Math.round(avg)+" reps con el rango en "+rMin+"-"+rMax+". Sin carga externa esto deja de entrenar fuerza: sumá peso o pasá a la variante más difícil.";
+      return R(0,rMax);
+    }
+    const tr=Math.min(Math.round(avg)+1,rMax+TOL);
+    sug="Peso corporal: apuntar a "+tr+" reps.";
+    nota="Rango objetivo "+rMin+"-"+rMax+" reps.";
+    return R(0,tr);
+  }
+
+  const sig=cargaSiguienteUtil(impl,cfg,mw);
+  const salto=sig>mw?sig-mw:0;
+  const pct=salto>0?salto/mw*100:0;
+
+  // 4) Muy por encima del techo: la carga quedó corta. Se recalibra con 1RM estimado.
+  if(avg>=rMax+TOL&&(rir===null||rir>=1)){
+    const rm=e1rm(mw,avg);
+    let cand=cargaMasCerca(impl,cfg,cargaPara(rm,rMax));
+    if(cand<=mw)cand=sig;
+    sug="Subir a "+cand+"kg y volver a "+rMax+" reps.";
+    nota="Con "+mw+"kg hiciste "+Math.round(avg)+" reps y tu rango es "+rMin+"-"+rMax+": lo que falta es carga, no repeticiones. Tu 1RM estimado es ~"+r1(rm)+"kg, así que con "+cand+"kg deberías caer dentro del rango."+(esBWdom(last.name)?" Acá tu propio peso pesa más que la carga: si te siguen sobrando reps, la próxima subimos otra vez.":"");
+    return R(cand,rMax);
+  }
+  // 5) Llegaste al techo del rango
+  if(avg>=rMax){
+    if(rir!==null&&rir<=0){
+      const tr=Math.min(Math.round(avg),rMax);
+      sug="Repetir "+mw+"kg x "+tr+" reps.";
+      nota="Llegaste al techo del rango pero con RIR 0. Consolidá una sesión más antes de subir.";
+      return R(mw,tr);
+    }
+    if(pct>12){
+      const techo=rMax+TOL;
+      const tr=Math.min(Math.round(avg)+2,techo);
+      fuera=tr>rMax;
+      sug="Sostener "+mw+"kg y llegar a "+tr+" reps.";
+      nota="El próximo peso razonable en "+IMPL_L[impl]+" es "+sig+"kg (+"+Math.round(pct)+"%). Acumulá reps hasta "+techo+" como MÁXIMO: ahí pasamos a "+sig+"kg sí o sí y volvés a "+rMin+"-"+rMax+".";
+      return R(mw,tr);
+    }
+    sug="Subir a "+sig+"kg y volver a "+rMin+" reps.";
+    nota="Salto de "+r1(salto)+"kg ("+Math.round(pct)+"%): el más chico que vale la pena con "+IMPL_L[impl]+". Los micro-saltos de menos del 2,5% son ruido, no progreso.";
+    return R(sig,rMin);
+  }
+  // 6) Dentro del rango: sumar reps
+  if(avg>=rMin){
+    const tr=Math.min(Math.round(avg)+1,rMax);
     sug="Mantener "+mw+"kg. Apuntar a "+tr+" reps.";
     nota="Rango objetivo "+rMin+"-"+rMax+" reps"+(rir!==null?" · último RIR "+rir:"")+".";
-  }else if(rir!==null&&rir===0){                         // no llegó al piso y sin margen: bajar
-    tw=Math.max(0,Math.round((mw-step)*2)/2); tr=rMin;
-    sug="Bajar a "+tw+"kg para llegar a "+rMin+" reps.";
-    nota="Quedaste debajo del rango y sin reps en reserva.";
-  }else{                                                 // no llegó al piso: sumar serie o bajar
-    if(sets.length<5){ts=sets.length+1;tw=mw;tr=Math.round(avg);
-      sug="Mantener "+mw+"kg x "+tr+" reps. Sumar 1 serie ("+ts+").";
-      nota="Antes de bajar peso, probá con una serie más.";
-    }else{tw=Math.max(0,Math.round((mw-step)*2)/2);tr=rMin;
-      sug="Bajar a "+tw+"kg para llegar a "+rMin+" reps.";
-      nota="Con 5 series ya y sin llegar al rango, conviene bajar la carga.";
-    }
+    return R(mw,tr);
   }
-  return {targetWeight:tw,targetReps:tr,targetSets:ts,suggestion:sug,nota:nota,impl:impl,rango:rango};
+  // 7) Por debajo del piso del rango
+  if(rir!==null&&rir===0){
+    const back=cargaAnterior(impl,cfg,mw);
+    sug="Bajar a "+back+"kg para llegar a "+rMin+" reps.";
+    nota="Quedaste debajo del rango y sin reps en reserva.";
+    return R(back,rMin);
+  }
+  if(sets.length<5){
+    ts=sets.length+1;
+    sug="Mantener "+mw+"kg x "+Math.round(avg)+" reps. Sumar 1 serie ("+ts+").";
+    nota="Antes de bajar peso, probá con una serie más.";
+    return R(mw,Math.round(avg));
+  }
+  const back=cargaAnterior(impl,cfg,mw);
+  sug="Bajar a "+back+"kg para llegar a "+rMin+" reps.";
+  nota="Con 5 series y sin llegar al rango, conviene bajar la carga.";
+  return R(back,rMin);
 }
 
 
 function buildPrompt(ses,all,fb,meals,notas,ajustePrevio){
   const exd=ses.exercises.map(ex=>{const tm=ex.tiempo!==undefined?ex.tiempo:esTiempo(ex.name);const ss=ex.sets.map((s,i)=>"  S"+(i+1)+": "+s.weight+"kg x "+(ex.uni?(s.reps+(tm?"s":"")+" izq / "+(s.repsR||0)+(tm?"s":"")+" der"):(s.reps+(tm?" segundos":" reps")))).join("\n");return ex.name+" ("+MG[ex.muscleGroup]?.l+", "+exImpl(ex.name)+")"+(tm?" [POR TIEMPO: son segundos, no repeticiones]":"")+(ex.uni?" [POR LADO: no sumadas]":"")+(ex.rir!==undefined&&ex.rir!==""?" [RIR "+ex.rir+"]":"")+":\n"+ss}).join("\n\n");
-  const recent=all.slice(-5).map(s=>fd(s.date)+": "+[...new Set(s.exercises.map(e=>MG[e.muscleGroup]?.l))].join(", ")).join("\n");
+  const recent=all.slice(-6).map(s=>fd(s.date)+" ["+(s.estado||"sin dato")+(s.molestiaZona?": "+s.molestiaZona:"")+"]: "+[...new Set(s.exercises.map(e=>MG[e.muscleGroup]?.l))].join(", ")).join("\n");
+  const hace28=(()=>{const l=new Date();l.setDate(l.getDate()-27);const d0=l.toISOString().slice(0,10);return all.filter(s=>s.date>=d0).length})();
   // Continuidad: qué le venís diciendo vos y qué te viene respondiendo él
   const unaLinea=t=>String(t||"").split("\n").join(" ").trim();
   const previas=[...(notas||[])].filter(n=>n.sessionId!==ses.id).slice(-4);
@@ -1173,15 +1448,22 @@ function buildPrompt(ses,all,fb,meals,notas,ajustePrevio){
   const todayMeals=(meals||[]).filter(m=>m.date===ses.date);
   const nutCtx=todayMeals.length>0?"Alimentacion del dia:\n"+todayMeals.map(m=>{let txt=MEAL_TYPES.find(t=>t.id===m.type)?.l+": "+m.food;if(m.kcal)txt+=" ("+m.kcal+"kcal";if(m.protein)txt+=", "+m.protein+"g prot";if(m.carbs)txt+=", "+m.carbs+"g carb";if(m.fat)txt+=", "+m.fat+"g grasa";if(m.kcal||m.protein)txt+=")";return txt}).join("\n"):"";
   const cat=[...new Set(ses.exercises.map(e=>e.name))].join(", ");
+  const ck=ses.checkin;
+  const chkCtx=ck?("Check-in ANTES de entrenar (1 muy mal, 5 muy bien): sueno "+ck.sueno+", energia "+ck.energia+", dolor muscular "+ck.muscular+", estres "+ck.estres
+    +(ck.molestias&&ck.molestias.length?"; molestias: "+ck.molestias.map(m=>m.zona+" "+m.nivel+"/10").join(", "):"; sin molestias")
+    +(ck.enfermo?"; SE SENTIA ENFERMO":"")
+    +(ses.decision?". La app decidio: "+ses.decision.nivel+" — "+ses.decision.motivo:"")):"";
   const P=[];
   P.push("Sos un coach de fuerza e hipertrofia basado en evidencia (ACSM, NSCA, Schoenfeld).");
   P.push("Sesion completada:");
   P.push("Fecha: "+fd(ses.date));
   P.push("Ejercicios:");
   P.push(exd);
-  P.push("Recientes:");
+  P.push("Sesiones realmente registradas (fecha y estado del dia):");
   P.push(recent);
+  P.push("Adherencia real: "+hace28+" sesiones de gimnasio en los ultimos 28 dias. El usuario NO cumple el plan a rajatabla: falta, mueve dias, y a veces entrena enfermo o con molestias. Razona sobre las fechas y estados de arriba, no sobre el calendario teorico del plan.");
   if(nutCtx)P.push(nutCtx);
+  if(chkCtx)P.push(chkCtx);
   P.push("Comentario del usuario sobre esta sesion: "+fb);
   if(histCtx)P.push(histCtx);
   if(ajCtx)P.push(ajCtx);
@@ -1324,14 +1606,14 @@ function TodayTab({data,onGo}){
   // Lo que te toca hoy, con el peso sugerido según tus sesiones registradas
   const sugerido=nombre=>{
     const aj=ajusteDe(data,nombre);
-    const todos=(data.sessions||[]).flatMap(x=>(x.exercises||[]).map(e=>({...e,_d:x.date}))).sort((a,b)=>String(a._d).localeCompare(String(b._d)));
+    const todos=(data.sessions||[]).flatMap(x=>(x.exercises||[]).map(e=>({...e,_d:x.date,_estado:x.estado||"",_molestia:x.molestiaZona||""}))).sort((a,b)=>String(a._d).localeCompare(String(b._d)));
     const clave=normLbl(nombre);
     const base=clave.split("(")[0].trim();
     let hist=todos.filter(e=>normLbl(e.name)===clave);
     if(!hist.length)hist=todos.filter(e=>normLbl(e.name).split("(")[0].trim()===base);   // "Press inclinado" ≈ "Press inclinado (mancuernas)"
     const t=tgtFor(data,nombre,hist);
     if(aj)return {txt:(aj.peso!=null?aj.peso+" kg":"")+(aj.series!=null?" · "+aj.series+" series":"")+(aj.reps!=null?" · "+aj.reps+" reps":""),motivo:aj.motivo,coach:true};
-    if(t)return {txt:t.tiempo?(t.targetReps+" seg"):(t.targetWeight+" kg · "+t.targetReps+" reps"),motivo:t.suggestion+(t.nota?" "+t.nota:""),coach:false};
+    if(t)return {txt:t.tiempo?(t.targetReps+" seg"):(t.targetWeight+" kg · "+t.targetReps+" reps"),motivo:t.suggestion+(t.nota?" "+t.nota:""),coach:false,fuera:!!t.fuera};
     return {txt:"Sin registro previo",motivo:"Primera vez que hacés este ejercicio: elegí un peso que te deje 3-4 repeticiones en reserva y quedará como referencia.",nuevo:true};
   };
   const fecha=new Date();fecha.setDate(fecha.getDate()+(sel-hoyIdx)+semOff*7);
@@ -1367,6 +1649,19 @@ function TodayTab({data,onGo}){
       </div>
       <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"·"} {ph.ic} {ph.name}</div>
     </div>
+    {(()=>{const ad=adherencia(data,28);
+      if(!ad.ultima)return null;
+      const col=ad.hechas>=ad.previstas?"#2ECC71":(ad.hechas>=ad.previstas-2?"#F39C12":"#E74C3C");
+      return <div style={{...S.cd,padding:"12px 14px"}}>
+        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:6}}>CÓMO VENÍS DE VERDAD</div>
+        <div style={{display:"flex",gap:10,alignItems:"baseline",flexWrap:"wrap"}}>
+          <span style={{fontSize:22,fontFamily:"'Oswald',sans-serif",color:col}}>{ad.hechas}/{ad.previstas}</span>
+          <span style={{fontSize:11.5,color:"#999"}}>sesiones de gimnasio en los últimos 28 días</span>
+        </div>
+        <div style={{fontSize:11.5,color:"#999",marginTop:6,lineHeight:1.5}}>Última: {fd(ad.ultima)}{ad.sinEntrenar!==null?" · hace "+ad.sinEntrenar+" "+(ad.sinEntrenar===1?"día":"días"):""}.{ad.conEstado>0?" "+ad.conEstado+(ad.conEstado===1?" sesión":" sesiones")+" con algo raro (cansancio, molestia o enfermedad).":""}</div>
+        <div style={{fontSize:11,color:"#666",marginTop:6,lineHeight:1.5}}>Los pesos de abajo salen de tus últimas sesiones reales y de cuándo las hiciste, no del calendario del plan.</div>
+        {ad.sinEntrenar!==null&&ad.sinEntrenar>=10&&<div style={{fontSize:11.5,color:"#F39C12",marginTop:6,lineHeight:1.5}}>Más de 10 días sin entrenar: la vuelta va con carga de reentrada, no con la que tenías antes del parate.</div>}
+      </div>})()}
     {data.activeSession&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.08)"}}>
       <div style={{fontSize:12.5,color:"#2ECC71",fontWeight:700}}>Tenés una sesión en curso</div>
       <p style={{fontSize:11.5,color:"#CCC",margin:"4px 0 8px",lineHeight:1.5}}>{(data.activeSession.exercises||[]).length} ejercicios cargados del {fd(data.activeSession.date)}. No se pierde si salís de la pestaña.</p>
@@ -1388,10 +1683,10 @@ function TodayTab({data,onGo}){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
           <div style={{minWidth:0}}><div style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>{i+1}. {e.n}</div>
           {EXP[e.n]&&<div style={{fontSize:10.5,color:"#7A7A7A",marginTop:2}}>{EXP[e.n]}</div>}</div>
-          <span style={{fontSize:12,color:"#FF6B35",fontWeight:700,whiteSpace:"nowrap"}}>{e.s} x {e.r}</span>
+          <span style={{fontSize:12,color:sg2&&sg2.fuera?"#F39C12":"#FF6B35",fontWeight:700,whiteSpace:"nowrap"}}>{e.s} x {e.r}</span>
         </div>
         {sg2&&<div style={{marginTop:6,padding:"6px 9px",borderRadius:8,background:sg2.coach?"rgba(155,89,182,0.10)":(sg2.nuevo?"rgba(255,255,255,0.04)":"rgba(46,204,113,0.08)")}}>
-          <div style={{fontSize:11.5,color:sg2.coach?"#C39BD3":(sg2.nuevo?"#888":"#2ECC71"),fontWeight:700}}>{sg2.coach?"🧠 Coach: ":(sg2.nuevo?"":"📈 Hoy: ")}{sg2.txt}</div>
+          <div style={{fontSize:11.5,color:sg2.coach?"#C39BD3":(sg2.nuevo?"#888":(sg2.fuera?"#F39C12":"#2ECC71")),fontWeight:700}}>{sg2.coach?"🧠 Coach: ":(sg2.nuevo?"":(sg2.fuera?"⚙️ Recalibrando: ":"📈 Hoy: "))}{sg2.txt}</div>
           {sg2.motivo&&<div style={{fontSize:10.5,color:"#999",marginTop:2}}>{sg2.motivo}</div>}
         </div>}
         {!sg2&&e.note&&<div style={{fontSize:11,color:"#999",marginTop:5,fontStyle:"italic"}}>{e.note}</div>}
@@ -1451,11 +1746,11 @@ function PlanTab({data,setData}){
     </div>}
     {sug&&sug.fase!==pi&&data.coachAdjust&&data.coachAdjust.avanzarFase===false&&<div style={{...S.cd,borderLeft:"3px solid #9B59B6",background:"rgba(155,89,182,0.07)"}}>
       <div style={{fontSize:12,color:"#9B59B6",fontWeight:700,marginBottom:4}}>{"\u{1F9E0}"} El coach dice esperar</div>
-      <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>Por calendario ya sería {PHASES[sug.fase].name}, pero después de tu sesión del {fd(data.coachAdjust.date)} el coach recomendó quedarte donde estás{data.coachAdjust.motivoFase?": "+data.coachAdjust.motivoFase:"."}</p>
+      <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>Por tus entrenamientos hechos ya sería {PHASES[sug.fase].name}, pero después de tu sesión del {fd(data.coachAdjust.date)} el coach recomendó quedarte donde estás{data.coachAdjust.motivoFase?": "+data.coachAdjust.motivoFase:"."}</p>
     </div>}
     {sug&&sug.fase!==pi&&!(data.coachAdjust&&data.coachAdjust.avanzarFase===false)&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.08)"}}>
-      <div style={{fontSize:12,color:"#F39C12",fontWeight:700,marginBottom:4}}>{"\u26A0\uFE0F"} Semana {sug.semana} del plan</div>
-      <p style={{fontSize:12,color:"#CCC",marginTop:0,marginBottom:10,lineHeight:1.5}}>Por calendario ya te toca <b style={{color:"#FFF"}}>{PHASES[sug.fase].name}</b>, pero seguís en {ph.name}. Cambiá cuando te sientas listo: si faltaste o venís cansado, quedate donde estás.</p>
+      <div style={{fontSize:12,color:"#F39C12",fontWeight:700,marginBottom:4}}>{"\u26A0\uFE0F"} Semana {sug.semana} de entrenamiento efectivo</div>
+      <p style={{fontSize:12,color:"#CCC",marginTop:0,marginBottom:10,lineHeight:1.5}}>Llevás <b style={{color:"#FFF"}}>{sug.sesiones} sesiones</b> registradas = {sug.efectivas} semanas de entrenamiento real{sug.semCal?" (en el calendario pasaron "+sug.semCal+" semanas desde que arrancaste)":""}. Con eso te tocaría <b style={{color:"#FFF"}}>{PHASES[sug.fase].name}</b> y seguís en {ph.name}. La fase avanza por lo que entrenaste, no por los días que pasaron.</p>
       <button onClick={()=>{if(window.confirm("Pasar a "+PHASES[sug.fase].name+"?"))pasarAFase(sug.fase)}} style={{...S.btn,width:"100%",padding:"11px 16px",fontSize:13,background:"linear-gradient(135deg,#F39C12,#D68910)"}}>Pasar a {PHASES[sug.fase].name}</button>
     </div>}
     <div style={{...S.cd,borderLeft:"3px solid "+ph.c,background:"linear-gradient(135deg,"+ph.c+"15,"+ph.c+"05)"}}>
@@ -1503,7 +1798,7 @@ function PlanTab({data,setData}){
     {data.planNotes?.length>0&&<div style={{marginTop:16}}><h3 style={{...S.t1,fontSize:14}}>{"\u{1F9E0}"} Notas del Coach sobre el plan</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.planNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.planNotes.at(-1).date)}</p></div></div>}
     <div style={{marginTop:20}}>
       <h3 style={{...S.t1,fontSize:14}}>Todas las fases</h3>
-      {semPlan&&<p style={{fontSize:11,color:"#888",marginBottom:8}}>Vas por la semana {semPlan} desde que arrancaste.</p>}
+      <p style={{fontSize:11,color:"#888",marginBottom:8,lineHeight:1.5}}>{semPlan?"Calendario: semana "+semPlan+" desde que arrancaste. ":""}Entrenamientos registrados: {(data.sessions||[]).filter(x=>(x.exercises||[]).length>0).length} = {Math.round(semanasEfectivas(data)*10)/10} semanas efectivas. Lo que manda para cambiar de fase es esto último.</p>
       {PHASES.map((p,i)=><div key={i} onClick={()=>{if(i!==pi&&window.confirm("Cambiar a "+p.name+"?"))pasarAFase(i)}} style={{...S.cd,padding:"10px 14px",borderLeft:"3px solid "+(i===pi?p.c:"transparent"),background:i===pi?p.c+"14":"rgba(255,255,255,0.02)",opacity:i===pi?1:0.55,cursor:"pointer"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
           <span style={{fontSize:14,fontFamily:"'Oswald',sans-serif",color:i===pi?p.c:"#888"}}>{p.ic} {p.name}</span>
@@ -1890,14 +2185,64 @@ function TrainTab({data,setData,apiKey,modo,setModo}){
 }
 
 function WorkoutTab({data,setData,apiKey}){
+  const[est,setEst]=useState("");const[zona,setZona]=useState("");
   const[ses,setSes]=useState(data.activeSession||null);const[sg,setSg]=useState(null);
   // La sesión en curso se guarda en cada cambio: podés salir a mirar el plan y volver
   useEffect(()=>{setData(d=>{const nd={...d,activeSession:ses};sv(nd);return nd})},[ses]);const[exQ,setExQ]=useState("");const[showFb,setShowFb]=useState(false);const[fb,setFb]=useState("");const[aiRes,setAiRes]=useState("");const[aiLoad,setAiLoad]=useState(false);
-  const start=(f)=>{setSes({id:gi(),date:f||td(),exercises:[]});setSg(null);setExQ("")};
+  const[chkOn,setChkOn]=useState(false);const[planOn,setPlanOn]=useState(false);
+  const[chk,setChk]=useState(null);const[acc,setAcc]=useState({});const[pendDate,setPendDate]=useState(td());
+  // Registrar un día pasado no lleva check-in: sería inventar cómo te sentías.
+  const start=(f)=>{
+    const d=f||td();
+    if(f&&f!==td()){setSes({id:gi(),date:d,exercises:[]});setSg(null);setExQ("");return}
+    setPendDate(d);setChk({date:d,sueno:3,energia:3,muscular:3,estres:3,molestias:[],enfermo:false});setAcc({});setChkOn(true);setPlanOn(false);
+  };
+  const progDia=()=>sesionProgramada(data,pendDate);
+  const nombresDia=()=>{const pr=progDia();return pr?pr.exercises.map(e=>e.n):[]};
+  const afectDia=()=>afectadosPor(nombresDia(),chk&&chk.molestias);
+  const guardarCheckin=c=>{const nd={...data,checkins:[...(data.checkins||[]).filter(x=>x.date!==c.date),{...c,id:c.date}]};setData(nd);sv(nd)};
+  const irAlPlan=()=>{
+    const af=afectadosPor(nombresDia(),chk.molestias);
+    const a={};Object.keys(af).forEach(n=>{a[n]=af[n].nivel>5?(af[n].alt?"cambiar":"sacar"):"hacer"});
+    setAcc(a);setChkOn(false);setPlanOn(true);
+  };
+  const armar=(forzarRecorte)=>{
+    guardarCheckin(chk);
+    const dec=decisionDelDia(data,chk);
+    const rec=forzarRecorte||recorteDe(dec?dec.nivel:"completo");
+    const pr=progDia(), af=afectadosPor(nombresDia(),chk.molestias);
+    const exs=[];
+    let puestos=0;
+    (pr?pr.exercises:[]).forEach(e=>{
+      const a=acc[e.n]||"hacer";
+      if(a==="sacar")return;
+      const nombre=(a==="cambiar"&&af[e.n]&&af[e.n].alt)?af[e.n].alt:e.n;
+      // Los dos primeros que QUEDAN son los principales del día: el recorte de series toca a los accesorios.
+      // Una sesión técnica además baja la carga de todo.
+      const esAccesorio=puestos>=2; puestos++;
+      const r=rec?(esAccesorio?rec:(rec.pesoFactor?{pesoFactor:rec.pesoFactor}:null)):null;
+      exs.push(construirEjercicio(data,nombre,grupoDe(nombre,(pr.muscles||[])[0]),{recorte:r,molestia:af[e.n]||null,plan:{s:e.s,r:e.r}}));
+    });
+    setSes({id:gi(),date:pendDate,exercises:exs,checkin:chk,decision:dec,recorte:rec});
+    setChkOn(false);setPlanOn(false);setSg(null);setExQ("");
+  };
+  const armarSinCheckin=()=>{
+    const pr=progDia();
+    const exs=(pr?pr.exercises:[]).map(e=>construirEjercicio(data,e.n,grupoDe(e.n,(pr.muscles||[])[0]),{plan:{s:e.s,r:e.r}}));
+    setSes({id:gi(),date:pendDate,exercises:exs});setChkOn(false);setPlanOn(false);setSg(null);setExQ("");
+  };
+  // La primera serie es un dato de hoy; el check-in era una predicción. Si la serie sale bien, manda la serie.
+  const levantarRecorte=()=>setSes(s=>({...s,vetoHecho:true,recorte:null,exercises:s.exercises.map(ex=>{
+    if(!ex.targetsOrig)return ex;
+    const T=ex.targetsOrig;
+    const sets=ex.sets.map(st=>st.done?st:{...st,weight:T.targetWeight,reps:T.targetReps});
+    while(sets.length<Number(T.targetSets||1))sets.push(ex.uni?{weight:T.targetWeight,reps:T.targetReps,repsR:T.targetReps,done:false}:{weight:T.targetWeight,reps:T.targetReps,done:false});
+    return {...ex,targets:T,sets:sets,recortado:false};
+  })}));
   const setFecha=f=>setSes(x=>({...x,date:f}));
-  const addEx=(name,group)=>{const hist=data.sessions.flatMap(s=>s.exercises).filter(e=>e.name===name);const aj=ajusteDe(data,name);const t0=tgtFor(data,name,hist);const t2=aj?{targetWeight:(aj.peso!=null?aj.peso:(t0?t0.targetWeight:"")),nota:(t0&&t0.nota)||"",targetReps:(aj.reps!=null?String(aj.reps).split("-")[0]:(t0?t0.targetReps:"")),targetSets:(aj.series!=null?aj.series:(t0?t0.targetSets:1)),suggestion:"Coach: "+(aj.motivo||"ajuste indicado")+(aj.peso!=null?" \u2192 "+aj.peso+"kg":"")+(aj.series!=null?" \u00b7 "+aj.series+" series":"")+(aj.reps!=null?" \u00b7 "+aj.reps+" reps":""),coach:true}:t0;const modo=exModo(name);const uni=MODO_INFO[modo].lados;const tiempo=esTiempo(name);const mk=()=>{const b={weight:t2?t2.targetWeight:"",reps:t2?t2.targetReps:"",done:false};return uni?{...b,repsR:t2?t2.targetReps:""}:b};setSes(s=>({...s,exercises:[...s.exercises,{id:gi(),name,muscleGroup:group,uni,modo,tiempo,sets:Array.from({length:t2?t2.targetSets:1},mk),targets:t2}]}));if(aj)marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
+  const addEx=(name,group)=>{const ex=construirEjercicio(data,name,group,{recorte:ses&&ses.recorte});setSes(s=>({...s,exercises:[...s.exercises,ex]}));if(ajusteDe(data,name))marcarAjusteUsado(data,setData,name);setSg(null);setExQ("")};
   const setRir=(eid,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,rir:v}:ex)}));
-  const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:f==="done"?v:(v===""?"":Number(v))}:st)}:ex)}));
+  const upSet=(eid,idx,f,v)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.map((st,i)=>i===idx?{...st,[f]:v}:st)}:ex)}));
   const addSet=(eid)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>{if(ex.id!==eid)return ex;const l=ex.sets.at(-1)||{};const nx={weight:l.weight??"",reps:l.reps??"",done:false};if(ex.uni)nx.repsR=l.repsR??"";return{...ex,sets:[...ex.sets,nx]}})}));
   const rmSet=(eid,idx)=>setSes(s=>({...s,exercises:s.exercises.map(ex=>ex.id===eid?{...ex,sets:ex.sets.filter((_,i)=>i!==idx)}:ex)}));
   const rmEx=eid=>setSes(s=>({...s,exercises:s.exercises.filter(ex=>ex.id!==eid)}));
@@ -1909,7 +2254,7 @@ function WorkoutTab({data,setData,apiKey}){
     const sets=ex.sets.map(st=>{const o={...st};if(lados&&o.repsR===undefined)o.repsR=o.reps;if(!lados)delete o.repsR;return o});
     return {...ex,modo:m2,uni:lados,sets};
   })}));
-  const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:Number(st.weight)||0,reps:Number(st.reps)||0};if(ex.uni)o.repsR=Number(st.repsR)||0;return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns,activeSession:null};
+  const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,estado:est||"bien",molestiaZona:est==="molestia"?zona:"",exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:nm(st.weight),reps:nm(st.reps)};if(ex.uni)o.repsR=nm(st.repsR);return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns,activeSession:null};
     if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals,data.coachNotes,data.coachAdjust),apiKey);
       const corte=raw.indexOf("---AJUSTES---");
       const txt=(corte>=0?raw.slice(0,corte):raw).trim();
@@ -1919,9 +2264,92 @@ function WorkoutTab({data,setData,apiKey}){
       setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
     else{setAiRes("Sin API key. Sesion guardada. Anda a Config.")}
     setData(nd);sv(nd);setAiLoad(false)};
-  const reset=()=>{setSes(null);setShowFb(false);setFb("");setAiRes("")};
+  const reset=()=>{setSes(null);setShowFb(false);setFb("");setAiRes("");setEst("");setZona("");setChk(null);setChkOn(false);setPlanOn(false);setAcc({})};
 
-  if(showFb)return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4DD}"} Como estuvo?</h2>{!aiRes?<><textarea value={fb} onChange={e=>setFb(e.target.value)} placeholder="Como te sentiste? Pesado? Facil? Dolor? Dormiste bien?" style={S.ta} rows={5}/><button onClick={submit} disabled={!fb.trim()||aiLoad} style={{...S.btn,opacity:!fb.trim()||aiLoad?0.5:1,width:"100%",marginTop:12}}>{aiLoad?"\u{1F525} Analizando...":"Enviar al Coach IA"}</button></>:<div style={S.aicd}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><span style={{fontSize:24}}>{"\u{1F9E0}"}</span><span style={{fontFamily:"'Oswald',sans-serif",fontSize:16,fontWeight:700,color:"#FF6B35"}}>COACH FORJA</span></div><p style={{fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap",color:"#E0E0E0"}}>{aiRes}</p><button onClick={reset} style={{...S.btn,marginTop:16,width:"100%"}}>Cerrar</button></div>}</div>;
+  if(showFb)return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4DD}"} Como estuvo?</h2>{!aiRes?<>
+    <div style={{marginBottom:14}}>
+      <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:6}}>¿CÓMO ESTUVISTE HOY?</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{ESTADOS.map(e2=><button key={e2.id} onClick={()=>setEst(est===e2.id?"":e2.id)} style={{flex:"1 1 45%",padding:"9px 6px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:est===e2.id?700:400,border:est===e2.id?"1px solid "+e2.c:"1px solid rgba(255,255,255,0.10)",background:est===e2.id?e2.c+"22":"rgba(255,255,255,0.03)",color:est===e2.id?e2.c:"#888"}}>{e2.i} {e2.l}</button>)}</div>
+      {est==="molestia"&&<input value={zona} onChange={e2=>setZona(e2.target.value)} placeholder="¿Dónde? Ej: hombro derecho, muñeca" style={{...S.inp,marginTop:8}}/>}
+      <div style={{fontSize:10.5,color:"#666",marginTop:6,lineHeight:1.4}}>No es decorativo: si estuviste enfermo o con molestia, la próxima vez la app sostiene la carga en vez de pedirte subir.</div>
+    </div>
+    <textarea value={fb} onChange={e=>setFb(e.target.value)} placeholder="Como te sentiste? Pesado? Facil? Dolor? Dormiste bien?" style={S.ta} rows={5}/><button onClick={submit} disabled={(!fb.trim()&&!est)||aiLoad} style={{...S.btn,opacity:(!fb.trim()&&!est)||aiLoad?0.5:1,width:"100%",marginTop:12}}>{aiLoad?"\u{1F525} Analizando...":"Enviar al Coach IA"}</button></>:<div style={S.aicd}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><span style={{fontSize:24}}>{"\u{1F9E0}"}</span><span style={{fontFamily:"'Oswald',sans-serif",fontSize:16,fontWeight:700,color:"#FF6B35"}}>COACH FORJA</span></div><p style={{fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap",color:"#E0E0E0"}}>{aiRes}</p><button onClick={reset} style={{...S.btn,marginTop:16,width:"100%"}}>Cerrar</button></div>}</div>;
+
+  if(chkOn&&chk)return <div style={S.pg}>
+    <h2 style={S.t1}>¿Cómo llegás hoy?</h2>
+    <p style={{fontSize:11.5,color:"#888",margin:"-6px 0 14px",lineHeight:1.5}}>Cuatro toques. No es para ponerte un puntaje: es para saber si hoy conviene recortar algo, y para que en un mes se vean los patrones.</p>
+    {WELL_ITEMS.map(it=><div key={it.id} style={{...S.cd,padding:"12px 14px"}}>
+      <div style={{fontSize:13,color:"#FFF",fontWeight:600,marginBottom:8}}>{it.i} {it.l}</div>
+      <div style={{display:"flex",gap:5}}>{[1,2,3,4,5].map(v=><button key={v} onClick={()=>setChk(c=>({...c,[it.id]:v}))} style={{flex:1,padding:"11px 0",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:chk[it.id]===v?700:400,border:chk[it.id]===v?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.10)",background:chk[it.id]===v?"rgba(255,107,53,0.18)":"rgba(255,255,255,0.03)",color:chk[it.id]===v?"#FF6B35":"#777"}}>{v}</button>)}</div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#666",marginTop:5}}><span>{it.lo}</span><span>{it.hi}</span></div>
+    </div>)}
+    <div style={{...S.cd,padding:"12px 14px"}}>
+      <div style={{fontSize:13,color:"#FFF",fontWeight:600,marginBottom:3}}>{"\u{1FA79}"} ¿Alguna molestia?</div>
+      <div style={{fontSize:10.5,color:"#666",marginBottom:8,lineHeight:1.4}}>Tocá la zona. Sólo cambia los ejercicios que cargan esa articulación; el resto de la sesión va igual.</div>
+      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{ZONAS.map(z=>{const sel=(chk.molestias||[]).some(m=>m.zona===z.id);
+        return <button key={z.id} onClick={()=>setChk(c=>{const ms=(c.molestias||[]).slice();const i=ms.findIndex(m=>m.zona===z.id);if(i>=0)ms.splice(i,1);else ms.push({zona:z.id,nivel:4});return{...c,molestias:ms}})} style={{flex:"1 1 30%",padding:"9px 4px",borderRadius:8,cursor:"pointer",fontSize:11.5,border:sel?"1px solid #E67E22":"1px solid rgba(255,255,255,0.10)",background:sel?"rgba(230,126,34,0.18)":"rgba(255,255,255,0.03)",color:sel?"#E67E22":"#888",fontWeight:sel?700:400}}>{z.l}</button>})}</div>
+      {(chk.molestias||[]).map(m=><div key={m.zona} style={{marginTop:12}}>
+        <div style={{fontSize:11.5,color:"#E67E22",fontWeight:600,marginBottom:5}}>{(ZONAS.find(z=>z.id===m.zona)||{}).l}: ¿cuánto duele, del 0 al 10?</div>
+        <div style={{display:"flex",gap:3}}>{[0,1,2,3,4,5,6,7,8,9,10].map(v=><button key={v} onClick={()=>setChk(c=>({...c,molestias:(c.molestias||[]).map(x=>x.zona===m.zona?{...x,nivel:v}:x)}))} style={{flex:1,minWidth:0,padding:"7px 0",borderRadius:6,cursor:"pointer",fontSize:11,border:m.nivel===v?"1px solid #E67E22":"1px solid rgba(255,255,255,0.08)",background:m.nivel===v?"rgba(230,126,34,0.22)":"rgba(255,255,255,0.03)",color:m.nivel===v?"#E67E22":"#666"}}>{v}</button>)}</div>
+        <div style={{fontSize:10,color:"#666",marginTop:5,lineHeight:1.4}}>Hasta 5 se puede entrenar, si el dolor no crece semana a semana y a la mañana siguiente volvió a lo de siempre. De 6 para arriba ese patrón sale de la sesión.</div>
+      </div>)}
+    </div>
+    <button onClick={()=>setChk(c=>({...c,enfermo:!c.enfermo}))} style={{...S.eo,justifyContent:"center",borderColor:chk.enfermo?"#E74C3C":"rgba(255,255,255,0.10)",color:chk.enfermo?"#E74C3C":"#888",fontWeight:chk.enfermo?700:400}}>{chk.enfermo?"✓ ":""}Estoy enfermo: fiebre o cuerpo cortado</button>
+    <button onClick={irAlPlan} style={{...S.btn,width:"100%",marginTop:12}}>Ver la sesión de hoy {"→"}</button>
+    <button onClick={armarSinCheckin} style={{...S.aset,marginTop:8,borderStyle:"solid"}}>Saltear y entrenar igual</button>
+  </div>;
+
+  if(planOn&&chk){
+    const dec=decisionDelDia(data,chk)||{nivel:"completo",motivo:""};
+    const nv=NIVEL[dec.nivel]||NIVEL.completo;
+    const pr=progDia(), af=afectDia();
+    const lista=pr?pr.exercises:[];
+    const b=wellBase(data,chk.date);
+    return <div style={S.pg}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><button onClick={()=>{setPlanOn(false);setChkOn(true)}} style={S.sm}>{"←"}</button><h2 style={{...S.t1,margin:0}}>La sesión de hoy</h2></div>
+      <div style={{...S.cd,borderLeft:"3px solid "+nv.c,background:"linear-gradient(135deg,"+nv.c+"18,"+nv.c+"05)"}}>
+        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600}}>QUÉ HACEMOS HOY</div>
+        <h3 style={{fontFamily:"'Oswald',sans-serif",fontSize:18,color:nv.c,margin:"6px 0 6px",lineHeight:1.2}}>{nv.t}</h3>
+        <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.55}}>{dec.motivo}</p>
+        {b.listo&&<p style={{fontSize:10.5,color:"#666",margin:"8px 0 0",lineHeight:1.4}}>Comparado con tus últimos {b.n} check-ins, no con una tabla general.</p>}
+      </div>
+      {Object.keys(af).length>0&&<div>
+        <h3 style={{...S.t1,fontSize:14,marginTop:16}}>Ejercicios que tocan esa zona</h3>
+        <p style={{fontSize:11,color:"#888",marginBottom:10,lineHeight:1.5}}>El resto de la sesión va completa. Elegí qué hacer con estos.</p>
+        {Object.keys(af).map(n=>{const a=af[n], sel=acc[n]||"hacer";
+          const opt=(id,txt)=><button key={id} onClick={()=>setAcc(x=>({...x,[n]:id}))} style={{flex:1,padding:"8px 4px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:sel===id?700:400,border:sel===id?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.10)",background:sel===id?"rgba(255,107,53,0.16)":"rgba(255,255,255,0.03)",color:sel===id?"#FF6B35":"#888"}}>{txt}</button>;
+          return <div key={n} style={{...S.cd,padding:"11px 14px"}}>
+            <div style={{fontSize:13.5,color:"#FFF",fontWeight:600}}>{n}</div>
+            <div style={{fontSize:11,color:"#E67E22",marginTop:2,marginBottom:8}}>Carga {(ZONAS.find(z=>z.id===a.zona)||{}).l.toLowerCase()} · dolor {a.nivel}/10</div>
+            <div style={{display:"flex",gap:6}}>{[opt("hacer","Hacerlo igual"),a.alt?opt("cambiar","Cambiar por "+a.alt):null,opt("sacar","Sacarlo de hoy")].filter(Boolean)}</div>
+            <div style={{fontSize:10,color:"#666",marginTop:7,lineHeight:1.4}}>{a.nivel>5?"Con dolor de 6 o más conviene no cargar ese patrón hoy.":"Con dolor de hasta 5 podés hacerlo: pará si sube de 5, y fijate mañana que haya vuelto a lo de siempre."}</div>
+          </div>})}
+      </div>}
+      {lista.length>0?<div>
+        {(()=>{const fuera=lista.filter(e=>(acc[e.n]||"hacer")==="sacar").length;
+          return fuera>=3&&<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.07)",marginTop:16}}>
+            <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.55}}>Salen {fuera} ejercicios y queda poco del día. Con una molestia así suele rendir más correr esta sesión y hacer hoy la de otro grupo: entrenás igual, no forzás la zona y no perdés la semana. Podés armarla a mano desde <b style={{color:"#FFF"}}>Agregar ejercicio</b>.</p>
+          </div>})()}
+        <h3 style={{...S.t1,fontSize:14,marginTop:16}}>La sesión queda en {lista.filter(e=>(acc[e.n]||"hacer")!=="sacar").length} ejercicios</h3>
+        {lista.map((e,i)=>{const a=acc[e.n]||"hacer", af2=af[e.n];
+          const nombre=(a==="cambiar"&&af2&&af2.alt)?af2.alt:e.n;
+          return <div key={i} style={{...S.cd,padding:"8px 14px",opacity:a==="sacar"?0.4:1}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,color:"#FFF",textDecoration:a==="sacar"?"line-through":"none"}}>{i+1}. {nombre}{a==="cambiar"?" (en vez de "+e.n+")":""}</span>
+              <span style={{fontSize:11.5,color:"#FF6B35",fontWeight:700,whiteSpace:"nowrap"}}>{e.s} x {e.r}</span>
+            </div>
+          </div>})}
+      </div>:<div style={{...S.cd,borderLeft:"3px solid #F39C12",background:"rgba(243,156,18,0.07)"}}>
+        <p style={{fontSize:12,color:"#CCC",margin:0,lineHeight:1.5}}>Hoy no hay sesión de gimnasio programada. Podés armarla a mano igual: se abre vacía y agregás lo que quieras.</p>
+      </div>}
+      {dec.nivel==="descanso"
+        ?<div style={{marginTop:14}}>
+          <button onClick={()=>{guardarCheckin(chk);setChkOn(false);setPlanOn(false)}} style={{...S.btn,width:"100%",background:"linear-gradient(135deg,#E74C3C,#C0392B)"}}>Descansar hoy</button>
+          <button onClick={()=>armar({menosSeries:1,pesoFactor:0.7})} style={{...S.aset,marginTop:8,borderStyle:"solid"}}>Entrenar igual, en modo técnico</button>
+        </div>
+        :<button onClick={()=>armar()} style={{...S.btn,width:"100%",marginTop:14}}>Armar la sesión {"→"}</button>}
+    </div>;
+  }
 
   if(!ses){const last=data.sessions.at(-1);return <div style={S.pg}><div style={S.hero}><span style={{fontSize:48}}>{"\u{1F525}"}</span><h2 style={{fontFamily:"'Oswald',sans-serif",fontSize:22,margin:"8px 0 4px"}}>Listo para forjar?</h2><p style={{fontSize:13,color:"#AAA",margin:0}}>{last?"Ultima: "+fd(last.date):"Comenza a registrar"}</p><button onClick={()=>start()} style={{...S.btn,marginTop:16,width:"100%"}}>Iniciar sesión</button>
     <button onClick={()=>{const d=window.prompt("¿De qué día es el entrenamiento? Formato AAAA-MM-DD",td());if(!d)return;if(d.length!==10||d[4]!=="-"||d[7]!=="-"||isNaN(new Date(d+"T00:00:00").getTime())){window.alert("Fecha inválida. Usá el formato 2026-08-03.");return}if(d>td()){window.alert("No se puede registrar un entrenamiento futuro.");return}start(d)}} style={{...S.aset,marginTop:10,borderStyle:"solid"}}>Registrar un día anterior</button></div>{(()=>{const pend=[];for(let k=1;k<=7;k++){const dt=new Date();dt.setDate(dt.getDate()-k);const iso=dt.toISOString().slice(0,10);const dia=WEEKDAYS[(dt.getDay()+6)%7];const prog=phSched(data,data.phase||0).find(x=>x.day===dia);if(prog&&!(data.sessions||[]).some(x=>x.date===iso))pend.push({iso,dia,nombre:prog.name})}
@@ -1937,6 +2365,22 @@ function WorkoutTab({data,setData,apiKey}){
     {data.coachNotes.length>0&&<div style={{marginTop:20}}><h3 style={S.t1}>{"\u{1F9E0}"} Coach</h3><div style={S.aicd}><p style={{fontSize:13,lineHeight:1.5,color:"#CCC",whiteSpace:"pre-wrap"}}>{data.coachNotes.at(-1).note}</p><p style={{fontSize:11,color:"#888",marginTop:8}}>{fd(data.coachNotes.at(-1).date)}</p></div></div>}</div>}
 
   return <div style={S.pg}>
+    {(()=>{
+      if(!ses.recorte||ses.vetoHecho)return null;
+      const e0=(ses.exercises||[])[0]; if(!e0)return null;
+      const s0=(e0.sets||[])[0]; if(!s0||!s0.done)return null;
+      const obj=nm((e0.targetsOrig||e0.targets||{}).targetReps), hecho=nm(s0.reps);
+      if(!obj||!hecho)return null;
+      const bien=hecho>=obj;
+      return <div style={{...S.cd,borderLeft:"3px solid #3498DB",background:"rgba(52,152,219,0.08)"}}>
+        <div style={{fontSize:12.5,color:"#3498DB",fontWeight:700,marginBottom:4}}>La primera serie tiene la última palabra</div>
+        <p style={{fontSize:11.5,color:"#CCC",margin:"0 0 9px",lineHeight:1.5}}>Hiciste {hecho} reps con {s0.weight}kg en {e0.name}; sin recorte el objetivo era {obj}. {bien?"Salió bien: el check-in era una predicción, esto es un dato de hoy.":"Quedó corto, así que el recorte parece acertado."}</p>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={levantarRecorte} style={{...S.btn,flex:1,padding:"9px 10px",fontSize:12,background:bien?undefined:"rgba(255,255,255,0.08)"}}>Levantar el recorte</button>
+          <button onClick={()=>setSes(s=>({...s,vetoHecho:true}))} style={{...S.aset,flex:1,marginTop:0,borderStyle:"solid"}}>Mantenerlo</button>
+        </div>
+      </div>})()}
+    {ses.decision&&!ses.recorte&&!ses.vetoHecho&&<div style={{fontSize:11,color:"#666",marginBottom:8,lineHeight:1.5}}>{"\u{1F4CB}"} {ses.decision.motivo}</div>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><h2 style={{...S.t1,margin:0}}>Sesión en curso</h2>{ses.date!==td()&&<span style={{fontSize:10,fontWeight:700,color:"#0A0A0B",background:"#F39C12",borderRadius:6,padding:"3px 8px",letterSpacing:0.5}}>ATRASADA</span>}</div>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
       <span style={{fontSize:11.5,color:"#888",whiteSpace:"nowrap"}}>Fecha</span>
@@ -1969,9 +2413,9 @@ function WorkoutTab({data,setData,apiKey}){
         <div style={{display:"grid",gridTemplateColumns:gt,gap:6,marginBottom:6}}><span style={S.colh}>#</span><span style={S.colh}>Kg</span><span style={S.colh}>{tmp?(uni?"Seg izq":"Seg"):(uni?"Izq":"Reps")}</span>{uni&&<span style={S.colh}>{tmp?"Seg der":"Der"}</span>}<span style={S.colh}>Ok</span><span></span></div>
         {ex.sets.map((set,idx)=><div key={idx} style={{display:"grid",gridTemplateColumns:gt,gap:6,alignItems:"center",marginBottom:4,opacity:set.done?0.6:1}}>
           <span style={{fontSize:13,color:"#888",textAlign:"center"}}>{idx+1}</span>
-          <input type="number" inputMode="decimal" placeholder="0" value={set.weight} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"weight",e.target.value)} style={S.inp} step="0.5"/>
-          <input type="number" inputMode="numeric" placeholder={tmp?"seg":"0"} value={set.reps} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"reps",e.target.value)} style={S.inp}/>
-          {uni&&<input type="number" inputMode="numeric" placeholder={tmp?"seg":"0"} value={set.repsR===undefined?"":set.repsR} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"repsR",e.target.value)} style={S.inp}/>}
+          <input type="text" inputMode="decimal" autoComplete="off" placeholder="0" value={set.weight} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"weight",limpiaNum(e.target.value))} style={S.inp}/>
+          <input type="text" inputMode="numeric" autoComplete="off" placeholder={tmp?"seg":"0"} value={set.reps} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"reps",limpiaNum(e.target.value))} style={S.inp}/>
+          {uni&&<input type="text" inputMode="numeric" autoComplete="off" placeholder={tmp?"seg":"0"} value={set.repsR===undefined?"":set.repsR} onFocus={e=>e.target.select()} onChange={e=>upSet(ex.id,idx,"repsR",limpiaNum(e.target.value))} style={S.inp}/>}
           <button onClick={()=>upSet(ex.id,idx,"done",!set.done)} style={{...S.chk,background:set.done?"#2ECC71":"rgba(255,255,255,0.05)",color:set.done?"#FFF":"#666"}}>&#10003;</button>
           <button onClick={()=>rmSet(ex.id,idx)} style={S.sm}>-</button>
         </div>)}
@@ -2207,6 +2651,14 @@ function ProgressTab({data}){
 // ─── SETTINGS ───
 function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const[k,setK]=useState(apiKey);const[saved,setSaved]=useState(false);
+  const cfIni=cargasCfg(data);
+  const[cg,setCg]=useState({barra:String(cfIni.barra),discos:(cfIni.discos||[]).join(", "),mancuernas:(cfIni.mancuernas||[]).join(", "),pesas:(cfIni.pesas||[]).join(", "),stack:String(cfIni.stack)});
+  const[cgOk,setCgOk]=useState(false);
+  const parseLista=s=>[...new Set(String(s).split(/[^0-9.,]+/).map(x=>nm(x)).filter(x=>x>0))].sort((a,b)=>a-b);
+  const guardarCargas=()=>{
+    const nc={barra:nm(cg.barra)||20,discos:parseLista(cg.discos),mancuernas:parseLista(cg.mancuernas),pesas:parseLista(cg.pesas),stack:nm(cg.stack)||5,extra:cfIni.extra};
+    const nd={...data,cargas:nc};setData(nd);sv(nd);setCgOk(true);setTimeout(()=>setCgOk(false),2200);
+  };
   const doSave=()=>{onApiKeyChange(k);setSaved(true);setTimeout(()=>setSaved(false),2000)};
   const[impMsg,setImpMsg]=useState(null);
   const[wipeOn,setWipeOn]=useState(false);
@@ -2287,6 +2739,21 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     rd.readAsText(f);ev.target.value="";
   };
   return <div style={S.pg}><h2 style={S.t1}>{"⚙️"} Config</h2><div style={S.cd}><h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>API Key de Anthropic</h3><p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Para el Coach IA. Solo se guarda en tu dispositivo. <a href="https://console.anthropic.com" target="_blank" rel="noopener" style={{color:"#FF6B35"}}>console.anthropic.com</a></p><input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api..." style={{...S.inp,marginBottom:12}}/><button onClick={doSave} style={{...S.btn,width:"100%"}}>{saved?"Guardada!":"Guardar"}</button></div>
+  <div style={{...S.cd,marginTop:16}}>
+    <h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Cargas disponibles en tu gimnasio</h3>
+    <p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>De acá sale el próximo peso que te sugiere la app. No usa saltos fijos: usa los kilos que realmente existen donde entrenás. Separá con comas.</p>
+    <label style={S.lbl}>Barra (kg que pesa la barra sola)</label>
+    <input value={cg.barra} inputMode="decimal" onChange={e=>setCg({...cg,barra:limpiaNum(e.target.value)})} style={{...S.inp,marginBottom:10}}/>
+    <label style={S.lbl}>Discos, por lado (kg)</label>
+    <input value={cg.discos} onChange={e=>setCg({...cg,discos:e.target.value})} style={{...S.inp,marginBottom:10}}/>
+    <label style={S.lbl}>Mancuernas (kg de cada mancuerna)</label>
+    <input value={cg.mancuernas} onChange={e=>setCg({...cg,mancuernas:e.target.value})} style={{...S.inp,marginBottom:10}}/>
+    <label style={S.lbl}>Pesas sueltas y kettlebells (kg)</label>
+    <input value={cg.pesas} onChange={e=>setCg({...cg,pesas:e.target.value})} style={{...S.inp,marginBottom:10}}/>
+    <label style={S.lbl}>Salto de placa en poleas y máquinas (kg)</label>
+    <input value={cg.stack} inputMode="decimal" onChange={e=>setCg({...cg,stack:limpiaNum(e.target.value)})} style={{...S.inp,marginBottom:12}}/>
+    <button onClick={guardarCargas} style={{...S.btn,width:"100%"}}>{cgOk?"Guardado!":"Guardar cargas"}</button>
+  </div>
   <div style={{...S.cd,marginTop:16}}>
     <h3 style={{fontSize:14,color:"#4285F4",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Sincronización con Google Drive</h3>
     <p style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>Guarda un archivo <b>forja-data.json</b> en tu Drive y lo mantiene al día. Así ves los mismos datos en el teléfono y en la computadora. FORJA solo puede tocar ese archivo: el resto de tu Drive le queda invisible.</p>
@@ -3193,7 +3660,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[modoTrain,setModoTrain]=useState(null);const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];if(!d.checkins)d.checkins=[];setData(d)}setAK(gk());setLoading(false)},[]);
   // Si la sync esta activa, avisa cuando Drive tiene algo mas nuevo que este dispositivo
   const[gdNuevo,setGdNuevo]=useState(false);
   useEffect(()=>{
