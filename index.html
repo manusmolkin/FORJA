@@ -1109,6 +1109,117 @@ const cargaPara=(rm,r)=>rm/(1+r/30);
 const BW_DOM=["sentadilla","sentadilla bulgara","zancadas","zancadas caminando","fondos","dominadas","dominadas asistidas","elevacion rodillas colgado","elevacion piernas colgado"];
 const esBWdom=n=>BW_DOM.indexOf(normLbl(String(n||"").split("(")[0].trim()))>=0;
 // Cómo te sentiste en la sesión: define si se progresa o se sostiene
+// ─── PARENTESCO ENTRE EJERCICIOS ───
+// Un ejercicio no se entrena solo: la sentadilla frontal entrena el mismo patrón que la sentadilla.
+// "dif" es cuánto peso mueve ese ejercicio respecto del de referencia del patrón, en las unidades
+// que anota la app (en mancuernas el peso es por mancuerna, por eso los números son chicos).
+const EX_PATRON={
+"Sentadilla":{p:"sentadilla",dif:1},"Sentadilla frontal":{p:"sentadilla",dif:0.85},
+"Sentadilla hack":{p:"sentadilla",dif:1.15},"Prensa":{p:"sentadilla",dif:2},"Sentadilla goblet":{p:"sentadilla",dif:0.45},
+"Peso muerto convencional":{p:"bisagra",dif:1.2},"Peso muerto sumo":{p:"bisagra",dif:1.2},
+"Peso muerto rumano":{p:"bisagra",dif:1},"Peso muerto rumano unilateral":{p:"bisagra",dif:0.5},"Buenos dias":{p:"bisagra",dif:0.55},
+"Hip thrust":{p:"extension_cadera",dif:1},"Hip thrust unilateral":{p:"extension_cadera",dif:0.5},
+"Puente gluteo":{p:"extension_cadera",dif:0.7},"Frog pump":{p:"extension_cadera",dif:0.5},"Patada gluteo":{p:"extension_cadera",dif:0.25},
+"Zancadas":{p:"unilateral_pierna",dif:1},"Zancadas caminando":{p:"unilateral_pierna",dif:1},
+"Sentadilla bulgara":{p:"unilateral_pierna",dif:0.9},"Step up":{p:"unilateral_pierna",dif:0.9},
+"Press banca":{p:"empuje_horizontal",dif:1},"Press inclinado":{p:"empuje_horizontal",dif:0.85},
+"Press declinado":{p:"empuje_horizontal",dif:1.05},"Press banca plano (mancuernas)":{p:"empuje_horizontal",dif:0.4},
+"Press inclinado (mancuernas)":{p:"empuje_horizontal",dif:0.35},"Press mancuernas":{p:"empuje_horizontal",dif:0.4},
+"Press maquina":{p:"empuje_horizontal",dif:0.9},
+"Press militar":{p:"empuje_vertical",dif:1},"Press militar (mancuernas)":{p:"empuje_vertical",dif:0.4},
+"Press Arnold":{p:"empuje_vertical",dif:0.38},"Press maquina hombro":{p:"empuje_vertical",dif:0.9},
+"Curl barra":{p:"curl_codo",dif:1},"Curl mancuernas":{p:"curl_codo",dif:0.45},"Curl martillo":{p:"curl_codo",dif:0.48},
+"Curl inclinado":{p:"curl_codo",dif:0.38},"Curl concentrado":{p:"curl_codo",dif:0.35},"Curl predicador":{p:"curl_codo",dif:0.8},
+"Curl arana":{p:"curl_codo",dif:0.4},"Curl polea":{p:"curl_codo",dif:0.9},
+};
+// Para los que no están en la tabla (o los que escribís vos a mano), el patrón sale del nombre.
+const patronInfer=n=>{
+  const t=" "+normLbl(n)+" ", has=x=>t.indexOf(x)>=0;
+  if(has("curl femoral"))return {p:"flexion_rodilla",dif:1};
+  if(has("extension cuadriceps"))return {p:"extension_rodilla",dif:1};
+  if(has("curl muneca")||has("curl reverso")||has("pronacion")||has("farmer")||has("dead hang")||has("extension muneca"))return {p:"antebrazo",dif:1};
+  if(has("gemelo")||has("soleo")||has("pantorrilla"))return {p:"gemelo",dif:1};
+  if(has("abduccion")||has("aduccion"))return {p:"abduccion_cadera",dif:1};
+  if(has("hip thrust")||has("puente gluteo")||has("patada gluteo")||has("frog"))return {p:"extension_cadera",dif:1};
+  if(has("peso muerto")||has("rumano")||has("buenos dias")||has("hiperextension")||has("superman"))return {p:"bisagra",dif:1};
+  if(has("bulgara")||has("zancada")||has("lunge")||has("step up")||has("split"))return {p:"unilateral_pierna",dif:1};
+  if(has("sentadilla")||has("squat")||has("prensa")||has("hack"))return {p:"sentadilla",dif:1};
+  if(has("press militar")||has("arnold")||has("press hombro")||has("maquina hombro"))return {p:"empuje_vertical",dif:1};
+  if(has("elev laterales")||has("elevaciones laterales")||has("elev frontales")||has("elevaciones frontales"))return {p:"deltoides_lateral",dif:1};
+  if(has("pajaros")||has("face pull"))return {p:"deltoides_posterior",dif:1};
+  if(has("encogimiento")||has("trapecio")||has("remo al menton"))return {p:"trapecio",dif:1};
+  if(has("jalon")||has("dominadas")||has("pull over")||has("pullover"))return {p:"traccion_vertical",dif:1};
+  if(has("remo"))return {p:"traccion_horizontal",dif:1};
+  if(has("curl"))return {p:"curl_codo",dif:1};
+  if(has("extension polea")||has("extension cabeza")||has("press frances")||has("patada triceps")||has("press cerrado")||has("fondos banco"))return {p:"extension_codo",dif:1};
+  if(has("press")||has("aperturas")||has("cruces")||has("peck")||has("fondos"))return {p:"empuje_horizontal",dif:1};
+  if(has("crunch")||has("plancha")||has("ab wheel")||has("elevacion piernas")||has("elevacion rodillas")||has("dead bug")||has("bird dog")||has("pallof")||has("russian"))return {p:"core",dif:1};
+  return null;
+};
+const modeloDe=n=>EX_PATRON[n]||patronInfer(n);
+// Cuánto de un patrón se lleva al otro. 1 = es el mismo trabajo; 0 = no se tocan.
+const PATRON_REL={
+ sentadilla:{sentadilla:1,unilateral_pierna:0.6,extension_rodilla:0.35,extension_cadera:0.3,bisagra:0.25},
+ unilateral_pierna:{unilateral_pierna:1,sentadilla:0.6,extension_cadera:0.35,extension_rodilla:0.3,bisagra:0.25,abduccion_cadera:0.25},
+ bisagra:{bisagra:1,extension_cadera:0.5,flexion_rodilla:0.35,sentadilla:0.25},
+ extension_cadera:{extension_cadera:1,bisagra:0.5,unilateral_pierna:0.35,sentadilla:0.3,abduccion_cadera:0.3},
+ extension_rodilla:{extension_rodilla:1,sentadilla:0.35,unilateral_pierna:0.3},
+ flexion_rodilla:{flexion_rodilla:1,bisagra:0.35},
+ abduccion_cadera:{abduccion_cadera:1,unilateral_pierna:0.25,extension_cadera:0.3},
+ gemelo:{gemelo:1},
+ empuje_horizontal:{empuje_horizontal:1,empuje_vertical:0.5,extension_codo:0.3},
+ empuje_vertical:{empuje_vertical:1,empuje_horizontal:0.5,extension_codo:0.3,deltoides_lateral:0.35},
+ traccion_horizontal:{traccion_horizontal:1,traccion_vertical:0.5,curl_codo:0.25,deltoides_posterior:0.3,trapecio:0.3},
+ traccion_vertical:{traccion_vertical:1,traccion_horizontal:0.5,curl_codo:0.25},
+ curl_codo:{curl_codo:1,traccion_vertical:0.25,traccion_horizontal:0.25,antebrazo:0.25},
+ extension_codo:{extension_codo:1,empuje_horizontal:0.3,empuje_vertical:0.3},
+ deltoides_lateral:{deltoides_lateral:1,empuje_vertical:0.35,deltoides_posterior:0.2},
+ deltoides_posterior:{deltoides_posterior:1,traccion_horizontal:0.3,deltoides_lateral:0.2},
+ trapecio:{trapecio:1,traccion_horizontal:0.3},
+ antebrazo:{antebrazo:1,curl_codo:0.25},
+ core:{core:1},
+};
+const transferencia=(a,b)=>{
+  if(normLbl(a)===normLbl(b))return 1;
+  const A=modeloDe(a),B=modeloDe(b);
+  if(!A||!B)return 0;
+  if(A.p===B.p)return 0.85;                       // mismo patrón, otro ejercicio: casi todo el trabajo se comparte
+  return (PATRON_REL[A.p]||{})[B.p]||0;
+};
+// La última vez que entrenaste ESTE PATRÓN con OTRO ejercicio.
+// Es lo que evita bajar la carga de la sentadilla porque hace 14 días no la hacés,
+// cuando la semana pasada hiciste sentadilla frontal.
+const ultimoPatron=(data,nombre,hoy,umbral)=>{
+  const u=umbral===undefined?0.5:umbral;
+  let best=null;
+  (data.sessions||[]).forEach(s=>{
+    (s.exercises||[]).forEach(e=>{
+      if(!e.name||normLbl(e.name)===normLbl(nombre))return;
+      const t=transferencia(nombre,e.name);
+      if(t<u)return;
+      if(!best||s.date>best.date||(s.date===best.date&&t>best.transfer))best={date:s.date,name:e.name,transfer:t,sets:e.sets||[]};
+    });
+  });
+  if(!best)return null;
+  best.dias=Math.round((new Date((hoy||td())+"T12:00:00")-new Date(best.date+"T12:00:00"))/86400000);
+  return best;
+};
+// Ejercicio nuevo: si hiciste uno muy parecido con el mismo tipo de implemento, arrancamos de ahí
+// en vez de pedirte que adivines. Es una estimación y el texto lo dice.
+const estimarInicial=(data,nombre,rango,cfg,up)=>{
+  if(!up||up.transfer<0.7)return null;
+  const A=modeloDe(nombre), B=modeloDe(up.name);
+  if(!A||!B)return null;
+  const wRef=Math.max(0,...(up.sets||[]).map(x=>nm(x.weight)));
+  if(!wRef)return null;
+  const implA=implReal(exImplOv(data,nombre),wRef,cfg), implB=implReal(exImplOv(data,up.name),wRef,cfg);
+  if(implA!==implB)return null;                       // sin mismo implemento la equivalencia no se sostiene
+  const w=cargaMasCerca(implA,cfg,wRef*((A.dif||1)/(B.dif||1))*0.9);
+  return {targetWeight:w,targetReps:rango[1],targetSets:3,estimado:true,rango:rango,impl:implA,
+    suggestion:"Arrancar con "+w+"kg x "+rango[1]+" reps.",
+    nota:"Nunca registraste este ejercicio, pero hiciste "+up.name+" con "+wRef+"kg hace "+up.dias+" "+(up.dias===1?"día":"días")+" y es el mismo patrón. Es una estimación para no arrancar a ciegas: con lo que hagas hoy queda calibrado de verdad."};
+};
+
 // ─── CHECK-IN PREVIO: cómo llegás hoy ───
 // Cuatro ítems tipo índice de Hooper (sueño, fatiga, dolor muscular, estrés), 1 = muy mal, 5 = muy bien.
 // Se usa contra TU propia línea de base, nunca como puntaje absoluto, y nunca se muestra como score.
@@ -1315,7 +1426,12 @@ const construirEjercicio=(data,name,group,opts)=>{
     molestia:o.molestia||null,coachAjuste:!!aj};
 };
 const exImplOv=(data,n)=>(((data&&data.exImpl)||{})[n])||exImpl(n);
-const tgtFor=(data,nombre,hist)=>tgt(hist,{impl:exImplOv(data,nombre),cfg:cargasCfg(data),rango:rangoPlan(data,nombre)||[8,12],hoy:td()});
+const tgtFor=(data,nombre,hist)=>{
+  const cfg=cargasCfg(data), rango=rangoPlan(data,nombre)||[8,12];
+  const up=ultimoPatron(data,nombre,td(),0.5);
+  if(!hist||!hist.length)return estimarInicial(data,nombre,rango,cfg,up);
+  return tgt(hist,{impl:exImplOv(data,nombre),cfg:cfg,rango:rango,hoy:td(),patron:up});
+};
 
 function tgt(hist,opts){
   if(!hist||!hist.length)return null;
@@ -1341,10 +1457,17 @@ function tgt(hist,opts){
   const impl=implReal(o.impl||"maquina",mw,cfg);
   const rir=last.rir!==undefined&&last.rir!==""?Number(last.rir):null;
   let ts=sets.length, sug="", nota="", fuera=false;
-  const R=(w,r)=>({targetWeight:w,targetReps:r,targetSets:ts,suggestion:sug,nota:nota,impl:impl,rango:rango,dias:dias,fuera:fuera,estado:estado});
+  // ¿Entrenaste el mismo patrón con otro ejercicio? Entonces no venís de un parate.
+  const pat=o.patron||null;
+  const patFresco=!!(pat&&pat.dias!=null&&pat.dias<14&&pat.transfer>=0.5);
+  const parate=dias!==null&&dias>=14&&!patFresco;
+  const pre=(dias!==null&&dias>=14&&patFresco)
+    ? "Hace "+dias+" días que no hacés este ejercicio exacto, pero entrenaste el mismo patrón con "+pat.name+" hace "+pat.dias+" "+(pat.dias===1?"día":"días")+": no venís de un parate, la carga se sostiene. "
+    : "";
+  const R=(w,r)=>({targetWeight:w,targetReps:r,targetSets:ts,suggestion:sug,nota:pre+nota,impl:impl,rango:rango,dias:dias,fuera:fuera,estado:estado,patron:pat});
 
-  // 1) Volvés después de un parate: se retoma, no se progresa
-  if(dias!==null&&dias>=14){
+  // 1) Volvés después de un parate de verdad: se retoma, no se progresa
+  if(parate){
     const back=mw>0?cargaAnterior(impl,cfg,mw):0;
     sug=(back<mw?"Bajar a "+back+"kg":"Repetir "+mw+"kg")+" x "+rMin+" reps.";
     nota="Hace "+dias+" días que no hacés este ejercicio. Primera vuelta: reconectar el patrón, no buscar récord. Si sale fácil, la próxima subimos.";
@@ -1649,19 +1772,6 @@ function TodayTab({data,onGo}){
       </div>
       <div style={{fontSize:11,color:"#777",marginTop:8}}>{fecha.toLocaleDateString("es-AR",{day:"numeric",month:"long"})} {"·"} {ph.ic} {ph.name}</div>
     </div>
-    {(()=>{const ad=adherencia(data,28);
-      if(!ad.ultima)return null;
-      const col=ad.hechas>=ad.previstas?"#2ECC71":(ad.hechas>=ad.previstas-2?"#F39C12":"#E74C3C");
-      return <div style={{...S.cd,padding:"12px 14px"}}>
-        <div style={{fontSize:11,color:"#888",letterSpacing:1.2,fontWeight:600,marginBottom:6}}>CÓMO VENÍS DE VERDAD</div>
-        <div style={{display:"flex",gap:10,alignItems:"baseline",flexWrap:"wrap"}}>
-          <span style={{fontSize:22,fontFamily:"'Oswald',sans-serif",color:col}}>{ad.hechas}/{ad.previstas}</span>
-          <span style={{fontSize:11.5,color:"#999"}}>sesiones de gimnasio en los últimos 28 días</span>
-        </div>
-        <div style={{fontSize:11.5,color:"#999",marginTop:6,lineHeight:1.5}}>Última: {fd(ad.ultima)}{ad.sinEntrenar!==null?" · hace "+ad.sinEntrenar+" "+(ad.sinEntrenar===1?"día":"días"):""}.{ad.conEstado>0?" "+ad.conEstado+(ad.conEstado===1?" sesión":" sesiones")+" con algo raro (cansancio, molestia o enfermedad).":""}</div>
-        <div style={{fontSize:11,color:"#666",marginTop:6,lineHeight:1.5}}>Los pesos de abajo salen de tus últimas sesiones reales y de cuándo las hiciste, no del calendario del plan.</div>
-        {ad.sinEntrenar!==null&&ad.sinEntrenar>=10&&<div style={{fontSize:11.5,color:"#F39C12",marginTop:6,lineHeight:1.5}}>Más de 10 días sin entrenar: la vuelta va con carga de reentrada, no con la que tenías antes del parate.</div>}
-      </div>})()}
     {data.activeSession&&<div style={{...S.cd,borderLeft:"3px solid #2ECC71",background:"rgba(46,204,113,0.08)"}}>
       <div style={{fontSize:12.5,color:"#2ECC71",fontWeight:700}}>Tenés una sesión en curso</div>
       <p style={{fontSize:11.5,color:"#CCC",margin:"4px 0 8px",lineHeight:1.5}}>{(data.activeSession.exercises||[]).length} ejercicios cargados del {fd(data.activeSession.date)}. No se pierde si salís de la pestaña.</p>
