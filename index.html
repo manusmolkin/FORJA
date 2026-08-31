@@ -52,7 +52,7 @@ calves:{l:"Gemelos",i:"\u{1F9B6}",c:"#16A085"},forearms:{l:"Antebrazos",i:"✊",
 const EC={
 chest:["Press banca","Press banca plano (mancuernas)","Press inclinado","Press inclinado (mancuernas)","Press declinado","Press mancuernas","Press maquina","Aperturas","Cruces polea","Peck deck","Fondos","Pull-over mancuerna"],
 back:["Dominadas","Dominadas asistidas","Jalon al pecho","Jalon agarre neutro","Jalon agarre supino","Remo barra","Remo mancuerna","Remo con apoyo en banco","Remo en T","Remo polea baja","Remo maquina","Pull-over","Encogimiento hombros","Hiperextension 45","Superman"],
-shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press maquina hombro","Elev. laterales","Elev. laterales polea","Elev. frontales","Pajaros","Face pull","Remo al menton"],
+shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press maquina hombro","Elev. laterales","Elev. laterales polea","Elev. frontales","Pajaros","Peck deck inverso","Face pull","Remo al menton"],
 biceps:["Curl barra","Curl mancuernas","Curl inclinado","Curl martillo","Curl concentrado","Curl polea","Curl predicador","Curl arana"],
 triceps:["Extension polea","Extension polea soga","Extension cabeza","Press frances","Patada triceps","Press cerrado","Fondos banco","Fondos paralelas"],
 legs:["Sentadilla","Sentadilla frontal","Sentadilla goblet","Sentadilla hack","Prensa","Extension cuadriceps","Curl femoral","Curl femoral sentado","Curl femoral tumbado","Peso muerto rumano","Peso muerto convencional","Buenos dias","Zancadas","Zancadas caminando","Sentadilla bulgara","Step up","Hip thrust"],
@@ -1131,6 +1131,8 @@ const EX_PATRON={
 "Curl barra":{p:"curl_codo",dif:1},"Curl mancuernas":{p:"curl_codo",dif:0.45},"Curl martillo":{p:"curl_codo",dif:0.48},
 "Curl inclinado":{p:"curl_codo",dif:0.38},"Curl concentrado":{p:"curl_codo",dif:0.35},"Curl predicador":{p:"curl_codo",dif:0.8},
 "Curl arana":{p:"curl_codo",dif:0.4},"Curl polea":{p:"curl_codo",dif:0.9},
+"Pajaros":{p:"deltoides_posterior",dif:1},"Peck deck inverso":{p:"deltoides_posterior",dif:4},"Face pull":{p:"deltoides_posterior",dif:3},
+"Elev. laterales":{p:"deltoides_lateral",dif:1},"Elev. laterales polea":{p:"deltoides_lateral",dif:1.2},"Elev. frontales":{p:"deltoides_lateral",dif:1},
 };
 // Para los que no están en la tabla (o los que escribís vos a mano), el patrón sale del nombre.
 const patronInfer=n=>{
@@ -1146,7 +1148,8 @@ const patronInfer=n=>{
   if(has("sentadilla")||has("squat")||has("prensa")||has("hack"))return {p:"sentadilla",dif:1};
   if(has("press militar")||has("arnold")||has("press hombro")||has("maquina hombro"))return {p:"empuje_vertical",dif:1};
   if(has("elev laterales")||has("elevaciones laterales")||has("elev frontales")||has("elevaciones frontales"))return {p:"deltoides_lateral",dif:1};
-  if(has("pajaros")||has("face pull"))return {p:"deltoides_posterior",dif:1};
+  const inv=has("inverso")||has("inversa")||has("reverse")||has("posterior")||has("rear");
+  if(has("pajaros")||has("face pull")||(inv&&(has("peck")||has("apertura")||has("fly")||has("deltoide"))))return {p:"deltoides_posterior",dif:1};
   if(has("encogimiento")||has("trapecio")||has("remo al menton"))return {p:"trapecio",dif:1};
   if(has("jalon")||has("dominadas")||has("pull over")||has("pullover"))return {p:"traccion_vertical",dif:1};
   if(has("remo"))return {p:"traccion_horizontal",dif:1};
@@ -1247,7 +1250,7 @@ const EX_ZONAS={
 "Dominadas":["hombro","codo","muneca"],"Dominadas asistidas":["hombro","codo","muneca"],
 "Jalon al pecho":["hombro","codo"],"Jalon agarre neutro":["hombro","codo"],
 "Remo con apoyo en banco":["hombro","codo"],"Remo polea baja":["lumbar","codo","hombro"],"Remo con barra":["lumbar","codo","hombro"],
-"Elev. laterales":["hombro"],"Elev. laterales polea":["hombro"],"Pajaros":["hombro"],"Face pull":["hombro","cuello"],
+"Elev. laterales":["hombro"],"Elev. laterales polea":["hombro"],"Pajaros":["hombro"],"Peck deck inverso":["hombro"],"Face pull":["hombro","cuello"],
 "Encogimiento hombros":["cuello","hombro"],
 "Extension polea":["codo"],"Extension polea soga":["codo"],"Extension cabeza":["codo","hombro"],"Press frances":["codo","muneca"],
 "Curl barra":["codo","muneca"],"Curl inclinado":["codo","hombro"],"Curl martillo":["codo"],"Curl arana":["codo"],
@@ -1278,7 +1281,28 @@ const EX_SUST={
 "Elevacion rodillas colgado":{hombro:"Crunch polea",muneca:"Crunch polea"},
 "Elevacion piernas colgado":{hombro:"Crunch polea",muneca:"Crunch polea"},
 };
-const zonasDe=n=>EX_ZONAS[n]||[];
+const ZONAS_PATRON={sentadilla:["rodilla","cadera"],unilateral_pierna:["rodilla","cadera"],bisagra:["lumbar","cadera"],
+ extension_cadera:["cadera"],extension_rodilla:["rodilla"],flexion_rodilla:["rodilla"],abduccion_cadera:["cadera"],gemelo:["tobillo"],
+ empuje_horizontal:["hombro","codo"],empuje_vertical:["hombro","codo"],traccion_horizontal:["hombro","codo"],traccion_vertical:["hombro","codo"],
+ curl_codo:["codo"],extension_codo:["codo"],deltoides_lateral:["hombro"],deltoides_posterior:["hombro"],trapecio:["cuello","hombro"],
+ antebrazo:["muneca"],core:[]};
+// Como lo busca la gente, no como lo llama el catálogo
+const EX_ALIAS={
+"Peck deck inverso":["reverse peck deck","peck deck reverse","pajaros maquina","pajaros en maquina","aperturas inversas","rear delt","deltoide posterior maquina"],
+"Pajaros":["rear delt fly","aperturas posteriores","vuelos posteriores"],
+"Sentadilla frontal":["front squat","sentadilla front"],
+"Sentadilla bulgara":["bulgaras","split squat"],
+"Peso muerto rumano":["rdl","romanian deadlift"],
+"Jalon al pecho":["polea al pecho","lat pulldown"],
+"Elev. laterales":["laterales","lateral raise"],
+};
+const buscaEx=(n,q)=>{
+  const t=normLbl(q);
+  if(!t)return true;
+  if(normLbl(n).indexOf(t)>=0)return true;
+  return (EX_ALIAS[n]||[]).some(a=>normLbl(a).indexOf(t)>=0);
+};
+const zonasDe=n=>{if(EX_ZONAS[n])return EX_ZONAS[n];const m=modeloDe(n);return (m&&ZONAS_PATRON[m.p])||[]};
 const wellScore=c=>WELL_ITEMS.reduce((a,x)=>a+(Number(c&&c[x.id])||3),0);   // 4 a 20
 // Tu propia línea de base: media y desvío de los últimos 28 check-ins.
 // Piso de 0.8 en el DE para que una racha muy pareja no convierta cualquier ruido en "día malo".
@@ -1357,7 +1381,7 @@ const EX_IMPL={
 "Remo polea baja":"polea","Remo maquina":"maquina","Pull-over":"polea","Encogimiento hombros":"mancuerna",
 "Hiperextension 45":"corporal","Superman":"corporal",
 "Press militar":"barra","Press militar (mancuernas)":"mancuerna","Press Arnold":"mancuerna","Press maquina hombro":"maquina",
-"Elev. laterales":"mancuerna","Elev. laterales polea":"polea","Elev. frontales":"mancuerna","Pajaros":"mancuerna",
+"Elev. laterales":"mancuerna","Elev. laterales polea":"polea","Elev. frontales":"mancuerna","Pajaros":"mancuerna","Peck deck inverso":"maquina",
 "Face pull":"polea","Remo al menton":"barra",
 "Curl barra":"barra","Curl mancuernas":"mancuerna","Curl inclinado":"mancuerna","Curl martillo":"mancuerna",
 "Curl concentrado":"mancuerna","Curl polea":"polea","Curl predicador":"mancuerna","Curl arana":"mancuerna",
@@ -2544,7 +2568,7 @@ function WorkoutTab({data,setData,apiKey}){
         {uni&&ex.sets.length>0&&<div style={{fontSize:11,color:"#888",marginTop:8,textAlign:"center",lineHeight:1.5}}>{ex.sets.length+" series · "+sl+(tmp?"s":"")+" izq / "+sr+(tmp?"s":"")+" der"}<br/><span style={{color:"#FF6B35",fontWeight:600}}>{tmp?((sl+sr)+" segundos totales"):((sl+sr)+" repeticiones totales")}</span><br/><span style={{color:"#666"}}>{ex.modo==="mano"?"El peso es por mancuerna, no la suma de las dos":"La serie cuenta los dos lados"}</span></div>}
       </div></div>;
     })}
-    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>!exQ.trim()||n.toLowerCase().includes(exQ.trim().toLowerCase())).map(n=>{const mi=MODO_INFO[exModo(n)];return <button key={n} onClick={()=>addEx(n,sg)} style={S.eo}><span>{n}</span><span style={{fontSize:10,color:esTiempo(n)?"#2ECC71":mi.c,fontWeight:600,whiteSpace:"nowrap"}}>{[esTiempo(n)?"seg":null,mi.lados?"Izq/Der":null].filter(Boolean).join(" · ")}</span></button>})}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
+    {!sg?<div><h3 style={{...S.t1,fontSize:14,marginTop:20}}>Agregar ejercicio</h3><div style={S.mg2}>{Object.entries(MG).map(([k,v])=><button key={k} onClick={()=>setSg(k)} style={S.mb2}><span style={{fontSize:22}}>{v.i}</span><span style={{fontSize:11,color:v.c,fontWeight:600}}>{v.l}</span></button>)}</div></div>:<div><div style={{display:"flex",alignItems:"center",gap:8,marginTop:16,marginBottom:8}}><button onClick={()=>setSg(null)} style={S.sm}>&#8592;</button><h3 style={{fontSize:14,color:MG[sg].c,margin:0,fontFamily:"'Oswald',sans-serif"}}>{MG[sg].i} {MG[sg].l}</h3></div><input value={exQ} onChange={e=>setExQ(e.target.value)} placeholder="Buscar o escribir un ejercicio nuevo..." style={{...S.inp,marginBottom:8}}/><div style={{display:"flex",flexDirection:"column",gap:4}}>{(EC[sg]||[]).filter(n=>buscaEx(n,exQ)).map(n=>{const mi=MODO_INFO[exModo(n)];return <button key={n} onClick={()=>addEx(n,sg)} style={S.eo}><span>{n}</span><span style={{fontSize:10,color:esTiempo(n)?"#2ECC71":mi.c,fontWeight:600,whiteSpace:"nowrap"}}>{[esTiempo(n)?"seg":null,mi.lados?"Izq/Der":null].filter(Boolean).join(" · ")}</span></button>})}{exQ.trim()&&!(EC[sg]||[]).some(n=>n.toLowerCase()===exQ.trim().toLowerCase())&&<button onClick={()=>addEx(exQ.trim(),sg)} style={{...S.eo,borderColor:MG[sg].c+"66",color:MG[sg].c}}>{"+ Agregar \""+exQ.trim()+"\""}</button>}</div></div>}
     {ses.exercises.length>0&&<button onClick={()=>setShowFb(true)} style={{...S.btn,marginTop:24,width:"100%"}}>Finalizar {"\u{1F525}"}</button>}
   </div>;
 }
@@ -2764,6 +2788,27 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
   const cfIni=cargasCfg(data);
   const[cg,setCg]=useState({barra:String(cfIni.barra),discos:(cfIni.discos||[]).join(", "),mancuernas:(cfIni.mancuernas||[]).join(", "),pesas:(cfIni.pesas||[]).join(", "),stack:String(cfIni.stack)});
   const[cgOk,setCgOk]=useState(false);
+  // Renombrar un ejercicio del historial: sirve cuando lo veníamos anotando con otro nombre
+  const[renDe,setRenDe]=useState("");const[renA,setRenA]=useState("");const[renDesde,setRenDesde]=useState("");const[renMsg,setRenMsg]=useState(null);
+  const usados=(()=>{const m={};(data.sessions||[]).forEach(s=>(s.exercises||[]).forEach(e=>{if(e.name)m[e.name]=(m[e.name]||0)+1}));
+    return Object.keys(m).sort().map(n=>({n:n,c:m[n]}))})();
+  const catalogo=[...new Set([].concat(...Object.values(EC)))].sort();
+  const afecta=(()=>{if(!renDe)return 0;
+    return (data.sessions||[]).reduce((a,s)=>a+((!renDesde||s.date>=renDesde)?(s.exercises||[]).filter(e=>e.name===renDe).length:0),0)})();
+  const renombrar=()=>{
+    const destino=renA.trim();
+    if(!renDe||!destino||destino===renDe)return;
+    if(!window.confirm("Pasar "+afecta+" registro(s) de \""+renDe+"\" a \""+destino+"\"?"+(renDesde?" Sólo desde el "+renDesde+".":" En todo el historial.")))return;
+    let n=0;
+    const ns=(data.sessions||[]).map(s=>{
+      if(renDesde&&s.date<renDesde)return s;
+      if(!(s.exercises||[]).some(e=>e.name===renDe))return s;
+      return {...s,exercises:s.exercises.map(e=>{if(e.name!==renDe)return e;n++;return {...e,name:destino,muscleGroup:grupoDe(destino,e.muscleGroup)}})};
+    });
+    const nd={...data,sessions:ns};setData(nd);sv(nd);
+    setRenMsg({ok:true,t:n+(n===1?" registro pasó":" registros pasaron")+" a \""+destino+"\". El seguimiento de ese ejercicio ahora sale de ahí."});
+    setRenDe("");setRenA("");setRenDesde("");
+  };
   const parseLista=s=>[...new Set(String(s).split(/[^0-9.,]+/).map(x=>nm(x)).filter(x=>x>0))].sort((a,b)=>a-b);
   const guardarCargas=()=>{
     const nc={barra:nm(cg.barra)||20,discos:parseLista(cg.discos),mancuernas:parseLista(cg.mancuernas),pesas:parseLista(cg.pesas),stack:nm(cg.stack)||5,extra:cfIni.extra};
@@ -2863,6 +2908,24 @@ function SettingsTab({apiKey,onApiKeyChange,data,setData}){
     <label style={S.lbl}>Salto de placa en poleas y máquinas (kg)</label>
     <input value={cg.stack} inputMode="decimal" onChange={e=>setCg({...cg,stack:limpiaNum(e.target.value)})} style={{...S.inp,marginBottom:12}}/>
     <button onClick={guardarCargas} style={{...S.btn,width:"100%"}}>{cgOk?"Guardado!":"Guardar cargas"}</button>
+  </div>
+  <div style={{...S.cd,marginTop:16}}>
+    <h3 style={{fontSize:14,color:"#FF6B35",margin:"0 0 8px",fontFamily:"'Oswald',sans-serif"}}>Renombrar un ejercicio</h3>
+    <p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>Si veníamos anotando un ejercicio con otro nombre (porque no estaba en la lista), pasalo al correcto y el historial se muda con él: los pesos, la progresión y el parentesco pasan a contar para el ejercicio de verdad.</p>
+    <label style={S.lbl}>Ejercicio anotado</label>
+    <select value={renDe} onChange={e=>{setRenDe(e.target.value);setRenMsg(null)}} style={{...S.inp,marginBottom:10}}>
+      <option value="" style={{background:"#1a1a1a"}}>Elegí uno de tu historial…</option>
+      {usados.map(x=><option key={x.n} value={x.n} style={{background:"#1a1a1a"}}>{x.n} ({x.c})</option>)}
+    </select>
+    <label style={S.lbl}>Pasarlo a</label>
+    <input list="forja-ex-cat" value={renA} onChange={e=>{setRenA(e.target.value);setRenMsg(null)}} placeholder="Escribí o elegí del catálogo" style={{...S.inp,marginBottom:10}}/>
+    <datalist id="forja-ex-cat">{catalogo.map(n=><option key={n} value={n}/>)}</datalist>
+    <label style={S.lbl}>Sólo desde esta fecha (opcional)</label>
+    <input type="date" value={renDesde} onChange={e=>setRenDesde(e.target.value)} style={{...S.inp,marginBottom:6}}/>
+    <p style={{fontSize:10.5,color:"#666",margin:"0 0 12px",lineHeight:1.4}}>Dejala vacía para mudar todo el historial. Ponele fecha si al principio hacías el ejercicio de verdad y recién después empezaste con el otro.</p>
+    {renDe&&<p style={{fontSize:11.5,color:"#FF6B35",margin:"0 0 10px"}}>Se van a mudar {afecta} registro{afecta===1?"":"s"}.</p>}
+    <button onClick={renombrar} disabled={!renDe||!renA.trim()||renA.trim()===renDe} style={{...S.btn,width:"100%",opacity:(!renDe||!renA.trim()||renA.trim()===renDe)?0.5:1}}>Renombrar</button>
+    {renMsg&&<p style={{fontSize:11.5,color:"#2ECC71",marginTop:10,marginBottom:0,lineHeight:1.5}}>{renMsg.t}</p>}
   </div>
   <div style={{...S.cd,marginTop:16}}>
     <h3 style={{fontSize:14,color:"#4285F4",margin:"0 0 4px",fontFamily:"'Oswald',sans-serif"}}>Sincronización con Google Drive</h3>
