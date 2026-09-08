@@ -56,7 +56,7 @@ shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press ma
 biceps:["Curl barra","Curl mancuernas","Curl inclinado","Curl martillo","Curl concentrado","Curl polea","Curl predicador","Curl arana"],
 triceps:["Extension polea","Extension polea soga","Extension cabeza","Press frances","Patada triceps","Press cerrado","Fondos banco","Fondos paralelas"],
 legs:["Sentadilla","Sentadilla frontal","Sentadilla goblet","Sentadilla hack","Prensa","Extension cuadriceps","Curl femoral","Curl femoral sentado","Curl femoral tumbado","Peso muerto rumano","Peso muerto convencional","Buenos dias","Zancadas","Zancadas caminando","Sentadilla bulgara","Step up","Hip thrust"],
-glutes:["Hip thrust","Hip thrust unilateral","Peso muerto sumo","Peso muerto rumano unilateral","Patada gluteo","Abduccion cadera","Puente gluteo","Frog pump"],
+glutes:["Hip thrust","Hip thrust unilateral","Peso muerto sumo","Peso muerto rumano unilateral","Patada gluteo","Abduccion cadera","Aduccion cadera","Puente gluteo","Frog pump"],
 calves:["Gemelo de pie","Gemelo sentado","Gemelo en prensa","Gemelo burro","Gemelo unilateral"],
 abs:["Crunch","Crunch polea","Plancha","Plancha lateral","Ab wheel","Elevacion piernas","Elevacion piernas colgado","Russian twist","Pallof press","Crunch inverso","Crunch maquina","Elevacion rodillas colgado","Dead bug","Bird dog"],
 forearms:["Curl muneca","Curl reverso","Pronacion/supinacion","Extension muneca isometrica","Farmer walk","Dead hang"],
@@ -666,7 +666,7 @@ const EXP={
 "Extension cuadriceps":"Recto femoral","Zancadas":"Cuadriceps + gluteo medio","Sentadilla bulgara":"Gluteo medio + cuadriceps",
 "Peso muerto rumano":"Isquios: por cadera","Curl femoral":"Isquios: por rodilla","Curl femoral sentado":"Isquios: por rodilla",
 "Curl femoral tumbado":"Isquios: por rodilla",
-"Hip thrust":"Gluteo mayor","Patada gluteo":"Gluteo mayor (aislado)","Puente gluteo":"Gluteo mayor","Abduccion cadera":"Gluteo medio",
+"Hip thrust":"Gluteo mayor","Patada gluteo":"Gluteo mayor (aislado)","Puente gluteo":"Gluteo mayor","Abduccion cadera":"Gluteo medio","Aduccion cadera":"Aductores (magno y largo)",
 "Gemelo de pie":"Gastrocnemio","Gemelo sentado":"Soleo","Gemelo en prensa":"Soleo",
 "Crunch polea":"Recto abdominal superior","Crunch":"Recto abdominal superior","Crunch inverso":"Recto abdominal inferior",
 "Elevacion rodillas colgado":"Recto abdominal inferior","Pallof press":"Anti-rotacion","Plancha":"Anti-extension","Plancha lateral":"Oblicuos",
@@ -1005,7 +1005,7 @@ const EX_MODE={
 "Zancadas":"uni","Zancadas caminando":"uni","Sentadilla bulgara":"uni","Step up":"uni","Hip thrust":"bi",
 // Gluteos
 "Hip thrust unilateral":"uni","Peso muerto sumo":"bi","Peso muerto rumano unilateral":"uni",
-"Patada gluteo":"uni","Abduccion cadera":"bi","Puente gluteo":"bi","Frog pump":"bi",
+"Patada gluteo":"uni","Abduccion cadera":"bi","Aduccion cadera":"bi","Puente gluteo":"bi","Frog pump":"bi",
 // Gemelos
 "Gemelo de pie":"bi","Gemelo sentado":"bi","Gemelo en prensa":"bi","Gemelo burro":"bi","Gemelo unilateral":"uni",
 // Abdomen
@@ -1141,7 +1141,8 @@ const patronInfer=n=>{
   if(has("extension cuadriceps"))return {p:"extension_rodilla",dif:1};
   if(has("curl muneca")||has("curl reverso")||has("pronacion")||has("farmer")||has("dead hang")||has("extension muneca"))return {p:"antebrazo",dif:1};
   if(has("gemelo")||has("soleo")||has("pantorrilla"))return {p:"gemelo",dif:1};
-  if(has("abduccion")||has("aduccion"))return {p:"abduccion_cadera",dif:1};
+  if(has("aduccion")||has("aductor"))return {p:"aduccion_cadera",dif:1};
+  if(has("abduccion")||has("abductor"))return {p:"abduccion_cadera",dif:1};
   if(has("hip thrust")||has("puente gluteo")||has("patada gluteo")||has("frog"))return {p:"extension_cadera",dif:1};
   if(has("peso muerto")||has("rumano")||has("buenos dias")||has("hiperextension")||has("superman"))return {p:"bisagra",dif:1};
   if(has("bulgara")||has("zancada")||has("lunge")||has("step up")||has("split"))return {p:"unilateral_pierna",dif:1};
@@ -1162,13 +1163,16 @@ const patronInfer=n=>{
 const modeloDe=n=>EX_PATRON[n]||patronInfer(n);
 // Cuánto de un patrón se lleva al otro. 1 = es el mismo trabajo; 0 = no se tocan.
 const PATRON_REL={
- sentadilla:{sentadilla:1,unilateral_pierna:0.6,extension_rodilla:0.35,extension_cadera:0.3,bisagra:0.25},
- unilateral_pierna:{unilateral_pierna:1,sentadilla:0.6,extension_cadera:0.35,extension_rodilla:0.3,bisagra:0.25,abduccion_cadera:0.25},
- bisagra:{bisagra:1,extension_cadera:0.5,flexion_rodilla:0.35,sentadilla:0.25},
- extension_cadera:{extension_cadera:1,bisagra:0.5,unilateral_pierna:0.35,sentadilla:0.3,abduccion_cadera:0.3},
+ sentadilla:{sentadilla:1,unilateral_pierna:0.6,extension_rodilla:0.35,extension_cadera:0.3,bisagra:0.25,aduccion_cadera:0.3},
+ unilateral_pierna:{unilateral_pierna:1,sentadilla:0.6,extension_cadera:0.35,extension_rodilla:0.3,bisagra:0.25,abduccion_cadera:0.25,aduccion_cadera:0.3},
+ bisagra:{bisagra:1,extension_cadera:0.5,flexion_rodilla:0.35,sentadilla:0.25,aduccion_cadera:0.25},
+ extension_cadera:{extension_cadera:1,bisagra:0.5,unilateral_pierna:0.35,sentadilla:0.3,abduccion_cadera:0.3,aduccion_cadera:0.25},
  extension_rodilla:{extension_rodilla:1,sentadilla:0.35,unilateral_pierna:0.3},
  flexion_rodilla:{flexion_rodilla:1,bisagra:0.35},
  abduccion_cadera:{abduccion_cadera:1,unilateral_pierna:0.25,extension_cadera:0.3},
+ // Los aductores (sobre todo el magno) son extensores de cadera: trabajan en sentadilla, bulgara y rumano.
+ // Con la abduccion no se cruzan: son antagonistas, comparten la maquina y nada mas.
+ aduccion_cadera:{aduccion_cadera:1,sentadilla:0.3,unilateral_pierna:0.3,extension_cadera:0.25,bisagra:0.25},
  gemelo:{gemelo:1},
  empuje_horizontal:{empuje_horizontal:1,empuje_vertical:0.5,extension_codo:0.3},
  empuje_vertical:{empuje_vertical:1,empuje_horizontal:0.5,extension_codo:0.3,deltoides_lateral:0.35},
@@ -1240,7 +1244,7 @@ const ZONAS=[
 const EX_ZONAS={
 "Sentadilla":["rodilla","cadera","lumbar"],"Sentadilla hack":["rodilla","cadera"],"Prensa":["rodilla","cadera"],
 "Sentadilla bulgara":["rodilla","cadera"],"Zancadas":["rodilla","cadera"],"Sentadilla goblet":["rodilla","cadera","muneca"],
-"Hip thrust":["cadera","lumbar"],"Puente gluteo":["cadera"],"Patada gluteo":["cadera"],"Abduccion cadera":["cadera"],
+"Hip thrust":["cadera","lumbar"],"Puente gluteo":["cadera"],"Patada gluteo":["cadera"],"Abduccion cadera":["cadera"],"Aduccion cadera":["cadera"],
 "Peso muerto rumano":["lumbar","cadera"],"Peso muerto convencional":["lumbar","cadera"],"Peso muerto sumo":["lumbar","cadera"],
 "Curl femoral":["rodilla"],"Curl femoral sentado":["rodilla"],"Curl femoral tumbado":["rodilla"],"Extension cuadriceps":["rodilla"],
 "Gemelo de pie":["tobillo"],"Gemelo sentado":["tobillo"],"Gemelo en prensa":["tobillo","rodilla"],
@@ -1282,7 +1286,7 @@ const EX_SUST={
 "Elevacion piernas colgado":{hombro:"Crunch polea",muneca:"Crunch polea"},
 };
 const ZONAS_PATRON={sentadilla:["rodilla","cadera"],unilateral_pierna:["rodilla","cadera"],bisagra:["lumbar","cadera"],
- extension_cadera:["cadera"],extension_rodilla:["rodilla"],flexion_rodilla:["rodilla"],abduccion_cadera:["cadera"],gemelo:["tobillo"],
+ extension_cadera:["cadera"],extension_rodilla:["rodilla"],flexion_rodilla:["rodilla"],abduccion_cadera:["cadera"],aduccion_cadera:["cadera"],gemelo:["tobillo"],
  empuje_horizontal:["hombro","codo"],empuje_vertical:["hombro","codo"],traccion_horizontal:["hombro","codo"],traccion_vertical:["hombro","codo"],
  curl_codo:["codo"],extension_codo:["codo"],deltoides_lateral:["hombro"],deltoides_posterior:["hombro"],trapecio:["cuello","hombro"],
  antebrazo:["muneca"],core:[]};
@@ -1295,6 +1299,8 @@ const EX_ALIAS={
 "Peso muerto rumano":["rdl","romanian deadlift"],
 "Jalon al pecho":["polea al pecho","lat pulldown"],
 "Elev. laterales":["laterales","lateral raise"],
+"Aduccion cadera":["aductores","aductor","maquina de aductores","adductor machine","aduccion de cadera","cerrar piernas"],
+"Abduccion cadera":["abductores","abductor","maquina de abductores","abductor machine","abduccion de cadera","abrir piernas"],
 };
 const buscaEx=(n,q)=>{
   const t=normLbl(q);
@@ -1371,7 +1377,7 @@ const EX_IMPL={
 "Curl femoral tumbado":"maquina","Peso muerto rumano":"barra","Peso muerto convencional":"barra","Peso muerto sumo":"barra",
 "Buenos dias":"barra","Zancadas":"mancuerna","Zancadas caminando":"mancuerna","Sentadilla bulgara":"mancuerna",
 "Step up":"mancuerna","Hip thrust":"barra","Hip thrust unilateral":"mancuerna","Peso muerto rumano unilateral":"mancuerna",
-"Patada gluteo":"polea","Abduccion cadera":"maquina","Puente gluteo":"corporal","Frog pump":"corporal",
+"Patada gluteo":"polea","Abduccion cadera":"maquina","Aduccion cadera":"maquina","Puente gluteo":"corporal","Frog pump":"corporal",
 "Gemelo de pie":"maquina","Gemelo sentado":"maquina","Gemelo en prensa":"maquina","Gemelo burro":"maquina","Gemelo unilateral":"mancuerna",
 "Press banca":"barra","Press banca plano (mancuernas)":"mancuerna","Press inclinado":"barra","Press inclinado (mancuernas)":"mancuerna",
 "Press declinado":"barra","Press mancuernas":"mancuerna","Press maquina":"maquina","Aperturas":"mancuerna",
