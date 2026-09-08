@@ -707,7 +707,7 @@ const bkParse=txt=>{
   const j=JSON.parse(txt);
   const d=j&&j._forja?j.data:j;              // acepta backup con envoltorio o data cruda
   if(!d||typeof d!=="object"||!Array.isArray(d.sessions))throw new Error("El archivo no parece un backup de FORJA");
-  return {...EMPTY,...d};
+  const out={...EMPTY,...d}; migraNombres(out); return out;
 };
 
 // ─── UNIR DOS COPIAS DE LOS DATOS ───
@@ -735,6 +735,7 @@ const unirDatos=(local,remoto,remotoTs)=>{
     info.total[k]=res.length;
   });
   out.activeSession=l.activeSession||r.activeSession||null;
+  migraNombres(out);
   return {datos:out,info};
 };
 const resumenUnion=info=>{
@@ -1364,6 +1365,29 @@ const grupoDe=(n,fallback)=>{
   const k=normLbl(n);
   for(const g of Object.keys(EC)){if((EC[g]||[]).some(x=>normLbl(x)===k))return g}
   return fallback||"legs";
+};
+// ─── NOMBRES HISTÓRICOS ───
+// Antes de que un ejercicio entrara al catálogo se anotaba a mano, y cada variante del nombre
+// quedaba como un ejercicio distinto: el motor no veía el historial completo. Estas equivalencias
+// se aplican al cargar los datos (en memoria, sin reescribir el backup) y son idempotentes.
+const RENOMBRES={
+"aduccion de cadera":"Aduccion cadera","aduccion cadera":"Aduccion cadera",
+"aductores":"Aduccion cadera","aductores en maquina":"Aduccion cadera","aduccion en maquina":"Aduccion cadera",
+"abduccion de cadera":"Abduccion cadera","abductores":"Abduccion cadera",
+"abductores en maquina":"Abduccion cadera","abduccion en maquina":"Abduccion cadera",
+};
+const migraNombres=d=>{
+  if(!d)return 0;
+  let n=0;
+  const arreglar=e=>{
+    if(!e||!e.name)return;
+    const nuevo=RENOMBRES[normLbl(e.name).trim()];
+    if(!nuevo||e.name===nuevo)return;
+    e.name=nuevo; e.muscleGroup=grupoDe(nuevo,e.muscleGroup); n++;
+  };
+  (d.sessions||[]).forEach(s=>(s.exercises||[]).forEach(arreglar));
+  ((d.activeSession||{}).exercises||[]).forEach(arreglar);
+  return n;
 };
 // La sesión programada para una fecha
 const sesionProgramada=(data,iso)=>{
@@ -3839,7 +3863,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 // ─── APP ───
 function App(){
   const[data,setData]=useState(EMPTY);const[tab,setTab]=useState("today");const[modoTrain,setModoTrain]=useState(null);const[loading,setLoading]=useState(true);const[apiKey,setAK]=useState("");
-  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];if(!d.checkins)d.checkins=[];setData(d)}setAK(gk());setLoading(false)},[]);
+  useEffect(()=>{const d=ld();if(d){if(!d.anthropometry)d.anthropometry=[];if(d.phase===undefined)d.phase=0;if(!d.planNotes)d.planNotes=[];if(!d.cardioSessions)d.cardioSessions=[];if(!d.coachNotes)d.coachNotes=[];if(!d.meals)d.meals=[];if(!d.weeklyNutrPlan)d.weeklyNutrPlan=null;if(!d.healthStudies)d.healthStudies=[];if(!d.checkins)d.checkins=[];migraNombres(d);setData(d)}setAK(gk());setLoading(false)},[]);
   // Si la sync esta activa, avisa cuando Drive tiene algo mas nuevo que este dispositivo
   const[gdNuevo,setGdNuevo]=useState(false);
   useEffect(()=>{
