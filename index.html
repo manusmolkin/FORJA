@@ -52,13 +52,13 @@ calves:{l:"Gemelos",i:"\u{1F9B6}",c:"#16A085"},forearms:{l:"Antebrazos",i:"✊",
 const EC={
 chest:["Press banca","Press banca plano (mancuernas)","Press inclinado","Press inclinado (mancuernas)","Press declinado","Press mancuernas","Press maquina","Aperturas","Cruces polea","Peck deck","Fondos","Pull-over mancuerna"],
 back:["Dominadas","Dominadas asistidas","Jalon al pecho","Jalon agarre neutro","Jalon agarre supino","Remo barra","Remo mancuerna","Remo con apoyo en banco","Remo en T","Remo polea baja","Remo maquina","Pull-over","Encogimiento hombros","Hiperextension 45","Superman"],
-shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press maquina hombro","Elev. laterales","Elev. laterales polea","Elev. frontales","Pajaros","Peck deck inverso","Face pull","Remo al menton"],
+shoulders:["Press militar","Press militar (mancuernas)","Press Arnold","Press maquina hombro","Elev. laterales","Elev. laterales polea","Elev. frontales","Pajaros","Peck deck inverso","Face pull","Remo al menton","Rotacion externa con banda","Rotacion externa 90/90"],
 biceps:["Curl barra","Curl mancuernas","Curl inclinado","Curl martillo","Curl concentrado","Curl polea","Curl predicador","Curl arana"],
 triceps:["Extension polea","Extension polea soga","Extension cabeza","Press frances","Patada triceps","Press cerrado","Fondos banco","Fondos paralelas"],
 legs:["Sentadilla","Sentadilla frontal","Sentadilla goblet","Sentadilla hack","Prensa","Extension cuadriceps","Curl femoral","Curl femoral sentado","Curl femoral tumbado","Peso muerto rumano","Peso muerto convencional","Buenos dias","Zancadas","Zancadas caminando","Sentadilla bulgara","Step up","Hip thrust"],
 glutes:["Hip thrust","Hip thrust unilateral","Peso muerto sumo","Peso muerto rumano unilateral","Patada gluteo","Abduccion cadera","Aduccion cadera","Puente gluteo","Frog pump"],
 calves:["Gemelo de pie","Gemelo sentado","Gemelo en prensa","Gemelo burro","Gemelo unilateral"],
-abs:["Crunch","Crunch polea","Plancha","Plancha lateral","Ab wheel","Elevacion piernas","Elevacion piernas colgado","Russian twist","Pallof press","Crunch inverso","Crunch maquina","Elevacion rodillas colgado","Dead bug","Bird dog"],
+abs:["Crunch","Crunch polea","Plancha","Plancha lateral","Ab wheel","Elevacion piernas","Elevacion piernas colgado","Russian twist","Pallof press","Crunch inverso","Crunch maquina","Elevacion rodillas colgado","Dead bug","Bird dog","Hollow hold","Plancha con toque de hombro","Plancha lateral con elevacion de cadera","Sit up","V-up","Crunch bicicleta","Tijeras","Mountain climber","Superman","Pallof con banda","Plancha con elevacion de pierna","Puente gluteo a una pierna"],
 forearms:["Curl muneca","Curl reverso","Pronacion/supinacion","Extension muneca isometrica","Farmer walk","Dead hang"],
 };
 
@@ -109,7 +109,7 @@ const ANTHRO_G=["Básico","Composición","Índices","Perímetros","Pliegues","Di
 
 // Phases for someone returning after months off
 const PHASES=[
-{name:"Readaptacion",wk:"1-3",days:3,c:"#2ECC71",ic:"\u{1F331}",
+{name:"Readaptacion",wk:"1-3",days:3,rirObj:4,c:"#2ECC71",ic:"\u{1F331}",
 rpe:{title:"RIR 3-4 (RPE 6-7)",desc:"Esfuerzo moderado. Que te sobren 3-4 repeticiones antes del fallo. El objetivo es reaprender los movimientos y generar habito, NO fatigar el musculo. Semana 1 quedate todavia mas conservador. Si sentis que te cuesta terminar la serie, baja el peso.",color:"#2ECC71"},
 desc:"3 semanas. Lunes pierna, martes y viernes tren superior. Cargas livianas, tecnica perfecta, sin fallo.",
 schedule:[
@@ -155,7 +155,7 @@ exercises:[
 cardio:"Z2 suave (podes hablar) 20-30 min martes, miercoles y viernes. Lunes: NO correr antes de pierna. Jueves: piernas frescas para el futbol. Sabado: caminata o trote tranquilo.",
 goals:["Ir 3 veces por semana sin faltar","Reaprender la tecnica de cada ejercicio","NO buscar fallo muscular (quedar 3-4 reps antes)","Muneca: solo movilidad y curl reverso liviano las semanas 1-2","Registrar peso, reps y RIR de cada serie desde el dia 1"]
 },
-{name:"Base de Fuerza",wk:"4-7",days:3,c:"#3498DB",ic:"\u{1F527}",
+{name:"Base de Fuerza",wk:"4-7",days:3,rirObj:3,c:"#3498DB",ic:"\u{1F527}",
 rpe:{title:"RIR 2-3 (RPE 7-8)",desc:"Esfuerzo moderado-alto. Que te sobren 2-3 reps. Las ultimas reps cuestan pero nunca llegas al fallo. Doble progresion: llega al techo del rango de reps en todas las series, recien ahi subi 2.5-5% y volve al piso del rango.",color:"#3498DB"},
 desc:"Mismo esquema de 3 dias, subiendo cargas. Lunes pierna, martes y viernes tren superior.",
 schedule:[
@@ -201,9 +201,9 @@ exercises:[
 cardio:"Z2 30-40 min martes, miercoles y viernes. Sabado: tirada mas larga hasta 45 min. Nada de series ni intervalos.",
 goals:["Aumentar cargas 2.5-5% cuando llegues al techo de reps","Cubrir gemelos 6 series/semana (3 de pie + 3 sentado)","Completar las 3 sesiones sin faltar","Sumar carga en la rutina de muneca sin dolor"]
 },
-{name:"Hipertrofia",wk:"8-12",days:4,c:"#E67E22",ic:"\u{1F525}",
+{name:"Hipertrofia",wk:"8-12",days:4,rirObj:2,c:"#E67E22",ic:"\u{1F525}",
 rpe:{title:"RIR 1-2 (RPE 8-9)",desc:"Esfuerzo alto. Te sobran 1-2 reps como maximo. En aislamientos (curl, extensiones, laterales) podes llegar al fallo en la ultima serie. En compuestos (sentadilla, press, peso muerto) siempre guardate 1 rep.",color:"#E67E22"},
-desc:"Se suma el sabado de gluteo enfocado. Lunes pierna pesada, martes y viernes tren superior.",
+desc:"4 dias: lunes pierna pesada, martes y viernes tren superior, sabado sesion ligera de piernas, gluteo y pecho. Domingo caminata.",
 schedule:[
 {day:"Lunes",name:"Piernas, Gluteos y Gemelos",muscles:["legs","glutes","calves","abs"],
 exercises:[
@@ -212,6 +212,7 @@ exercises:[
 {n:"Peso muerto rumano",s:4,r:"8-10",rest:"150s",note:"Isquios por cadera"},
 {n:"Prensa",s:3,r:"10-12",rest:"120s",note:"Volumen extra de cuadriceps"},
 {n:"Abduccion cadera",s:3,r:"15-20",rest:"60s",note:"Gluteo medio: redondea la cadera"},
+{n:"Aduccion cadera",s:3,r:"12-15",rest:"60s",note:"Maquina. Aductor largo, corto, pectineo y gracil: el unico hueco real del plan y el factor de riesgo mejor documentado de lesion inguinal en futbol"},
 {n:"Curl femoral sentado",s:3,r:"10-12",rest:"90s",note:"Isquios por rodilla"},
 {n:"Extension cuadriceps",s:3,r:"12-15",rest:"90s",note:"Recto femoral. Si te falta tiempo, este es el primero que sacas"},
 {n:"Gemelo de pie",s:4,r:"10-15",rest:"90s",note:"Gastrocnemio. Pausa arriba"},
@@ -222,7 +223,7 @@ exercises:[
 exercises:[
 {n:"Press banca",s:4,r:"6-8",rest:"150s",note:"Pecho medio"},
 {n:"Remo con apoyo en banco",s:4,r:"8-10",rest:"120s",note:"Espesor"},
-{n:"Press inclinado (mancuernas)",s:3,r:"8-12",rest:"90s",note:"Pecho superior"},
+{n:"Peck deck",s:3,r:"10-15",rest:"75s",note:"Aduccion horizontal completa: el rango que ningun press te da. Maquina, sin carga en la muneca. NO abras hasta el tope: para donde sentis el estiramiento, los codos no pasan por detras del torso (hiperlaxitud)"},
 {n:"Jalon al pecho",s:3,r:"8-12",rest:"90s",note:"Anchura dorsal"},
 {n:"Elev. laterales",s:4,r:"12-15",rest:"60s",note:""},
 {n:"Pajaros",s:3,r:"15",rest:"60s",note:"Deltoides posterior"},
@@ -235,7 +236,7 @@ exercises:[
 exercises:[
 {n:"Press militar",s:4,r:"6-8",rest:"150s",note:"Deltoides anterior"},
 {n:"Dominadas",s:4,r:"8-10",rest:"120s",note:"Agarre distinto al martes. Asistidas o con lastre"},
-{n:"Fondos",s:3,r:"8-12",rest:"90s",note:"Pecho inferior + triceps"},
+{n:"Press inclinado",s:3,r:"8-12",rest:"90s",note:"Pecho superior. Reemplaza a los fondos: menos carga en la muneca y en la capsula anterior del hombro"},
 {n:"Face pull",s:3,r:"12-15",rest:"60s",note:"Deltoides posterior"},
 {n:"Elev. laterales",s:4,r:"12-20",rest:"60s",note:""},
 {n:"Curl martillo",s:3,r:"10-12",rest:"60s",note:"Braquial"},
@@ -243,22 +244,21 @@ exercises:[
 {n:"Elevacion rodillas colgado",s:3,r:"8-15",rest:"45s",note:"Core bloque A. Enrollar la pelvis, lumbar sin arquear"},
 {n:"Curl muneca",s:3,r:"15-20",rest:"45s",note:"Flexores"},
 ]},
-{day:"Sabado",name:"Gluteos y Piernas",muscles:["glutes","legs","back","abs"],
+{day:"Sabado",name:"Piernas, Gluteos y Pecho (ligero)",muscles:["glutes","legs","calves","chest","shoulders"],
 exercises:[
-{n:"Hip thrust",s:4,r:"8-12",rest:"120s",note:"Mas pesado o mas reps que el lunes. Frecuencia 2 de gluteo"},
-{n:"Patada gluteo",s:3,r:"12-15",rest:"60s",note:"En polea. Gluteo mayor aislado. Cada pierna"},
-{n:"Abduccion cadera",s:3,r:"15-20",rest:"60s",note:"Maquina o banda. Gluteo medio"},
-{n:"Sentadilla bulgara",s:3,r:"10-12",rest:"90s",note:"O step ups. Gluteo + estiramiento. Cada pierna"},
-{n:"Puente gluteo",s:2,r:"20",rest:"45s",note:"O frog pump. Al fallo, bombeo final"},
-{n:"Encogimiento hombros",s:3,r:"12-15",rest:"60s",note:"Opcional. Trapecio superior"},
-{n:"Crunch inverso",s:3,r:"12-15",rest:"45s",note:"Core bloque B"},
-{n:"Plancha lateral",s:3,r:"20-30s",rest:"30s",note:"Core bloque B. Cada lado"},
-]},
+{n:"Prensa",s:3,r:"10-12",rest:"120s",note:"Cuadriceps con poca fatiga sistemica. Sin femoral ni peso muerto rumano: esos quedan fijos el lunes"},
+{n:"Hip thrust",s:4,r:"8-12",rest:"120s",note:"Frecuencia 2 de gluteo. Mas liviano que el lunes"},
+{n:"Abduccion cadera",s:3,r:"15-20",rest:"60s",note:"Gluteo medio"},
+{n:"Gemelo de pie",s:3,r:"10-15",rest:"60s",note:"Gastrocnemio. Pausa arriba"},
+{n:"Press banca",s:3,r:"8-12",rest:"120s",note:"Frecuencia 2 de pecho. Movilidad de muneca antes"},
+{n:"Cruces polea",s:3,r:"12-15",rest:"60s",note:"Desde polea ALTA hacia abajo y adentro: porcion abdominal del pectoral, el vector que se fue con los fondos"},
+{n:"Face pull",s:3,r:"12-15",rest:"60s",note:"Deltoides posterior, el mas flojo de la semana"},
+]}
 ],
-cardio:"Z2 30-40 min martes, miercoles y viernes. Sabado: si haces la sesion de pierna ligera, el trote va suave; si no entrenas, tirada larga 45-50 min.",
+cardio:"Z2 30-40 min martes y viernes. Miercoles: tirada larga 45-50 min si la mantenes. Domingo: caminata, no trote (es el dia de recuperacion).",
 goals:["Frecuencia 2 para pecho, espalda y hombro","10-20 series semanales por grupo muscular","Gluteo con frecuencia 2 (lunes + sabado)","Progresar en peso O en reps cada semana","Deload cada 5-6 semanas (volumen -40/50%)","Segunda antropometria ISAK con Carina al final de la fase"]
 },
-{name:"Intensificacion",wk:"13+",days:5,c:"#D62828",ic:"⚡",
+{name:"Intensificacion",wk:"13+",days:5,rirObj:1,c:"#D62828",ic:"⚡",
 rpe:{title:"RIR 0-1 (RPE 9-10)",desc:"Esfuerzo maximo. En compuestos principales apunta a RIR 1 (te queda 1 sola rep). En aislamientos podes ir al fallo (RIR 0) en las ultimas 1-2 series. Cada 4-5 semanas hace una semana de deload (RPE 6-7) para recuperar.",color:"#D62828"},
 desc:"5 dias. Se suma el miercoles de hombro y brazo, que no toca piernas para llegar entero al futbol del jueves.",
 schedule:[
@@ -653,7 +653,7 @@ const derivarAnthro=v=>{
 
 // ─── PORCIONES QUE TRABAJA CADA EJERCICIO ───
 const EXP={
-"Press banca":"Pecho medio","Press inclinado (mancuernas)":"Pecho superior","Fondos":"Pecho inferior + triceps",
+"Press banca":"Pecho medio","Press inclinado (mancuernas)":"Pecho superior","Press inclinado":"Pecho superior","Peck deck":"Pecho: aduccion horizontal completa","Fondos":"Pecho inferior + triceps",
 "Fondos paralelas":"Pecho inferior + triceps","Press cerrado":"Triceps (integral)",
 "Remo con apoyo en banco":"Espalda: espesor","Remo polea baja":"Espalda: espesor","Remo mancuerna":"Espalda: espesor",
 "Jalon al pecho":"Espalda: anchura","Jalon agarre neutro":"Espalda: anchura","Dominadas":"Espalda: anchura",
@@ -670,6 +670,12 @@ const EXP={
 "Gemelo de pie":"Gastrocnemio","Gemelo sentado":"Soleo","Gemelo en prensa":"Soleo",
 "Crunch polea":"Recto abdominal superior","Crunch":"Recto abdominal superior","Crunch inverso":"Recto abdominal inferior",
 "Elevacion rodillas colgado":"Recto abdominal inferior","Pallof press":"Anti-rotacion","Plancha":"Anti-extension","Plancha lateral":"Oblicuos",
+"Hollow hold":"Anti-extension","Plancha con toque de hombro":"Anti-rotacion","Pallof con banda":"Anti-rotacion",
+"Plancha con elevacion de pierna":"Anti-extension","Plancha lateral con elevacion de cadera":"Oblicuos + gluteo medio",
+"Sit up":"Recto abdominal completo","V-up":"Recto abdominal completo","Crunch bicicleta":"Oblicuos",
+"Tijeras":"Recto abdominal inferior","Mountain climber":"Anti-extension dinamico","Superman":"Erectores espinales",
+"Puente gluteo a una pierna":"Gluteo mayor","Rotacion externa con banda":"Manguito rotador",
+"Rotacion externa 90/90":"Manguito rotador","Aduccion cadera":"Aductores",
 "Curl reverso":"Extensores de muneca","Curl muneca":"Flexores de muneca","Pronacion/supinacion":"Rotadores de muneca","Dead hang":"Agarre",
 };
 const DAY_CARDIO={
@@ -965,8 +971,10 @@ const MEAL_TYPES=[
 // ─── EJERCICIOS QUE SE MIDEN POR TIEMPO ───
 // Isométricos y sostenidos: no tienen repeticiones, tienen segundos.
 const EX_TIME=["Plancha","Plancha lateral","Dead hang","Farmer walk","Extension muneca isometrica",
-"Superman","Puente gluteo","Bird dog","Dead bug"];
-const EX_TIME_NO=["Superman","Puente gluteo","Bird dog","Dead bug"];   // estos sí van por reps
+"Superman","Puente gluteo","Bird dog","Dead bug","Hollow hold","Tijeras","Mountain climber"];
+const EX_TIME_NO=["Superman","Puente gluteo","Bird dog","Dead bug","Sit up","V-up","Crunch bicicleta",
+  "Plancha con toque de hombro","Plancha lateral con elevacion de cadera","Plancha con elevacion de pierna",
+  "Pallof con banda","Puente gluteo a una pierna","Rotacion externa con banda","Rotacion externa 90/90"];   // estos sí van por reps
 const esTiempo=n=>{
   if(EX_TIME_NO.indexOf(n)>=0)return false;
   if(EX_TIME.indexOf(n)>=0)return true;
@@ -1124,6 +1132,7 @@ const EX_PATRON={
 "Zancadas":{p:"unilateral_pierna",dif:1},"Zancadas caminando":{p:"unilateral_pierna",dif:1},
 "Sentadilla bulgara":{p:"unilateral_pierna",dif:0.9},"Step up":{p:"unilateral_pierna",dif:0.9},
 "Press banca":{p:"empuje_horizontal",dif:1},"Press inclinado":{p:"empuje_horizontal",dif:0.85},
+"Peck deck":{p:"empuje_horizontal",dif:0.6},"Aperturas":{p:"empuje_horizontal",dif:0.25},"Cruces polea":{p:"empuje_horizontal",dif:0.3},
 "Press declinado":{p:"empuje_horizontal",dif:1.05},"Press banca plano (mancuernas)":{p:"empuje_horizontal",dif:0.4},
 "Press inclinado (mancuernas)":{p:"empuje_horizontal",dif:0.35},"Press mancuernas":{p:"empuje_horizontal",dif:0.4},
 "Press maquina":{p:"empuje_horizontal",dif:0.9},
@@ -1250,6 +1259,7 @@ const EX_ZONAS={
 "Curl femoral":["rodilla"],"Curl femoral sentado":["rodilla"],"Curl femoral tumbado":["rodilla"],"Extension cuadriceps":["rodilla"],
 "Gemelo de pie":["tobillo"],"Gemelo sentado":["tobillo"],"Gemelo en prensa":["tobillo","rodilla"],
 "Press banca":["hombro","codo","muneca"],"Press inclinado (mancuernas)":["hombro","codo","muneca"],
+"Press inclinado":["hombro","codo","muneca"],"Peck deck":["hombro"],"Aperturas":["hombro"],"Cruces polea":["hombro"],
 "Press militar":["hombro","codo","muneca","lumbar"],"Press cerrado":["codo","muneca","hombro"],
 "Fondos":["hombro","codo","muneca"],"Fondos paralelas":["hombro","codo","muneca"],"Fondos banco":["hombro","codo","muneca"],
 "Dominadas":["hombro","codo","muneca"],"Dominadas asistidas":["hombro","codo","muneca"],
@@ -1263,11 +1273,29 @@ const EX_ZONAS={
 "Elevacion rodillas colgado":["hombro","muneca"],"Elevacion piernas colgado":["hombro","muneca"],
 "Crunch polea":["cuello"],"Crunch":["cuello"],"Ab wheel":["lumbar","hombro"],"Plancha":["hombro"],"Plancha lateral":["hombro"],
 "Crunch inverso":[],"Pallof press":[],"Dead bug":[],"Bird dog":[],
+"Jalon agarre supino":["hombro","codo"],"Remo barra":["lumbar","codo","hombro"],"Remo mancuerna":["codo","hombro"],
+"Remo en T":["lumbar","codo","hombro"],"Remo maquina":["codo","hombro"],"Pull-over":["hombro"],"Hiperextension 45":["lumbar","cadera"],
+"Curl mancuernas":["codo"],"Curl concentrado":["codo"],"Curl polea":["codo"],"Curl predicador":["codo","muneca"],
+"Patada triceps":["codo"],"Gemelo burro":["tobillo"],"Gemelo unilateral":["tobillo"],
+"Pronacion/supinacion":["muneca","codo"],"Extension muneca isometrica":["muneca"],
+"Press banca plano (mancuernas)":["hombro","codo","muneca"],"Press declinado":["hombro","codo","muneca"],
+"Press mancuernas":["hombro","codo","muneca"],"Press maquina":["hombro","codo"],"Pull-over mancuerna":["hombro"],
+"Press militar (mancuernas)":["hombro","codo","muneca"],"Press Arnold":["hombro","codo","muneca"],
+"Press maquina hombro":["hombro","codo"],"Elev. frontales":["hombro"],"Remo al menton":["hombro","cuello"],
+"Sentadilla frontal":["rodilla","cadera","muneca"],"Buenos dias":["lumbar","cadera"],
+"Zancadas caminando":["rodilla","cadera"],"Step up":["rodilla","cadera"],
+"Hip thrust unilateral":["cadera","lumbar"],"Peso muerto rumano unilateral":["lumbar","cadera"],"Frog pump":["cadera"],
+"Elevacion piernas":["lumbar"],"Russian twist":["lumbar"],"Crunch maquina":["cuello"],
+"Hollow hold":[],"Sit up":["cuello","lumbar"],"V-up":["cuello","lumbar"],"Crunch bicicleta":["cuello"],
+"Tijeras":["lumbar"],"Plancha con toque de hombro":["hombro","muneca"],"Mountain climber":["hombro","muneca"],
+"Plancha con elevacion de pierna":["hombro","muneca"],"Plancha lateral con elevacion de cadera":["hombro"],
+"Pallof con banda":[],"Superman":["lumbar"],"Puente gluteo a una pierna":["cadera"],
+"Rotacion externa con banda":["hombro"],"Rotacion externa 90/90":["hombro"],
 };
 // Cambios que conservan el estímulo cuando duele una zona puntual.
 const EX_SUST={
 "Press militar":{muneca:"Press inclinado (mancuernas)"},
-"Press banca":{muneca:"Press inclinado (mancuernas)"},
+"Press banca":{muneca:"Peck deck"},
 "Fondos":{hombro:"Press inclinado (mancuernas)",muneca:"Press inclinado (mancuernas)",codo:"Press inclinado (mancuernas)"},
 "Fondos paralelas":{hombro:"Press inclinado (mancuernas)",muneca:"Press inclinado (mancuernas)"},
 "Dominadas":{hombro:"Jalon agarre neutro",codo:"Jalon agarre neutro",muneca:"Jalon agarre neutro"},
@@ -1420,6 +1448,8 @@ const EX_IMPL={
 "Crunch":"corporal","Crunch polea":"polea","Crunch maquina":"maquina","Crunch inverso":"corporal","Plancha":"corporal",
 "Plancha lateral":"corporal","Ab wheel":"corporal","Elevacion piernas":"corporal","Elevacion piernas colgado":"corporal",
 "Elevacion rodillas colgado":"corporal","Russian twist":"mancuerna","Pallof press":"polea","Dead bug":"corporal","Bird dog":"corporal",
+"Hollow hold":"corporal","Plancha con toque de hombro":"corporal","Plancha lateral con elevacion de cadera":"corporal","Sit up":"corporal","V-up":"corporal","Crunch bicicleta":"corporal","Tijeras":"corporal","Mountain climber":"corporal","Superman":"corporal","Pallof con banda":"corporal","Plancha con elevacion de pierna":"corporal","Puente gluteo a una pierna":"corporal",
+"Rotacion externa con banda":"corporal","Rotacion externa 90/90":"corporal","Aduccion cadera":"maquina",
 "Curl muneca":"mancuerna","Curl reverso":"mancuerna","Pronacion/supinacion":"mancuerna","Extension muneca isometrica":"corporal",
 "Farmer walk":"mancuerna","Dead hang":"corporal",
 };
@@ -1484,7 +1514,7 @@ const tgtFor=(data,nombre,hist)=>{
   const cfg=cargasCfg(data), rango=rangoPlan(data,nombre)||[8,12];
   const up=ultimoPatron(data,nombre,td(),0.5);
   if(!hist||!hist.length)return estimarInicial(data,nombre,rango,cfg,up);
-  return tgt(hist,{impl:exImplOv(data,nombre),cfg:cfg,rango:rango,hoy:td(),patron:up});
+  return tgt(hist,{impl:exImplOv(data,nombre),cfg:cfg,rango:rango,hoy:td(),patron:up,rirObj:(PHASES[data.phase||0]||{}).rirObj});
 };
 
 function tgt(hist,opts){
@@ -1510,6 +1540,8 @@ function tgt(hist,opts){
   const mw=Math.max(...sets.map(x=>nm(x.weight)));
   const impl=implReal(o.impl||"maquina",mw,cfg);
   const rir=last.rir!==undefined&&last.rir!==""?Number(last.rir):null;
+  const rirObj=(o.rirObj!==undefined&&o.rirObj!==null)?Number(o.rirObj):null;
+  const exceso=(rir!==null&&rirObj!==null)?rir-rirObj:null;   // reps de reserva de más respecto del objetivo de la fase
   let ts=sets.length, sug="", nota="", fuera=false;
   // ¿Entrenaste el mismo patrón con otro ejercicio? Entonces no venís de un parate.
   const pat=o.patron||null;
@@ -1551,10 +1583,30 @@ function tgt(hist,opts){
   const salto=sig>mw?sig-mw:0;
   const pct=salto>0?salto/mw*100:0;
 
+  // 3b) El RIR dice que la carga quedó liviana para la fase, aunque las reps estén en rango.
+  //     Se calcula con las reps que te quedaban de verdad (reps hechas + RIR), no con las hechas.
+  if(exceso!==null&&exceso>=2&&avg>=rMin){
+    const rm=e1rm(mw,avg+rir);
+    const ideal=cargaPara(rm,rMin+rirObj);
+    const tope=mw*1.10;                                   // nunca más de 10% en una sesión
+    const capado=ideal>tope;
+    let cand=cargaMasCerca(impl,cfg,Math.min(ideal,tope));
+    if(cand>tope)cand=cargaMasCerca(impl,cfg,tope);
+    if(cand<=mw)cand=sig;
+    if(cand>mw){
+      const tr=capado?rMax:rMin;
+      sug="Subir a "+cand+"kg y apuntar a "+tr+" reps.";
+      nota="Registraste RIR "+(rir>=4?"4 o más":rir)+" y esta fase pide RIR "+rirObj+": te sobraban "+exceso+" reps de más. "
+        +"Contando las que te quedaban hiciste el equivalente a "+Math.round(avg+rir)+" reps, o sea un 1RM estimado de ~"+r1(rm)+"kg. "
+        +(capado?"El salto que haría falta es grande, así que vamos por partes: este es el máximo que conviene subir de una vez.":"Con "+cand+"kg deberías quedar en "+rirObj+" reps de reserva.");
+      return R(cand,tr);
+    }
+  }
   // 4) Muy por encima del techo: la carga quedó corta. Se recalibra con 1RM estimado.
   if(avg>=rMax+TOL&&(rir===null||rir>=1)){
-    const rm=e1rm(mw,avg);
-    let cand=cargaMasCerca(impl,cfg,cargaPara(rm,rMax));
+    const rm=e1rm(mw,rir!==null?avg+rir:avg);   // si registraste RIR, el 1RM sale de las reps que te quedaban de verdad
+    const reserva=(rir!==null&&rirObj!==null)?rirObj:0;
+    let cand=cargaMasCerca(impl,cfg,cargaPara(rm,rMax+reserva));
     if(cand<=mw)cand=sig;
     sug="Subir a "+cand+"kg y volver a "+rMax+" reps.";
     nota="Con "+mw+"kg hiciste "+Math.round(avg)+" reps y tu rango es "+rMin+"-"+rMax+": lo que falta es carga, no repeticiones. Tu 1RM estimado es ~"+r1(rm)+"kg, así que con "+cand+"kg deberías caer dentro del rango."+(esBWdom(last.name)?" Acá tu propio peso pesa más que la carga: si te siguen sobrando reps, la próxima subimos otra vez.":"");
