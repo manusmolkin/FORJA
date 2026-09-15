@@ -1713,11 +1713,24 @@ function buildPrompt(ses,all,fb,meals,notas,ajustePrevio){
 
 }
 
-async function callAI(prompt,key){
-  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:AI_MODEL,max_tokens:1000,messages:[{role:"user",content:prompt}]})});
-  const d=await r.json();if(d.error)throw new Error(d.error.message);
-  return d.content?.map(c=>c.text||"").join("")||"Sin respuesta.";
+// Sonnet 5 piensa por defecto (adaptive thinking) y ese pensamiento cuenta dentro de
+// max_tokens: con 1000 se lo comía entero y volvía sin bloque de texto ("Sin respuesta").
+// Por eso: margen fijo para pensar, lectura de bloques por tipo y timeout.
+const AI_MARGEN_PENSAR=12000;
+async function aiRequest(content,key,maxTokens){
+  const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),120000);
+  let r;
+  try{
+    r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:AI_MODEL,max_tokens:(maxTokens||2000)+AI_MARGEN_PENSAR,messages:[{role:"user",content:content}]})});
+  }catch(e){throw new Error(e.name==="AbortError"?"La IA tardó más de 2 minutos. Revisá la conexión y probá de nuevo.":"No hubo conexión con la IA ("+e.message+").")}
+  finally{clearTimeout(to)}
+  let d;try{d=await r.json()}catch(e){throw new Error("Respuesta inválida del servidor (HTTP "+r.status+").")}
+  if(d.error)throw new Error(d.error.message||("HTTP "+r.status));
+  const txt=(d.content||[]).filter(c=>c&&c.type==="text").map(c=>c.text||"").join("").trim();
+  if(!txt)throw new Error("La IA no devolvió texto (motivo: "+(d.stop_reason||"desconocido")+"). Probá de nuevo.");
+  return txt;
 }
+async function callAI(prompt,key,maxTokens){return aiRequest(prompt,key,maxTokens||2000)}
 
 // ─── VISION / FILE HELPERS ───
 function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=()=>rej(new Error("No se pudo leer el archivo"));r.readAsDataURL(file)})}
@@ -1775,11 +1788,7 @@ function pj(txt){
   throw new Error("No se pudo interpretar la respuesta de la IA (formato inválido).");
 }
 
-async function callAIVision(parts,key,maxTokens){
-  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:AI_MODEL,max_tokens:maxTokens||2000,messages:[{role:"user",content:parts}]})});
-  const d=await r.json();if(d.error)throw new Error(d.error.message);
-  return d.content?.map(c=>c.text||"").join("")||"";
-}
+async function callAIVision(parts,key,maxTokens){return aiRequest(parts,key,maxTokens||2000)}
 
 const S={
 app:{fontFamily:"'Source Sans 3',sans-serif",background:"#0A0A0B",minHeight:"100vh",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column",color:"#E0E0E0"},
@@ -2471,15 +2480,19 @@ function WorkoutTab({data,setData,apiKey}){
     return {...ex,modo:m2,uni:lados,sets};
   })}));
   const submit=async()=>{setAiLoad(true);const toSave={...ses,feedback:fb,estado:est||"bien",molestiaZona:est==="molestia"?zona:"",exercises:ses.exercises.map(ex=>({...ex,sets:ex.sets.map(st=>{const o={...st,weight:nm(st.weight),reps:nm(st.reps)};if(ex.uni)o.repsR=nm(st.repsR);return o})}))};const ns=[...data.sessions,toSave];const nd={...data,sessions:ns,activeSession:null};
-    if(apiKey){try{const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals,data.coachNotes,data.coachAdjust),apiKey);
+    // La sesión se guarda ANTES de llamar al coach: si la IA falla o tarda, el entreno ya cuenta para el motor.
+    setData(nd);sv(nd);
+    if(!apiKey){setAiRes("Sin API key. Sesion guardada. Anda a Config.");setAiLoad(false);return}
+    try{
+      const raw=await callAI(buildPrompt(toSave,ns,fb,data.meals,data.coachNotes,data.coachAdjust),apiKey,2500);
       const corte=raw.indexOf("---AJUSTES---");
       const txt=(corte>=0?raw.slice(0,corte):raw).trim();
       let aj=null;
       if(corte>=0){try{const j=pj(raw.slice(corte+13));if(j&&Array.isArray(j.ajustes))aj={date:toSave.date,sessionId:toSave.id,items:j.ajustes.filter(x=>x&&x.ejercicio),avanzarFase:!!j.avanzarFase,motivoFase:j.motivoFase||""}}catch(e){}}
-      if(aj)nd.coachAdjust=aj;
-      setAiRes(txt);nd.coachNotes=[...nd.coachNotes,{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}];nd.planNotes=[...(nd.planNotes||[]),{date:toSave.date,note:txt}]}catch(e){setAiRes("Error: "+e.message)}}
-    else{setAiRes("Sin API key. Sesion guardada. Anda a Config.")}
-    setData(nd);sv(nd);setAiLoad(false)};
+      setAiRes(txt);
+      setData(d=>{const n2={...d,coachNotes:[...(d.coachNotes||[]),{sessionId:toSave.id,date:toSave.date,note:txt,feedback:fb}],planNotes:[...(d.planNotes||[]),{date:toSave.date,note:txt}]};if(aj)n2.coachAdjust=aj;sv(n2);return n2});
+    }catch(e){setAiRes("La sesión quedó guardada, pero el coach no pudo responder.\n\nError: "+e.message)}
+    setAiLoad(false)};
   const reset=()=>{setSes(null);setShowFb(false);setFb("");setAiRes("");setEst("");setZona("");setChk(null);setChkOn(false);setPlanOn(false);setAcc({})};
 
   if(showFb)return <div style={S.pg}><h2 style={S.t1}>{"\u{1F4DD}"} Como estuvo?</h2>{!aiRes?<>
@@ -3526,10 +3539,7 @@ Responde SOLO con JSON válido, sin markdown, sin texto antes o después:
 }`;
 
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:AI_MODEL,max_tokens:8000,messages:[{role:"user",content:prompt}]})});
-      const d=await r.json();if(d.error)throw new Error(d.error.message);
-      const txt=d.content?.map(c=>c.text||"").join("")||"";
-      if(!txt.trim())throw new Error("La IA no devolvió contenido. Intentá de nuevo.");
+      const txt=await aiRequest(prompt,apiKey,8000);
       const plan=pj(txt);
       if(!plan||!plan.days||!plan.days.length)throw new Error("El plan llegó incompleto. Intentá regenerar.");
       const nd={...data,weeklyNutrPlan:{...plan,generatedAt:td()}};
